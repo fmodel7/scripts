@@ -14,7 +14,7 @@ Biblioteca de scripts e automações para compartilhar conhecimento e facilitar 
 - **Sou iniciante:** consulte [como baixar e executar](docs/COMO-BAIXAR-E-EXECUTAR.md).
 - **Quero padronizar a documentação:** use o [modelo PowerShell](templates/powershell/README.md), também em [inglês](templates/powershell/README.en-US.md) e [alemão](templates/powershell/README.de-DE.md).
 
-**Status inicial:** a estrutura está pronta para receber scripts. Ainda não há scripts de execução publicados neste catálogo. Os modelos são documentação para preencher, não programas prontos para executar.
+**Primeira ferramenta publicada:** [Configure NTP PDC](scripts/configure-ntp-pdc/README.md) — consulta e configuração protegida do horário no PDC raiz da floresta, com relatórios e manuais PT-BR/EN-US. Consulte o catálogo para escolher uma ferramenta. Os arquivos em templates continuam sendo modelos, não programas.
 
 ## Como cada script será organizado
 
@@ -52,3 +52,4 @@ A visibilidade pública, por si só, não define uma licença de reutilização.
 [Como contribuir](CONTRIBUTING.md) · [Dados e credenciais](SECURITY.md) · [Histórico](CHANGELOG.md)
 
 Só publicar conteúdo que você tenha direito de compartilhar. Os scripts privados do Infratech e dados de clientes não são transferidos automaticamente para esta biblioteca.
+

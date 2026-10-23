@@ -1,6 +1,6 @@
 # Baixar e executar — para iniciantes
 
-A biblioteca ainda não contém scripts executáveis publicados. As instruções abaixo explicam o caminho que será usado quando uma ferramenta for adicionada.
+A biblioteca já contém [Configure NTP PDC](../scripts/configure-ntp-pdc/README.md). Cada ferramenta tem suas próprias instruções; os passos abaixo explicam como chegar à pasta e ao README corretos.
 
 ## Baixar
 
@@ -22,3 +22,4 @@ No VSCode: **File → Open Folder**, escolha a pasta da ferramenta e depois **Te
 Não cole a chave de API em texto literal no comando nem altere políticas corporativas para contornar um bloqueio. Não execute o modelo `templates/powershell`: ele não é uma ferramenta.
 
 Para PowerShell, quando o script realmente aceitar SecureString, seu README pode usar Read-Host -AsSecureString para receber uma chave. Não presumir que esse parâmetro existe em todos os scripts.
+

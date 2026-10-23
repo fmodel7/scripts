@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0",
+  "source_commit": "f680c67aa3ebd9d11950ef28431da9a27f8ef58b",
+  "review_date": "2026-10-23",
+  "source_sha256": {
+    "Configure-NTP-PDC.ps1": "eae6f61986f787536819eb7df45687964356f02581ddaa7c2cf11edf78224ede",
+    "src/NtpPdc.Core.ps1": "6a39f9ec55ba6b07fee87556db25ba8cd47e921ab1c317148e5ee4796231af63"
+  },
+  "original_sha256": "3332f90ed33b5b5467c686b32e02920fb56271cb45540353c524b829993481a9",
+  "local_runtime": "PowerShell 7.4.13 / Linux",
+  "local_core_checks": 75,
+  "mocked_workflows": 18,
+  "workflow_assertions": 188,
+  "isolated_entry_processes": 3,
+  "entry_assertions": 9,
+  "real_pdc_configuration_tested": false,
+  "real_clock_changed": false,
+  "live_dns_ntp_probed": false,
+  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/40010481878",
+  "ci_platforms": [
+    {
+      "environment": "Windows hosted runner",
+      "shell": "Windows PowerShell 5.1",
+      "core_checks": 79
+    },
+    {
+      "environment": "Windows hosted runner",
+      "shell": "PowerShell 7",
+      "core_checks": 79
+    },
+    {
+      "environment": "Ubuntu hosted runner",
+      "shell": "PowerShell 7",
+      "core_checks": 75
+    }
+  ],
+  "ci_status": "success",
+  "runtime_details": "Exact runtime metadata is uploaded as runtime.txt in each CI artifact."
+}

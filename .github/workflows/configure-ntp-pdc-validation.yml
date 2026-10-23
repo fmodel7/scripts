@@ -1,0 +1,61 @@
+name: Configure NTP PDC - offline validation
+on:
+  push:
+    branches: [main, codex/configure-ntp-pdc]
+    paths:
+      - 'scripts/configure-ntp-pdc/**'
+      - '.github/workflows/configure-ntp-pdc-validation.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/configure-ntp-pdc/**'
+      - '.github/workflows/configure-ntp-pdc-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ntp-pdc-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline-validation:
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            shell: powershell
+            label: Windows PowerShell 5.1
+          - os: windows-latest
+            shell: pwsh
+            label: PowerShell 7 - Windows
+          - os: ubuntu-latest
+            shell: pwsh
+            label: PowerShell 7 - Linux mocks
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+        working-directory: scripts/configure-ntp-pdc
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse, run synthetic workflows and test actual CLI with fake adapters
+        run: |
+          $ErrorActionPreference='Stop'
+          $destination=Join-Path $env:RUNNER_TEMP 'ntp-pdc-evidence'
+          $null=New-Item -ItemType Directory -Path $destination -Force
+          $PSVersionTable | Out-String | Out-File (Join-Path $destination 'runtime.txt')
+          Get-FileHash ./Configure-NTP-PDC.ps1,./src/NtpPdc.Core.ps1 -Algorithm SHA256 | Format-List | Out-File (Join-Path $destination 'sha256.txt')
+          $childHost=(Get-Process -Id $PID).Path
+          foreach($test in @('Test-Core.ps1','Test-Workflow.ps1','Test-EntryPoint.ps1')){
+            & $childHost -NoProfile -File "./tests/$test" 2>&1 | Tee-Object -FilePath (Join-Path $destination ($test+'.log'))
+            if($LASTEXITCODE -ne 0){throw "$test failed with exit code $LASTEXITCODE"}
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ntp-pdc-validation-${{ matrix.os }}-${{ matrix.shell }}
+          path: ${{ runner.temp }}/ntp-pdc-evidence/*
+          retention-days: 30
+          if-no-files-found: warn
