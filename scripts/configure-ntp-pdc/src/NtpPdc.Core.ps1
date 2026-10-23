@@ -310,7 +310,7 @@ function Restart-PdcTimeService {
     if($service.Status -eq 'Running'){Restart-Service -Name W32Time -ErrorAction Stop -WhatIf:$false -Confirm:$false}
     else{Start-Service -Name W32Time -ErrorAction Stop -WhatIf:$false -Confirm:$false}
     $service=Get-Service -Name W32Time -ErrorAction Stop
-    $service.WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running,[TimeSpan]::FromSeconds(30))
+    $service.WaitForStatus('Running',[TimeSpan]::FromSeconds(30))
 }
 
 function Assert-PdcApplyTarget {
