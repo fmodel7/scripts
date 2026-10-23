@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.key
+*.secret
+*.pfx
+*.p12
+*.log
+**/Run-*/
+**/outputs/
+**/TestResults/
+.DS_Store
+Thumbs.db
