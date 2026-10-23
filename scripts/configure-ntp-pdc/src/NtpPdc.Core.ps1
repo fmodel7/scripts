@@ -83,6 +83,11 @@ function Test-PdcRuntime {
     }finally{$identity.Dispose()}
 }
 
+function Get-PdcOperatorIdentity {
+    $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
+    try{[pscustomobject]@{Name=$identity.Name;Sid=$identity.User.Value}}finally{$identity.Dispose()}
+}
+
 function Get-PdcNativePaths {
     $directory=[Environment]::SystemDirectory
     $w32tm=Join-Path $directory 'w32tm.exe';$reg=Join-Path $directory 'reg.exe'
@@ -278,7 +283,7 @@ function ConvertTo-PdcHtml {
     $intro=if($pt){'Estado observado, não uma certificação de precisão. Consultas e simulação não mudam W32Time; os relatórios são gravados localmente.'}else{'Observed state, not an accuracy certification. Audit and WhatIf do not change W32Time; reports are written locally.'}
     $h={param($x)[Net.WebUtility]::HtmlEncode([string]$x)}
     $rows=[Text.StringBuilder]::new()
-    foreach($pair in @(@('State',$Report.State),@('Mode',$Report.Mode),@('RunId',$Report.RunId),@('Computer',$Report.Context.LocalFqdn),@('Domain',$Report.Context.Domain),@('Forest root',$Report.Context.ForestRoot),@('Forest-root PDC',$Report.Context.ForestRootPdc),@('Eligible target',$Report.Context.IsForestRootPdc),@('Requested peers',$Report.Plan.PeerList),@('AnnounceFlags',$Report.Plan.AnnounceFlags),@('Configuration verified',$Report.ConfigurationVerified),@('Mutation attempted',$Report.MutationAttempted),@('Error',$Report.Error))){
+    foreach($pair in @(@('State',$Report.State),@('Mode',$Report.Mode),@('RunId',$Report.RunId),@('Operator',$Report.Operator),@('Computer',$Report.Context.LocalFqdn),@('Domain',$Report.Context.Domain),@('Forest root',$Report.Context.ForestRoot),@('Forest-root PDC',$Report.Context.ForestRootPdc),@('Eligible target',$Report.Context.IsForestRootPdc),@('Requested peers',$Report.Plan.PeerList),@('AnnounceFlags',$Report.Plan.AnnounceFlags),@('Configuration verified',$Report.ConfigurationVerified),@('Mutation attempted',$Report.MutationAttempted),@('Error',$Report.Error))){
         [void]$rows.Append('<tr><th>'+(& $h $pair[0])+'</th><td>'+(& $h $pair[1])+'</td></tr>')
     }
     $warningText=(@($Report.Warnings)|ForEach-Object{'<li>'+(& $h $_)+'</li>'}) -join ''
@@ -329,6 +334,7 @@ function Invoke-PdcTimeConfiguration {
         [string]$OutputPath,[int]$NativeTimeoutSeconds=20,[int]$VerificationTimeoutSeconds=120,
         [int]$VerificationIntervalSeconds=5,[int]$MaxSyncAgeSeconds=300,[switch]$ProbePeers,[scriptblock]$Approve)
     Test-PdcRuntime
+    $operator=Get-PdcOperatorIdentity
     $plan=Get-PdcPeerPlan $NtpServers $ReliabilityMode
     if($Apply -and $plan.Servers.Count -eq 0){throw 'Specify NtpServers explicitly with Apply; no upstream provider is selected automatically.'}
     if($ProbePeers -and $plan.Servers.Count -eq 0){throw 'Specify NtpServers when requesting ProbePeers.'}
@@ -344,7 +350,7 @@ function Invoke-PdcTimeConfiguration {
     $runId=[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8)
     $folder=Join-Path $basePath ('Run-'+$runId);$null=[IO.Directory]::CreateDirectory($folder)
     $report=[pscustomobject][ordered]@{
-        SchemaVersion=1;Version='1.0.0';RunId=$runId;StartedUtc=[DateTime]::UtcNow.ToString('o');EndedUtc=''
+        SchemaVersion=1;Version='1.0.0';Operator=$operator.Name;OperatorSid=$operator.Sid;RunId=$runId;StartedUtc=[DateTime]::UtcNow.ToString('o');EndedUtc=''
         Mode=$(if($Apply){'Apply'}else{'Audit'});State='Started';RunFolder=$folder
         Context=[pscustomobject]@{LocalFqdn='';Domain='';ForestRoot='';ForestRootPdc='';IsForestRootPdc=$false}
         Plan=$plan;Policy=$null;Before=$null;After=$null;ResolvedPeers=@();BeforeDiagnostics=$null;AfterDiagnostics=$null

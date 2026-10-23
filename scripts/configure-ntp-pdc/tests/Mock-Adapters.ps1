@@ -7,6 +7,7 @@ $script:seed=[pscustomobject]@{
     ServiceState='Running';ServiceStartMode='Auto'
 }
 function Test-PdcRuntime {}
+function Get-PdcOperatorIdentity {[pscustomobject]@{Name='SYNTHETIC\operator';Sid='SYNTHETIC-SID'}}
 function Get-PdcNativePaths {[pscustomobject]@{W32tm='mock-w32tm';Reg='mock-reg'}}
 function Get-PdcContext {
     $script:contextReads++
