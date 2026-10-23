@@ -67,6 +67,8 @@ Assert-Throws {Assert-PdcApplyTarget $context $settings $policy} 'Missing regist
 $path=Join-Path ([IO.Path]::GetTempPath()) ('ntp-unit-'+[guid]::NewGuid().ToString('N'))
 try{
     $null=[IO.Directory]::CreateDirectory($path)
+    Push-Location $path
+    try{Assert ((Resolve-PdcOutputPath './nested') -eq (Join-Path $path 'nested')) 'Relative output uses PowerShell location, not process working directory'}finally{Pop-Location}
     $file=Join-Path $path 'atomic.txt';Write-PdcAtomicText $file 'first';Write-PdcAtomicText $file 'second'
     Assert (([IO.File]::ReadAllText($file)) -ceq 'second') 'Atomic replacement preserves final content'
     Assert (@(Get-ChildItem $path -Filter '*.tmp').Count -eq 0) 'No temporary files left'
@@ -76,6 +78,7 @@ try{
     Assert-Throws {Write-PdcAction (Join-Path $path 'missing/actions.jsonl') 'test' 'INTENT'} 'Journal failure propagates before mutation'
 }finally{if(Test-Path $path){Remove-Item $path -Recurse -Force}}
 if([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT){
+    Assert-Throws {Resolve-PdcOutputPath 'HKLM:\SOFTWARE\FMODEL'} 'Non-filesystem output rejected'
     Add-Type -AssemblyName System.DirectoryServices -ErrorAction Stop
     Assert ($null -ne ('System.DirectoryServices.ActiveDirectory.Domain' -as [type])) 'Windows directory API type available (no bind)'
     $snapshot=Get-PdcSettings

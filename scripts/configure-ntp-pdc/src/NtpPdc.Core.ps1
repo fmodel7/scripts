@@ -329,6 +329,17 @@ function Assert-PdcApplyTarget {
     }
 }
 
+function Resolve-PdcOutputPath {
+    param([string]$Path)
+    if((Get-Location).Provider.Name -ne 'FileSystem'){throw 'Run from a filesystem directory.'}
+    $provider=$null;$drive=$null
+    $resolved=$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path,[ref]$provider,[ref]$drive)
+    if($provider.Name -ne 'FileSystem'){throw 'OutputPath must use the FileSystem provider.'}
+    $full=[IO.Path]::GetFullPath($resolved)
+    if($full.StartsWith('\\') -or ([IO.DriveInfo]::new([IO.Path]::GetPathRoot($full))).DriveType -eq [IO.DriveType]::Network){throw 'OutputPath must use local storage.'}
+    return $full
+}
+
 function Invoke-PdcTimeConfiguration {
     param([string[]]$NtpServers=@(),[switch]$Apply,[switch]$WhatIfRequested,[string]$ReliabilityMode='Automatic',
         [string]$OutputPath,[int]$NativeTimeoutSeconds=20,[int]$VerificationTimeoutSeconds=120,
@@ -343,10 +354,7 @@ function Invoke-PdcTimeConfiguration {
         if(-not $base){throw 'LocalApplicationData is unavailable; specify OutputPath.'}
         $OutputPath=Join-Path $base 'FMODEL/NtpPdc'
     }
-    if((Get-Location).Provider.Name -ne 'FileSystem'){throw 'Run from a filesystem directory.'}
-    if($OutputPath.StartsWith('\\')){throw 'Use a local output directory for the pre-change backup.'}
-    $basePath=[IO.Path]::GetFullPath($OutputPath)
-    if($basePath.StartsWith('\\') -or ([IO.DriveInfo]::new([IO.Path]::GetPathRoot($basePath))).DriveType -eq [IO.DriveType]::Network){throw 'OutputPath must use local storage.'}
+    $basePath=Resolve-PdcOutputPath $OutputPath
     $runId=[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8)
     $folder=Join-Path $basePath ('Run-'+$runId);$null=[IO.Directory]::CreateDirectory($folder)
     $report=[pscustomobject][ordered]@{
