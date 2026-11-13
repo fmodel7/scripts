@@ -5,6 +5,8 @@ F. Model · fmodel@fmodel.com.br
 
 Public library for scripts, automation and practical documentation. **Windows Time 2.0.0:** [PDC and DOMHIER](scripts/configure-ntp-pdc/README.en-US.md), two standalone scripts with embedded root-PDC NTP sources or AD hierarchy, confirmation, backup, HTML reports and complete PT-BR/EN-US documentation.
 
+**DHCP export/import:** [DHCP Transfer 1.0.0](scripts/dhcp-transfer/README.en-US.md) provides standalone scripts, guarded import, backups, HTML reports and individual PT-BR/EN-US guides. Real operations require Windows PowerShell 5.1; offline tests also run on PowerShell 7.
+
 [Português](README.md) · [Deutsch](README.de-DE.md) · [Catalog](scripts/README.md)
 
 Each independent tool will have its own folder and README covering purpose, requirements, permissions, setup, actual test/run commands, parameters, effects, outputs, troubleshooting and limitations.
@@ -12,5 +14,6 @@ Each independent tool will have its own folder and README covering purpose, requ
 Start with the [English PowerShell documentation template](templates/powershell/README.en-US.md). The [contribution guide](CONTRIBUTING.md) and [download guide](docs/COMO-BAIXAR-E-EXECUTAR.md) are currently in Portuguese.
 
 This repository is public; private Infratech projects are not imported automatically. No reuse license has been selected. Public visibility alone does not define permission to relicense or redistribute third-party code.
+
 
 

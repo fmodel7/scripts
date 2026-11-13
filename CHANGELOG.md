@@ -1,5 +1,12 @@
 # Histórico
 
+## 2026-11-13 — DHCP Transfer 1.0.0
+
+- Adiciona scripts/dhcp-transfer com Export-DHCP.ps1 e Import-DHCP.ps1 independentes, confirmação e caminhos explícitos no alvo local/remoto.
+- Exportação sem sobrescrita; importação com backups nativo/XML, snapshot, ScopeOverwrite/reinício opt-in, journal e HTML/JSON.
+- Manuais PT-BR/EN-US/PDF, guias por script, testes offline, hash do pacote e instruções de aceite.
+- CI: 26 cenários por ambiente; 227 verificações em cada Windows (5.1/7) e 225 em Linux. Sem DHCP/WinRM real ou teste de leases por clientes.
+
 ## 2026-11-13 — Windows Time 2.0.0
 
 - Substitui a ferramenta NTP modular por PS1 independentes de PDC e DOMHIER, com fontes embutidas, confirmação, backup e HTML.
@@ -22,6 +29,7 @@
 - Modelos PowerShell PT-BR/EN-US/de-DE e orientações para iniciantes.
 - Nenhum script privado, credencial ou dado real importado.
 - Nenhum script executável publicado nesta etapa.
+
 
 
 

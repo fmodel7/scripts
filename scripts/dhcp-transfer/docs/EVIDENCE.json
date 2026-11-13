@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "review_date": "2026-11-13",
+  "source_commit": "ccf60e47760b087387ba070add69c73c3abf767d",
+  "source_sha256": {
+    "Export-DHCP.ps1": "ad432b2d7c627fd58ae373611b4c0151a7fd1280735e77784025c5b08db7b59d",
+    "Import-DHCP.ps1": "48ec1c02c11f253310d4fcbc880179366466386f5618f752ffda785ffcf430d8",
+    "tests/Test-DhcpTransfer.ps1": "ae50a076e97ffb55d9c01bfa3ca23098aef1529e7eecde8d2452ae274bb30384"
+  },
+  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/43447564768",
+  "ci_status": "success",
+  "ci_platforms": [
+    {
+      "runtime": "Windows PowerShell 5.1 / Windows",
+      "assertions": 227
+    },
+    {
+      "runtime": "PowerShell 7 / Windows",
+      "assertions": 227
+    },
+    {
+      "runtime": "PowerShell 7 / Linux",
+      "assertions": 225
+    }
+  ],
+  "mocked_workflows_per_environment": 26,
+  "local_runtime": "PowerShell 7.4.13 / Linux",
+  "operational_runtime": "64-bit Windows PowerShell 5.1 / Windows Server 2016+ DHCP target",
+  "real_DHCP_export_import_backup_restore_tested": false,
+  "real_WinRM_tested": false,
+  "real_client_lease_tested": false,
+  "real_server_configuration_changed": false
+}
