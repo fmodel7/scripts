@@ -1,7 +1,7 @@
 name: AD Health Report - offline validation
 on:
   push:
-    branches: [main, codex/ad-health-report-v11]
+    branches: [main, codex/ad-health-report-v12]
     paths: ['scripts/ad-health-report/**', '.github/workflows/ad-health-report-validation.yml']
   pull_request:
     branches: [main]
@@ -44,7 +44,7 @@ jobs:
           $PSVersionTable | Out-String | Out-File (Join-Path $destination 'runtime.txt')
           Get-FileHash ./Export-ADHealthReport.ps1 -Algorithm SHA256 | Format-List | Out-File (Join-Path $destination 'sha256.txt')
           $childHost=(Get-Process -Id $PID).Path
-          foreach($test in @('Test-AdHealth.ps1','Test-AdOperations.ps1')){
+          foreach($test in @('Test-AdHealth.ps1','Test-AdOperations.ps1','Test-AdExtensions.ps1')){
             $ErrorActionPreference='Continue'
             & $childHost -NoProfile -File "./tests/$test" 2>&1 | Tee-Object -FilePath (Join-Path $destination ($test+'.log'))
             $testExit=$LASTEXITCODE
