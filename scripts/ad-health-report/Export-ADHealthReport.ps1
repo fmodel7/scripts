@@ -826,6 +826,42 @@ function Invoke-AdExtendedDomain {
         foreach($s in (Invoke-AdQuery 'Get-ADObject' @{LDAPFilter='(gPLink=*)';SearchBase=$Base;Server=$Server;Properties=@('gPLink','gPOptions');ResultPageSize=$Options.PageSize})){Convert-AdGpoLinks $s $Domain}
     } -Skip:(-not $Options.IncludeGpoInventory)
     Invoke-AdCollection $Report 'GroupPolicies' $Domain {Get-AdGpoInventory $Report $Options $Domain $Server $Folder} -Skip:(-not $Options.IncludeGpoInventory)
+    if($Options.IncludeDirectorySecurity -and -not $Options.SkipPrivilegedMembers){
+        # Complements the original selected groups; DC groups are inventory, not user-count violations.
+        $sidPrefix=@($Report.Datasets.Groups|Where-Object{$_.Domain -eq $Domain -and $_.SID -match '^S-1-5-21-\d+-\d+-\d+-512$'}|ForEach-Object{$_.SID -replace '-512$',''})
+        if($sidPrefix.Count -eq 1){
+            $additional=@(($sidPrefix[0]+'-516'),($sidPrefix[0]+'-521'),($sidPrefix[0]+'-520'),'S-1-5-32-550','S-1-5-32-562','S-1-5-32-569')
+            foreach($sid in $additional){
+                $groups=@($Report.Datasets.Groups|Where-Object{$_.Domain -eq $Domain -and $_.SID -eq $sid})
+                if($groups.Count -ne 1){continue}
+                Invoke-AdCollection $Report 'PrivilegedMembers' ($Domain+' / '+$sid) {
+                    foreach($m in (Invoke-AdQuery 'Get-ADGroupMember' @{Identity=$groups[0].DistinguishedName;Server=$Server})){
+                        [pscustomobject]@{Domain=$Domain;GroupName=$groups[0].Name;GroupSID=$sid;MemberName=$m.Name;MemberSID=Convert-AdSid (Get-AdField $m 'SID');MemberClass=$m.objectClass;MemberDN=$m.DistinguishedName;MembershipType='DirectOnly'}
+                    }
+                }
+            }
+        }
+    }
+}
+function Get-AdLifecycleHint {
+    param([string]$OperatingSystem,[datetime]$AsOf=[datetime]::UtcNow)
+    $rules=@(
+        @('Windows Server 2012 R2','(?i)Windows Server 2012 R2','2023-10-10','windows-server-2012-r2'),
+        @('Windows Server 2012','(?i)Windows Server 2012(?! R2)','2023-10-10','windows-server-2012'),
+        @('Windows Server 2008 R2','(?i)Windows Server 2008 R2','2020-01-14','windows-server-2008-r2'),
+        @('Windows 7','(?i)^Windows 7(?:\s|$)','2020-01-14','windows-7')
+    )
+    foreach($r in $rules){if($OperatingSystem -match $r[1]){
+        $end=[datetime]::ParseExact($r[2],'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+        if($AsOf.Date -gt $end.Date){return [pscustomobject]@{Product=$r[0];RegularSupportEnd=$r[2];Reference=('https://learn.microsoft.com/en-us/lifecycle/products/'+$r[3]);Observation='Regular lifecycle review only; edition/channel/ESU/custom support and whether the AD OS attribute is current are not verified.'}}
+        return
+    }}
+    if($OperatingSystem -match '(?i)^Windows 10(?:\s|$)' -and $OperatingSystem -notmatch '(?i)LTSC|LTSB'){
+        return [pscustomobject]@{Product='Windows 10 edition/build review';RegularSupportEnd='Varies by edition/channel/ESU';Reference='https://learn.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro';Observation='Windows 10 ordinary releases require edition/build/ESU review; this does not classify all Windows 10/LTSC systems as unsupported.'}
+    }
+    if($OperatingSystem -match '(?i)^Windows (?:NT|2000|XP|Vista|8(?:\.1)?)(?:\s|$)' -or $OperatingSystem -match '(?i)^Windows Server (?:2000|2003|2008)(?:\s|$)'){
+        [pscustomobject]@{Product='Legacy Windows product hint';RegularSupportEnd='Look up exact product/edition';Reference='https://learn.microsoft.com/en-us/lifecycle/';Observation='Legacy family name in AD; verify actual host OS, service pack, edition and contractual support. No universal version/name verdict.'}
+    }
 }
 function Get-AdGpoInventory {
     param($Report,$Options,[string]$Domain,[string]$Server,[string]$Folder)
@@ -1195,6 +1231,10 @@ function Invoke-AdExtendedDc {
 function Complete-AdExtensionFindings {
     param($Report)
     $o=$Report.Parameters
+    foreach($computer in $Report.Datasets.Computers){
+        $hint=Get-AdLifecycleHint ([string]$computer.OperatingSystem)
+        if($null -ne $hint){New-AdFinding $Report Info 'OS-LIFECYCLE-REVIEW' Computers $computer.Domain $computer.DistinguishedName ($computer.OperatingSystem+'; regular support end='+$hint.RegularSupportEnd+'; reference='+$hint.Reference+'; catalog checked=2026-11-13') $hint.Observation}
+    }
     if($o.IncludeRsop){
         foreach($dc in $Report.Datasets.DomainControllers){
             $domain=@($Report.Datasets.Domains|Where-Object{$_.Domain -eq $dc.Domain});if($domain.Count -ne 1){continue};$adminSid=[string]$domain[0].DomainSid+'-500'
@@ -1237,6 +1277,7 @@ function Complete-AdExtensionFindings {
 }
 function Get-AdAssessmentSources {
     $refs=@(
+        @('OS-LIFECYCLE','Microsoft product lifecycle','https://learn.microsoft.com/en-us/lifecycle/','Review selected legacy OS family references and ordinary lifecycle dates','AD OS strings, edition/channel, ESU and custom support require confirmation; no universal support verdict'),
         @('W32TIME','Windows Time configuration','https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings','Preserve raw W32Time evidence and machine/policy registry values','Configuration and measured offset do not certify UTC accuracy'),
         @('ADMIN500','Role-specific built-in Administrator guidance','https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-d--securing-built-in-administrator-accounts-in-active-directory','Inventory rights by SID without a DC deny-right verdict','The cited deny-right recommendations target workstations/member servers'),
         @('GPO-PERMISSIONS','Group Policy permissions','https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gppermission?view=windowsserver2025-ps','Read trustee permissions per GPO','Does not establish effective privilege across nested groups'),

@@ -18,6 +18,9 @@ try{
     Assert (@(Read-AdJsonList '[{"Path":"a"},{"Path":"b"}]').Count -eq 2) 'manifest JSON arrays flatten consistently on Windows PowerShell 5.1 and 7'
     Assert (@(Read-SnapshotCatalog '[{"Id":"a"},{"Id":"b"}]').Count -eq 2) 'remote registry catalog parses independent rules on Windows PowerShell 5.1 and 7'
     Assert (@(Get-AdRegistryCatalog).Count -eq 12) '12 registry guidance rules'
+    Assert ((Get-AdLifecycleHint 'Windows Server 2012 R2 Standard' ([datetime]'2026-11-13')).Reference -like '*windows-server-2012-r2') 'legacy lifecycle hint links correct product and preserves entitlement caveats'
+    Assert ($null -eq (Get-AdLifecycleHint 'Windows Server 2022 Standard' ([datetime]'2026-11-13')) -and $null -eq (Get-AdLifecycleHint 'Windows 10 Enterprise LTSC' ([datetime]'2026-11-13'))) 'modern server and Windows 10 LTSC are not classified by unrelated lifecycle dates'
+    Assert ($null -eq (Get-AdLifecycleHint 'Windows Server 2012 R2 Standard' ([datetime]'2020-01-01'))) 'lifecycle hint is not emitted before listed regular end date'
     $a=[pscustomobject]@{Name='SYNTHETIC';ObjectClass='user';ObjectGUID='a';DistinguishedName='CN=A,DC=example,DC=test';userAccountControl=(128+2097152+32+65536+4194304+262144);objectSid='S-1-5-21-1-2-3-1001'}
     $flags=Convert-AdSecurityAccount $a example.test dc1.example.test
     Assert ($flags.ReversibleEncryptionAllowed -and $flags.UseDESKeyOnly -and $flags.PasswordNotRequired -and $flags.PasswordNeverExpires -and $flags.SmartcardRequired -and -not $flags.TrustedForDelegation) 'UAC bits interpreted independently'
@@ -74,6 +77,16 @@ try{
         $domain=if($Arguments.ContainsKey('Server') -and [string]$Arguments.Server -like '*child*'){'child.example.test'}else{'example.test'};$dn='DC='+$domain.Replace('.',',DC=')
         if($Command -eq 'Get-ADRootDSE'){$v=&$script:baseQuery $Command $Arguments;$v|Add-Member -NotePropertyName configurationNamingContext -NotePropertyValue 'CN=Configuration,DC=example,DC=test';$v|Add-Member -NotePropertyName namingContexts -NotePropertyValue @($dn,('DC=DomainDnsZones,'+$dn),'DC=ForestDnsZones,DC=example,DC=test');return $v}
         if($Command -eq 'Get-ADOptionalFeature'){return [pscustomobject]@{EnabledScopes=@('CN=Partitions,CN=Configuration,DC=example,DC=test')}}
+        if($Command -eq 'Get-ADComputer'){
+            &$script:baseQuery $Command $Arguments
+            $legacy=New-FixtureAccount 'SYNTHETIC-legacy-host' $domain Computer $true $false $false;$legacy.OperatingSystem='Windows Server 2012 R2 Standard';$legacy.OperatingSystemVersion='6.3 (9600)';return $legacy
+        }
+        if($Command -eq 'Get-ADGroup'){
+            &$script:baseQuery $Command $Arguments
+            $prefix=if($domain -eq 'example.test'){'S-1-5-21-100-200-300'}else{'S-1-5-21-400-500-600'}
+            [pscustomobject]@{Name='SYNTHETIC Group Policy Creator Owners';SamAccountName='SYNTHETIC-GPO-CREATORS';SID=[pscustomobject]@{Value=($prefix+'-520')};DistinguishedName=('CN=GpoCreators,'+$dn);GroupCategory='Security';GroupScope='Global';AdminCount=0;whenCreated=[datetime]::UtcNow.AddYears(-1);whenChanged=[datetime]::UtcNow}
+            return
+        }
         if($Command -in @('Get-ADReplicationSite','Get-ADReplicationSubnet','Get-ADReplicationSiteLink')){return [pscustomobject]@{Name='SYNTHETIC-SITE';DistinguishedName='CN=Synthetic,CN=Sites,CN=Configuration,DC=example,DC=test';Cost=100;ReplicationFrequencyInMinutes=180;SitesIncluded=@('SITE-A','SITE-B');Subnets=@('192.0.2.0/24')}}
         if($Command -eq 'Get-ADObject' -and $Arguments.ContainsKey('LDAPFilter')){
             if($script:scenario -eq 'directory-denied' -and $Arguments.LDAPFilter -notmatch 'gPLink|InProgress'){throw 'SYNTHETIC DIRECTORY SECURITY DENIED'}
@@ -135,6 +148,7 @@ try{
             Assert (@($data.Datasets.DuplicateSPNs).Count -eq 1 -and $data.Datasets.DuplicateSPNs[0].OwnerCount -eq 6) 'duplicates across distinct owners and domains'
             Assert (@($data.Datasets.DuplicateUPNs).Count -eq 1 -and $data.Datasets.DuplicateUPNs[0].OwnerCount -eq 4) 'UPN duplicates preserved'
             Assert (@($data.Datasets.UserRightsAssignments).Count -eq 2 -and $data.Datasets.UserRightsAssignments[0].PrincipalSID -like '*-500') 'renamed Administrator identified by SID evidence'
+            Assert (@($data.Datasets.PrivilegedMembers|Where-Object{$_.GroupSID -like '*-520'}).Count -eq 2) 'additional role membership is inventoried by SID without declaring DC group counts unsafe'
             Assert (@($data.Datasets.DnsZones).Count -eq 2 -and @($data.Datasets.BackupEvidence).Count -eq 4 -and @($data.Datasets.AuditPolicy).Count -eq 2) 'DNS/backup/audit evidence exported'
             Assert (@($data.Datasets.SecurityEvents).Count -eq 4 -and $data.Datasets.SecurityEvents[0].Interpretation -like '*does not itself prove*') 'logon type parsed from XML with restrained interpretation'
             Assert (@($data.Datasets.SecurityReview|Where-Object{$_.RuleId -like 'SPOOLER-*' -and $_.Status -eq 'ReviewValueDifference'}).Count -eq 0) 'stopped disabled Spooler not core-service failure'
@@ -143,6 +157,7 @@ try{
             $html=[IO.File]::ReadAllText((Join-Path $result.RunFolder 'Report.html'));Assert ($html.Contains('&lt;img') -and $html.Contains('&lt;script&gt;not executable') -and -not $html.Contains('<img src=x')) 'untrusted GPO/software strings HTML encoded'
             $csv=@(Import-Csv (Join-Path $result.RunFolder 'installedsoftware.csv'));Assert ($csv[0].DisplayName.StartsWith("'=")) 'new CSV formula protected'
             Assert (@($data.Datasets.AssessmentSources).Count -ge 17) 'official sources carried in runtime report'
+            Assert (@($data.Datasets.Findings|Where-Object{$_.RuleId -eq 'OS-LIFECYCLE-REVIEW' -and $_.Severity -eq 'Info'}).Count -eq 2) 'legacy OS attributes produce sourced review hints, not unsupported/ESU certainty'
             $script:goodFolder=$result.RunFolder
             if($KeepExample){$null=New-Item -ItemType Directory -Path $KeepExample -Force;Copy-Item -Path (Join-Path $result.RunFolder '*') -Destination $KeepExample -Recurse -Force}
         }elseif($scenario -eq 'skip-users'){
