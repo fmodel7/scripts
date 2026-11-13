@@ -439,5 +439,477 @@
       "ErrorType",
       "Message"
     ]
+  },
+  "OptionalFeatures": {
+    "file": "optionalfeatures.csv",
+    "fields": [
+      "Forest",
+      "Feature",
+      "FeatureGuid",
+      "Enabled",
+      "EnabledScopes",
+      "QueryServer",
+      "Observation"
+    ]
+  },
+  "Sites": {
+    "file": "sites.csv",
+    "fields": [
+      "Forest",
+      "Name",
+      "DistinguishedName",
+      "Description",
+      "Subnets",
+      "InterSiteTopologyGenerator"
+    ]
+  },
+  "Subnets": {
+    "file": "subnets.csv",
+    "fields": [
+      "Forest",
+      "Name",
+      "Site",
+      "Location",
+      "Description",
+      "DistinguishedName"
+    ]
+  },
+  "SiteLinks": {
+    "file": "sitelinks.csv",
+    "fields": [
+      "Forest",
+      "Name",
+      "Cost",
+      "ReplicationFrequencyMinutes",
+      "Sites",
+      "DistinguishedName"
+    ]
+  },
+  "AccountSecurityFlags": {
+    "file": "accountsecurityflags.csv",
+    "fields": [
+      "Domain",
+      "QueryServer",
+      "Name",
+      "SamAccountName",
+      "ObjectClass",
+      "ObjectGuid",
+      "SID",
+      "DistinguishedName",
+      "Enabled",
+      "UserAccountControl",
+      "ReversibleEncryptionAllowed",
+      "UseDESKeyOnly",
+      "PasswordNotRequired",
+      "PasswordNeverExpires",
+      "DoesNotRequirePreAuth",
+      "TrustedForDelegation",
+      "TrustedToAuthForDelegation",
+      "NotDelegated",
+      "SmartcardRequired",
+      "SupportedEncryptionTypes",
+      "UserPrincipalName",
+      "Observation"
+    ]
+  },
+  "SPNInventory": {
+    "file": "spninventory.csv",
+    "fields": [
+      "Domain",
+      "SPN",
+      "NormalizedSPN",
+      "OwnerName",
+      "OwnerClass",
+      "OwnerGuid",
+      "OwnerDN"
+    ]
+  },
+  "DuplicateSPNs": {
+    "file": "duplicatespns.csv",
+    "fields": [
+      "SPN",
+      "OwnerCount",
+      "Domains",
+      "OwnerNames",
+      "OwnerGuids",
+      "OwnerDNs",
+      "AssessmentScope",
+      "Coverage"
+    ]
+  },
+  "DuplicateUPNs": {
+    "file": "duplicateupns.csv",
+    "fields": [
+      "UserPrincipalName",
+      "OwnerCount",
+      "Domains",
+      "OwnerNames",
+      "OwnerGuids",
+      "OwnerDNs",
+      "AssessmentScope",
+      "Coverage"
+    ]
+  },
+  "DirectoryCoverage": {
+    "file": "directorycoverage.csv",
+    "fields": [
+      "Domain",
+      "QueryServer",
+      "Objects",
+      "SPNValues",
+      "Truncated",
+      "ObjectLimit",
+      "SPNLimit",
+      "Observation"
+    ]
+  },
+  "GroupPolicies": {
+    "file": "grouppolicies.csv",
+    "fields": [
+      "Domain",
+      "QueryServer",
+      "Guid",
+      "Name",
+      "Status",
+      "CreatedUtc",
+      "ModifiedUtc",
+      "Owner",
+      "WmiFilter",
+      "ComputerVersionAD",
+      "ComputerVersionSysvol",
+      "UserVersionAD",
+      "UserVersionSysvol",
+      "ComputerSettings",
+      "UserSettings",
+      "LinkCount",
+      "Observation",
+      "SourceFile"
+    ]
+  },
+  "GPOLinks": {
+    "file": "gpolinks.csv",
+    "fields": [
+      "Domain",
+      "ScopeType",
+      "ScopeDN",
+      "ScopeName",
+      "GpoGuid",
+      "GpoDN",
+      "StoredPosition",
+      "LinkOptions",
+      "Enabled",
+      "Enforced",
+      "InheritanceBlocked",
+      "Observation"
+    ]
+  },
+  "GPOSettings": {
+    "file": "gposettings.csv",
+    "fields": [
+      "Domain",
+      "GpoGuid",
+      "GpoName",
+      "Area",
+      "SettingPath",
+      "Value",
+      "Attributes",
+      "SourceFile"
+    ]
+  },
+  "GPOPermissions": {
+    "file": "gpopermissions.csv",
+    "fields": [
+      "Domain",
+      "GpoGuid",
+      "GpoName",
+      "TrusteeName",
+      "TrusteeSID",
+      "TrusteeType",
+      "Permission",
+      "Inherited",
+      "SourceFile"
+    ]
+  },
+  "GPOCoverage": {
+    "file": "gpocoverage.csv",
+    "fields": [
+      "Domain",
+      "QueryServer",
+      "Discovered",
+      "Exported",
+      "Truncated",
+      "Limit",
+      "SettingsExported",
+      "SettingsTruncated",
+      "SettingsLimit",
+      "Observation"
+    ]
+  },
+  "SysvolFiles": {
+    "file": "sysvolfiles.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "RelativePath",
+      "Extension",
+      "Bytes",
+      "ModifiedUtc",
+      "Observation"
+    ]
+  },
+  "SysvolSummary": {
+    "file": "sysvolsummary.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Root",
+      "Files",
+      "Directories",
+      "Bytes",
+      "Extension",
+      "ExtensionFiles",
+      "ExtensionBytes",
+      "Truncated",
+      "Limit",
+      "DurationSeconds",
+      "Observation"
+    ]
+  },
+  "DnsServerConfiguration": {
+    "file": "dnsserverconfiguration.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Component",
+      "Property",
+      "Value",
+      "Observation"
+    ]
+  },
+  "DnsZones": {
+    "file": "dnszones.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "ZoneName",
+      "ZoneType",
+      "IsDsIntegrated",
+      "IsReverseLookupZone",
+      "DynamicUpdate",
+      "ReplicationScope",
+      "AgingEnabled",
+      "NoRefreshInterval",
+      "RefreshInterval",
+      "Observation"
+    ]
+  },
+  "DnsRootHints": {
+    "file": "dnsroothints.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "RecordType",
+      "HostName",
+      "NameServer",
+      "Address",
+      "Observation"
+    ]
+  },
+  "DnsZoneIndicators": {
+    "file": "dnszoneindicators.csv",
+    "fields": [
+      "Partition",
+      "Name",
+      "DistinguishedName",
+      "ObjectClass",
+      "QueryServer",
+      "Observation"
+    ]
+  },
+  "BackupEvidence": {
+    "file": "backupevidence.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Source",
+      "Status",
+      "ExitCode",
+      "TimedOut",
+      "Partition",
+      "LastBackupUtc",
+      "AgeDays",
+      "Observation",
+      "RawText",
+      "SourceFile"
+    ]
+  },
+  "HostHardware": {
+    "file": "hosthardware.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Manufacturer",
+      "Model",
+      "LogicalProcessors",
+      "PhysicalCores",
+      "Sockets",
+      "PhysicalMemoryBytes",
+      "OSBuild",
+      "UBR",
+      "InstallDateUtc",
+      "BIOSVersion",
+      "BIOSReleaseUtc",
+      "Observation"
+    ]
+  },
+  "InstalledSoftware": {
+    "file": "installedsoftware.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "RegistryView",
+      "ProductKey",
+      "DisplayName",
+      "DisplayVersion",
+      "Publisher",
+      "InstallDateRaw",
+      "InstallLocation",
+      "Observation"
+    ]
+  },
+  "Hotfixes": {
+    "file": "hotfixes.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "HotfixId",
+      "Description",
+      "InstalledOnRaw",
+      "InstalledUtc",
+      "InstalledBy",
+      "Observation"
+    ]
+  },
+  "HostSecurity": {
+    "file": "hostsecurity.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Component",
+      "Setting",
+      "Value",
+      "Observation",
+      "Source"
+    ]
+  },
+  "RegistryEvidence": {
+    "file": "registryevidence.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "RuleId",
+      "RegistryPath",
+      "ValueName",
+      "ValueKind",
+      "Value",
+      "Observation",
+      "Error"
+    ]
+  },
+  "SecurityReview": {
+    "file": "securityreview.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "RuleId",
+      "Title",
+      "Profile",
+      "Expected",
+      "Observed",
+      "Comparison",
+      "Status",
+      "OSBuild",
+      "Reference",
+      "Observation"
+    ]
+  },
+  "RSoPSettings": {
+    "file": "rsopsettings.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Area",
+      "SettingPath",
+      "Value",
+      "Attributes",
+      "SourceFile"
+    ]
+  },
+  "UserRightsAssignments": {
+    "file": "userrightsassignments.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Right",
+      "PrincipalSID",
+      "PrincipalName",
+      "SourceGpo",
+      "Observation",
+      "SourceFile"
+    ]
+  },
+  "SecurityEvents": {
+    "file": "securityevents.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "LogName",
+      "TimeCreatedUtc",
+      "EventId",
+      "Level",
+      "Provider",
+      "RecordId",
+      "Message",
+      "MessageStatus",
+      "EventDataJson",
+      "Interpretation"
+    ]
+  },
+  "LogConfiguration": {
+    "file": "logconfiguration.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "LogName",
+      "Enabled",
+      "MaximumBytes",
+      "LogMode",
+      "RecordCount",
+      "OldestRecordNumber",
+      "LastWriteUtc",
+      "Observation"
+    ]
+  },
+  "AuditPolicy": {
+    "file": "auditpolicy.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "SubcategoryGuid",
+      "Value",
+      "SourceFile",
+      "Observation"
+    ]
+  },
+  "AssessmentSources": {
+    "file": "assessmentsources.csv",
+    "fields": [
+      "Id",
+      "Topic",
+      "Reference",
+      "AccessedDate",
+      "Usage",
+      "Limitations"
+    ]
   }
 }

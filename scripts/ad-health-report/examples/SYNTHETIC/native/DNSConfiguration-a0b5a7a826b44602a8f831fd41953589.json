@@ -1,0 +1,25 @@
+{
+  "ServerForwarder": {
+    "IPAddress": [
+      "192.0.2.53"
+    ],
+    "UseRootHint": true
+  },
+  "ServerRecursion": {
+    "Enable": true
+  },
+  "ServerScavenging": {
+    "ScavengingState": false
+  },
+  "ServerRootHint": {
+    "NameServer": [
+      {
+        "RecordType": "NS",
+        "HostName": ".",
+        "RecordData": {
+          "NameServer": "a.root-servers.net."
+        }
+      }
+    ]
+  }
+}

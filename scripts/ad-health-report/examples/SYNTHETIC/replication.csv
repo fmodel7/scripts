@@ -1,2 +1,3 @@
 ﻿"Domain","DC","Partition","Partner","LastReplicationAttemptUtc","LastReplicationSuccessUtc","LastReplicationResult","ConsecutiveReplicationFailures"
-"example.test","dc1.example.test","DC=example,DC=test","CN=SYNTHETIC-PARTNER","2026-11-13T16:46:36.0779370Z","2026-11-13T16:41:36.0779380Z","0","0"
+"child.example.test","dc1.child.example.test","DC=example,DC=test","CN=SYNTHETIC-PARTNER","11/13/2026 20:05:51","11/13/2026 20:00:51","0","0"
+"example.test","dc1.example.test","DC=example,DC=test","CN=SYNTHETIC-PARTNER","11/13/2026 20:05:52","11/13/2026 20:00:52","0","0"

@@ -1,34 +1,44 @@
 {
-  "version": "1.1.0",
-  "review_date": "2026-11-13",
-  "source_commit": "c8d0f20c276ee82abce9e16f5575c9a6221db55a",
-  "source_sha256": {
-    "Export-ADHealthReport.ps1": "d2376031cf67dbae89a2ed6773e1b4359c8e25008ad22c4169885810eec56b9e",
+  "Version": "1.2.0",
+  "SourceCommit": "7d037054f9917e465610c4ba845d14376323fd0d",
+  "SourceWorkflow": "https://github.com/fmodel7/scripts/actions/runs/43498148487",
+  "SourceWorkflowConclusion": "success",
+  "SourceHashes": {
+    "Export-ADHealthReport.ps1": "163435cf59730dd218b8478d77556777aba029f70ef50df589fabb8d290ebf2d",
     "tests/Test-AdHealth.ps1": "1d17e9cdb372c0b24ad89325a717ea6c3bd3505151937db391047c449b4e749e",
-    "tests/Test-AdOperations.ps1": "9ff2c07a2b17872b1900023e902c2f17419467a3ee8eeffc91d08da41b59994c"
+    "tests/Test-AdOperations.ps1": "fe7ef9d0c00f74c3be4604b77a16a9b096d2e095bd7c30a3d182ef6f91ea4dc0",
+    "tests/Test-AdExtensions.ps1": "933418fbcb715647005506386b7ed3c40e5760fc4c3a23246d64886af5a3f879"
   },
-  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/43465971682",
-  "ci_status": "success",
-  "ci_platforms": [
-    {
-      "runtime": "Windows PowerShell 5.1",
-      "regression_assertions": 985,
-      "operational_assertions": 353
+  "Validation": {
+    "WindowsPowerShell51": {
+      "RegressionAssertions": 1843,
+      "OperationalAssertions": 650,
+      "ComprehensiveAssertions": 699,
+      "SyntheticWorkflows": 36
     },
-    {
-      "runtime": "PowerShell 7 Windows",
-      "regression_assertions": 981,
-      "operational_assertions": 353
+    "PowerShell7Windows": {
+      "RegressionAssertions": 1839,
+      "OperationalAssertions": 650,
+      "ComprehensiveAssertions": 699,
+      "SyntheticWorkflows": 36
     },
-    {
-      "runtime": "PowerShell 7 Linux",
-      "regression_assertions": 985,
-      "operational_assertions": 353
+    "PowerShell7Linux": {
+      "RegressionAssertions": 1843,
+      "OperationalAssertions": 650,
+      "ComprehensiveAssertions": 699,
+      "SyntheticWorkflows": 36
     }
-  ],
-  "synthetic_workflows_per_environment": 25,
-  "operational_runtime": "64-bit Windows PowerShell 5.1 and RSAT",
-  "real_AD_DNS_CIM_RPC_W32Time_dcdiag_tested": false,
-  "real_directory_or_clock_changed": false,
-  "browser_renderer_tested_with_synthetic_data": true
+  },
+  "CsvDatasets": 63,
+  "RealADQueried": false,
+  "RealRemotingSessionTested": false,
+  "RealDCDiagOrRepadminTested": false,
+  "ProductionValidated": false,
+  "Limits": [
+    "GroupPolicy/DnsServer/remoting adapters are synthetic; installed module and permission acceptance remains a lab task.",
+    "Remote worker statically reviewed, not executed against real DCs.",
+    "Selected guidance review is not full SCT/CIS compliance.",
+    "Backup/QFE/configuration evidence is not restore, patch or security certification.",
+    "Actual coverage is defined by scope, permissions and configured limits."
+  ]
 }

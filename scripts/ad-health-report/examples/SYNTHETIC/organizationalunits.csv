@@ -1,2 +1,3 @@
 ﻿"Domain","Name","DistinguishedName","ParentDN","ProtectedFromAccidentalDeletion","CreatedUtc","ChangedUtc"
-"example.test","SYNTHETIC-OU","OU=SYNTHETIC-OU,DC=example,DC=test","DC=example,DC=test","True","2025-11-13T16:46:35.9630646Z","2026-11-13T16:46:35.9643453Z"
+"child.example.test","SYNTHETIC-OU","OU=SYNTHETIC-OU,DC=child,DC=example,DC=test","DC=child,DC=example,DC=test","True","11/13/2025 20:05:51","11/13/2026 20:05:51"
+"example.test","SYNTHETIC-OU","OU=SYNTHETIC-OU,DC=example,DC=test","DC=example,DC=test","True","11/13/2025 20:05:52","11/13/2026 20:05:52"

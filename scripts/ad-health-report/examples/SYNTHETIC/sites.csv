@@ -1,0 +1,2 @@
+﻿"Forest","Name","DistinguishedName","Description","Subnets","InterSiteTopologyGenerator"
+"example.test","SYNTHETIC-SITE","CN=Synthetic,CN=Sites,CN=Configuration,DC=example,DC=test","","192.0.2.0/24",""

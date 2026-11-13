@@ -1,0 +1,4 @@
+﻿"Partition","Name","DistinguishedName","ObjectClass","QueryServer","Observation"
+"DC=DomainDnsZones,DC=child,DC=example,DC=test","SYNTHETIC..InProgress","DC=SYNTHETIC..InProgress,DC=DomainDnsZones,DC=child,DC=example,DC=test","dnsZone","dc1.child.example.test","NameIndicatorReviewRequired"
+"DC=DomainDnsZones,DC=example,DC=test","SYNTHETIC..InProgress","DC=SYNTHETIC..InProgress,DC=DomainDnsZones,DC=example,DC=test","dnsZone","dc1.example.test","NameIndicatorReviewRequired"
+"DC=ForestDnsZones,DC=example,DC=test","SYNTHETIC..InProgress","DC=SYNTHETIC..InProgress,DC=ForestDnsZones,DC=example,DC=test","dnsZone","dc1.example.test","NameIndicatorReviewRequired"

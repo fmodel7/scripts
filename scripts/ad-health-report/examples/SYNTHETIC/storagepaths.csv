@@ -3,3 +3,7 @@
 "example.test","dc1.example.test","NTDSDatabase","C:\ADData\NTDS\ntds.dit","Observed","C:\ADData\",""
 "example.test","dc1.example.test","NTDSLogs","C:\ADData\Logs","Observed","C:\ADData\",""
 "example.test","dc1.example.test","SYSVOL","C:\Windows\SYSVOL\sysvol","Observed","C:\",""
+"child.example.test","dc1.child.example.test","OS","C:\","Observed","C:\",""
+"child.example.test","dc1.child.example.test","NTDSDatabase","C:\ADData\NTDS\ntds.dit","Observed","C:\ADData\",""
+"child.example.test","dc1.child.example.test","NTDSLogs","C:\ADData\Logs","Observed","C:\ADData\",""
+"child.example.test","dc1.child.example.test","SYSVOL","C:\Windows\SYSVOL\sysvol","Observed","C:\",""

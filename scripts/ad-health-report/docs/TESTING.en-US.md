@@ -1,37 +1,52 @@
-# Validation and acceptance — AD Health Report 1.1.0
+# Validation — AD Health Report 1.2.0
 
-Validated source: c8d0f20c276ee82abce9e16f5575c9a6221db55a. [GitHub Actions](https://github.com/fmodel7/scripts/actions/runs/43465971682). Windows PowerShell 5.1 and PowerShell 7/Linux each passed 985 assertions; PowerShell 7/Windows passed 981. All ran 15 full synthetic workflows. Four native-runner checks use a harmless C# executable on 5.1 and shell on Linux; these are skipped on 7/Windows. No actual dcdiag was executed.
+FMODEL · F. Model · fmodel@fmodel.com.br
 
-```powershell
-powershell.exe -NoProfile -File .	ests\Test-AdHealth.ps1
-```
+Operational source passed [CI](https://github.com/fmodel7/scripts/actions/runs/43498148487), commit `7d037054f9917e465610c4ba845d14376323fd0d`. Delivered operational files match it. EVIDENCE.json/MANIFEST-SHA256.txt record hashes.
 
-pwsh also runs the suite, but the operational entry requires 64-bit Windows PowerShell 5.1/RSAT. Tests extract functions through AST, replace AD/CIM/native adapters and create temporary files. They neither run the operational entry nor contact a domain. Do not dot-source tests in an active administration session.
+| Runtime | Regression | Operational | Comprehensive | End-to-end scenarios |
+|---|---|---|---|---|
+| Windows PowerShell 5.1 | 1843 | 650 | 699 | 36 |
+| PowerShell 7 Windows | 1839 | 650 | 699 | 36 |
+| PowerShell 7 Linux | 1843 | 650 | 699 | 36 |
 
-Fifteen workflows cover default/no-findings collection, denied user reads, deliberate skips, complete/partial forests, optional diagnostics, CIM failure, native timeout/error, unavailable schema, missing privileged group, replication findings, WhatIf and bootstrap failure. Other checks cover dates, schema, unknown OS, escaped-comma DNs, CSV Unicode/formulas/quotes/newlines, empty headers, HTML cap, malicious data, CSP and file manifests. The JSON verifier was corrected for PowerShell 5.1's array-enumeration difference.
+Test columns are assertions. Four harmless native helper checks are omitted under PowerShell 7 Windows. There are 36 scenarios per runtime, not real DC assessments or compliance certification.
 
-Chromium/Playwright exercised the renderer with fictional data at 1440px and 390px widths: search, navigation, expansion, caps, encoding and no external requests/JavaScript errors. See RENDERER-TESTS.json. The renderer volume test reuses references to one synthetic row, not real forest/LDAP collection; it is not a production-scale benchmark.
-
-## Limits and acceptance
-
-No real AD query, remote CIM or dcdiag ran. RSAT integration, permissions, topology, current replication and production scale remain unverified. CI artifacts retain runtime/hash/logs for 30 days. EVIDENCE.json preserves source identity and limitations.
-
-1. Use an authorized lab/account and review Domain scope before Forest.
-2. Compare samples with AD consoles/Microsoft queries, including null/zero and direct groups.
-3. Test denied permissions/unavailable domains: expect Partial/errors rather than complete inventory.
-4. Inspect CSV/JSON, encoding, hashes, HTML cap and sensitive data.
-5. Approve rights/load before CIM/dcdiag and review native output in the local OS language.
-6. Measure runtime/RAM at representative scale; PageSize does not cap object count or JSON memory.
-7. Record technical acceptance. Findings need human review and authorize no automatic remediation.
-
-[Manual](MANUAL.en-US.md) · [Evidence](EVIDENCE.json)
-
-## Operational suite 1.1
+## Run without a domain
 
 ```powershell
-powershell.exe -NoProfile -File .	ests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
 ```
 
-353 assertions and 10 additional operational workflows per environment. Combined with regression: 25 scenarios, 1338 assertions on Windows PowerShell 5.1/Linux or 1334 on PowerShell 7/Windows. Covers FullAssessment, thresholds, blocked ICMP without gating, boot/memory, mounts/denied registry, hidden volumes, negative offsets/unknown parsing, empty/capped/denied events, dashboard and real durations. Network/AD/CIM/event/time adapters are synthetic; no live remote call occurred.
+pwsh also works. Suites load functions through AST without the operational entry. No domain/RSAT/elevation required. Synthetic adapters replace AD, DNS, CIM/remoting, GPO, events and diagnostics. Local files and harmless helper processes exercise local boundaries.
 
-Additional acceptance: review actual NTDS/SYSVOL volume mapping, compare time samples with an approved reference, verify collector clock, test CIM/registry/Event Log rights and event caps/load. Browser checks used a full fictional 30-CSV example, recorded in RENDERER-TESTS.json.
+## Coverage
+
+- Inventory, domain/forest discovery, SIDs, skips, missing attributes, replication, findings and exit codes.
+- ICMP does not gate collectors; DNS, volumes/mount points/NTDS, memory/boot, signed offsets, bounded events and coverage/errors.
+- UAC, distinct-owner SPN/UPN duplicates across two domains, denied/mismatched GPOs, nonzero-version empty extension data, links/flags, RSoP/rights by SID.
+- DNS administration, host/software/QFE, backup evidence and registry value comparison; unknown/missing data does not become success.
+- Namespaced/repeated XML, prohibited DTD/XXE, malformed/oversized XML and normalization caps.
+- SYSVOL traversal uses synthetic local files, not a share. Job ownership/cleanup uses adapters without stopping unrelated jobs.
+- Windows PowerShell 5.1 JSON arrays, offline render, allowed dataset/path names, manifest evidence copying, changed hashes and adjacent ZIP output.
+- All 63 CSVs, formula neutralization, UTF-8, JSON and HTML encoding of markup-bearing names/messages.
+
+Actual GroupPolicy/DnsServer modules and remoting endpoints were not accessed. Remote worker was statically reviewed without a live session. Tests do not establish installed module/permission compatibility in your infrastructure.
+
+## HTML and package
+
+SYNTHETIC includes fictional data in 63 tables across two domains/DCs. Browser checks search, expansion, CSV links, encoding, no external requests/dialogs/JavaScript errors and mobile layout; see RENDERER-TESTS.json. Local links, PDF, recursive manifest and ZIP contents are checked during packaging.
+
+## Authorized lab acceptance
+
+1. Verify Windows PowerShell 5.1 x64, required modules and approved read account; begin with default inventory.
+2. Test individual options and ADWS/LDAP, SMB, WSMan/remoting, event/RPC and DNS rights/connectivity. The tool enables none of them.
+3. Compare ADUC/ADAC, GPMC, Event Viewer, DNS and backup samples; verify selected domain/DC, source and timestamps.
+4. Exercise multiple domains, RODC/separate DNS if available, localized servers, denied access and an unavailable collector; verify partial results.
+5. Select the approved OS/role baseline; exercise differing, absent and unexpected-type values. Supplied profile is partial, not complete SCT.
+6. Adjust limits and inspect Coverage/GPOCoverage/DirectoryCoverage/EventLogCoverage, durations and truncation.
+7. Open HTML/CSV, verify hashes, render offline and create ZIP. Restrict real data access and do not publish it on GitHub.
+
+No real AD was used. Production transport, permissions and installed module versions require lab acceptance.

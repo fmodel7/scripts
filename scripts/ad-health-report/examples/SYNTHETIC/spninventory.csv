@@ -1,0 +1,7 @@
+﻿"Domain","SPN","NormalizedSPN","OwnerName","OwnerClass","OwnerGuid","OwnerDN"
+"child.example.test","HTTP/shared.example.test","http/shared.example.test","SYNTHETIC-1","user","child.example.test-owner-1","CN=Synthetic-1,DC=child,DC=example,DC=test"
+"child.example.test","HTTP/shared.example.test","http/shared.example.test","SYNTHETIC-2","user","child.example.test-owner-2","CN=Synthetic-2,DC=child,DC=example,DC=test"
+"child.example.test","HTTP/shared.example.test","http/shared.example.test","SYNTHETIC-3","computer","child.example.test-owner-3","CN=Synthetic-3,DC=child,DC=example,DC=test"
+"example.test","HTTP/shared.example.test","http/shared.example.test","SYNTHETIC-1","user","example.test-owner-1","CN=Synthetic-1,DC=example,DC=test"
+"example.test","HTTP/shared.example.test","http/shared.example.test","SYNTHETIC-2","user","example.test-owner-2","CN=Synthetic-2,DC=example,DC=test"
+"example.test","HTTP/shared.example.test","http/shared.example.test","SYNTHETIC-3","computer","example.test-owner-3","CN=Synthetic-3,DC=example,DC=test"

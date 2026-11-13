@@ -1,0 +1,2 @@
+﻿"UserPrincipalName","OwnerCount","Domains","OwnerNames","OwnerGuids","OwnerDNs","AssessmentScope","Coverage"
+"DUPLICATE@example.test","4","child.example.test; example.test","SYNTHETIC-1; SYNTHETIC-1; SYNTHETIC-2; SYNTHETIC-2","child.example.test-owner-1; example.test-owner-1; child.example.test-owner-2; example.test-owner-2","CN=Synthetic-1,DC=child,DC=example,DC=test; CN=Synthetic-1,DC=example,DC=test; CN=Synthetic-2,DC=child,DC=example,DC=test; CN=Synthetic-2,DC=example,DC=test","Forest","SelectedScopeOnly"

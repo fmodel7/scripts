@@ -1,8 +1,8 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "result": "PASS",
-  "data": "full synthetic operational report, not a real AD",
-  "csv_links": 30,
+  "data": "comprehensive synthetic report with 63 datasets; no real AD",
+  "csv_links": 63,
   "search": true,
   "expand": true,
   "mobile_body_overflow": false,

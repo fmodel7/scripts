@@ -7,7 +7,7 @@ Public library for scripts, automation and practical documentation. **Windows Ti
 
 **DHCP export/import:** [DHCP Transfer 1.0.0](scripts/dhcp-transfer/README.en-US.md) provides standalone scripts, guarded import, backups, HTML reports and individual PT-BR/EN-US guides. Real operations require Windows PowerShell 5.1; offline tests also run on PowerShell 7.
 
-**Active Directory inventory/review:** [AD Health Report 1.1.0](scripts/ad-health-report/README.en-US.md) combines read-only directory and DC operational collection, offline searchable HTML, 30 CSVs, JSON, coverage/errors and review recommendations. Includes a fictional example and PT-BR/EN-US manuals; no automatic remediation or health/compliance certification.
+**Active Directory inventory/review:** [AD Health Report 1.2.0](scripts/ad-health-report/README.en-US.md) adds comprehensive AD/GPO/RSoP, identifiers, host/security, DNS/SYSVOL and backup evidence, offline HTML, 63 CSVs/JSON and optional ZIP. Includes a fictional example, Microsoft references and full PT-BR/EN-US manuals; coverage and unknown data remain explicit.
 
 [Português](README.md) · [Deutsch](README.de-DE.md) · [Catalog](scripts/README.md)
 
