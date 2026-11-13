@@ -1,5 +1,11 @@
 # Histórico
 
+## 2026-11-13 — Windows Time 2.0.0
+
+- Substitui a ferramenta NTP modular por PS1 independentes de PDC e DOMHIER, com fontes embutidas, confirmação, backup e HTML.
+- Reescreve documentação PT-BR/EN-US, PDFs e pacote; a versão 1.0.0 permanece no histórico. Sem parâmetros passa a aplicar após confirmação: use -WhatIf para simular.
+- Offline CI: 151 verificações e 19 fluxos por ambiente, em Windows PowerShell 5.1 e PowerShell 7 Windows/Linux. Sem teste de aplicação em PDC real.
+
 ## SNOW Edge Monitor 1.0.0 (fontes) — 13/11/2026
 
 - Adicionada a aplicação Python na pasta `snow-edge-monitor`, conforme destino escolhido pelo proprietário.
@@ -22,5 +28,6 @@
 - Modelos PowerShell PT-BR/EN-US/de-DE e orientações para iniciantes.
 - Nenhum script privado, credencial ou dado real importado.
 - Nenhum script executável publicado nesta etapa.
+
 
 

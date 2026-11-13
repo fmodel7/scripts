@@ -1,91 +1,76 @@
-# Configure NTP PDC — FMODEL
+# FMODEL Windows Time 2.0.0
 
-**Versão 1.0.0 · PowerShell 5.1 e 7 · Windows 64 bits**  
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
-F. Model · revisão com assistência de Akira (ChatGPT) · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br)
+F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Akira (ChatGPT)
 
-[English](README.en-US.md) · [Manual completo PT-BR](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf) · [Alterações da revisão](docs/REVIEW.pt-BR.md)
+**Dois scripts independentes para o horário do Windows.** Windows Server 2016+ · Windows PowerShell 5.1 / PowerShell 7 · 64 bits.
 
-Consulta e configura o Windows Time (W32Time) **somente no PDC Emulator atual do domínio raiz da floresta** para o modo de fontes NTP manuais aprovadas. Os demais DCs e membros normalmente seguem a hierarquia do Active Directory.
+[Português](README.md) · [English](README.en-US.md) · [Manual](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf)
 
-**O padrão é consulta:** executar sem `-Apply` não altera W32Time, serviço ou relógio. Grava relatórios locais. Não existe servidor NTP escolhido automaticamente. Alterar a fonte de horário de um DC pode afetar a autenticação e aplicações; faça a aplicação real no ambiente e janela autorizados.
+## Escolha o script
 
-## 1. Baixar a ferramenta completa
+| Arquivo | Onde executar | Guia próprio |
+|---|---|---|
+| Configure-NTP-PDC.ps1 | PDC Emulator do domínio raiz da floresta | [PDC](docs/PDC.pt-BR.md) |
+| Configure-Time-DOMHIER.ps1 | Demais servidores do domínio, inclusive DCs de domínios filhos | [DOMHIER](docs/DOMHIER.pt-BR.md) |
 
-[Baixar ZIP v1.0.0](Configure-NTP-PDC-v1.0.0.zip?raw=true). No GitHub, abra o arquivo e clique em **Download raw file**. Extraia tudo.
+**Cada PS1 funciona sozinho.** O do PDC já contém os quatro nomes NTP do arquivo original. O de DOMHIER descobre fontes pela hierarquia AD, sem fixar endereço do PDC.
 
-Alternativa: na página [Scripts FMODEL](https://github.com/fmodel7/scripts), **Code → Download ZIP → Extrair Tudo**, depois abra `scripts/configure-ntp-pdc`.
+## Baixar
 
-Baixe o PS1 **e** a pasta `src`. Não execute `tests/Mock-Adapters.ps1` por dot-sourcing em uma sessão de trabalho: os testes usam comandos falsos e processos separados.
+[Baixar pacote Windows-Time-v2.0.0.zip](Windows-Time-v2.0.0.zip?raw=true). Se abrir a página do arquivo, clique em **Download raw file**. Depois escolha **Extrair Tudo**.
 
-## 2. Testar sem tocar no domínio
+Alternativa: na página principal do repositório, **Code → Download ZIP → Extrair Tudo → scripts/configure-ntp-pdc**. Não precisa instalar Git nem PowerShell 7: o Windows PowerShell 5.1 de 64 bits também é suportado.
 
-Estes testes não exigem elevação nem um domínio. Substituem alterações por operações sintéticas. Em Windows, a suíte do núcleo também faz leituras locais de Registro/CIM e exibe a ajuda real do w32tm, sem configurar o serviço.
+## Simular primeiro
 
-No PowerShell 7, dentro da pasta da ferramenta, execute cada linha separadamente:
+Abra PowerShell ou VSCode **como Administrador**, abra a pasta extraída e execute somente o comando correspondente ao alvo:
 
 ```powershell
-pwsh -NoProfile -File .\tests\Test-Core.ps1
-pwsh -NoProfile -File .\tests\Test-Workflow.ps1
-pwsh -NoProfile -File .\tests\Test-EntryPoint.ps1
+# No PDC raiz:
+.\Configure-NTP-PDC.ps1 -WhatIf
+
+# Em outro servidor do domínio:
+.\Configure-Time-DOMHIER.ps1 -WhatIf
 ```
 
-No Windows PowerShell 5.1, use `powershell.exe` no lugar de `pwsh`. Espere `PASS`. Os testes no Linux validam funções/fluxos simulados; **a ferramenta real é para Windows**.
+A simulação faz consultas AD/DNS/Registro/serviço, mas não altera o W32Time nem cria relatórios. Ela não comprova conectividade NTP ou sucesso futuro das alterações.
 
-Para ver o relatório sem executar PowerShell, abra [exemplo fictício PT-BR](examples/Report-SYNTHETIC.pt-BR.html) após baixá-lo. Não é evidência de um DC real.
+## Aplicar
 
-## 3. Consultar o servidor — caminho inicial
-
-No servidor Windows, abra **PowerShell como Administrador**. Também pode usar o VSCode elevado, com terminal PowerShell e a pasta da ferramenta aberta.
+No servidor correto e em janela autorizada, remova -WhatIf:
 
 ```powershell
-Get-Location
-Get-ChildItem
+# Escolha apenas UM, de acordo com o alvo:
 .\Configure-NTP-PDC.ps1
+.\Configure-Time-DOMHIER.ps1
 ```
 
-Se já estiver nessa pasta, não repita `cd configure-ntp-pdc`. O resultado mostra `RunFolder` e o caminho do HTML. O padrão de saída é `%LOCALAPPDATA%\FMODEL\NtpPdc\Run-...` da conta que executou o processo.
+**Haverá confirmação antes de aplicar.** A execução real pode ajustar o relógio via W32Time. O PDC raiz aceita somente o primeiro script e é bloqueado pelo segundo. Uma chave de política W32Time presente bloqueia ambos: revise a GPO.
 
-Abra `Report.pt-BR.html`. Confira o domínio, PDC raiz, serviço, política e dados anteriores. `AuditCompleted` significa que a consulta terminou, **não que o horário ou o alvo estejam aprovados para alteração**.
+No início do primeiro arquivo, o bloco NtpServers contém a.st1.ntp.br, c.st1.ntp.br, d.st1.ntp.br e e.st1.ntp.br. Revise fontes aprovadas pela empresa antes de aplicar. Não são endereços obrigatórios Microsoft nem tiveram disponibilidade atual verificada. Use nomes, sem IPs, URLs ou flags.
 
-## 4. Planejar e simular
+## Ver o resultado
 
-Defina fontes aprovadas para sua organização. Podem ser appliances internos confiáveis ou serviços externos autorizados. Não escolha servidores públicos apenas por estarem em um exemplo.
+Abra o caminho Report.html exibido no console. A pasta fica no LocalApplicationData da conta elevada, em FMODEL/WindowsTime/Run-.... Inclui backup do Registro, relatório HTML/JSON e diário das alterações tentadas. Não publique esses arquivos reais.
 
-Os nomes abaixo vêm do script recebido, **não são defaults nem foram consultados por nós**. Verifique disponibilidade, uso permitido, localização, latência e adequação antes de utilizá-los:
+Configured confirma configuração local, aceitação do pedido de ressync e retorno das consultas. **Não certifica sincronismo, precisão ou saúde de toda a floresta.** ConfiguredNeedsReview exige análise; FailedAfterMutationPossible pode indicar aplicação parcial. Não há rollback automático, e backup não desfaz ajuste de relógio.
+
+## Testar sem domínio ou alterações reais
 
 ```powershell
-$peers = @('a.st1.ntp.br', 'c.st1.ntp.br', 'd.st1.ntp.br', 'e.st1.ntp.br')
-.\Configure-NTP-PDC.ps1 -NtpServers $peers -Apply -WhatIf
+powershell.exe -NoProfile -File .	ests\Test-WindowsTime.ps1
 ```
 
-Informe apenas nomes/IPs; **não acrescente `,0x8`**. A ferramenta monta as flags. A simulação ainda faz consultas AD/DNS e grava relatórios, mas não exporta o backup `.reg`, não muda Registro e não reinicia/sincroniza o serviço.
+No PowerShell 7, troque powershell.exe por pwsh. Pode usar estação comum/VSCode, sem elevação. Aguarde mais de 30 segundos; a suíte testa o timeout de um processo filho inofensivo.
 
-Se houver política W32Time, o alvo não for o PDC raiz ou outra pré-condição falhar, a aplicação é bloqueada — inclusive na simulação. Não há opção para ignorar esses bloqueios.
+## Documentação
 
-## 5. Aplicar de verdade
+- [Manual completo](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf).
+- [Guia PDC](docs/PDC.pt-BR.md) · [Guia DOMHIER](docs/DOMHIER.pt-BR.md).
+- [Validação e aceite](docs/TESTING.pt-BR.md) · [Funções internas](docs/INTERNALS.pt-BR.md).
+- [Histórico e migração](CHANGELOG.md) · [Evidências](docs/EVIDENCE.json).
 
-**Só após revisar o relatório e as fontes aprovadas**, na mesma pasta e sessão elevada:
+**Mudança de comportamento:** substitui 1.0.0 na mesma pasta. Sem parâmetros agora aplica após confirmação; não existe -Apply. Use -WhatIf para não aplicar. Os antigos arquivos auxiliares não são necessários.
 
-```powershell
-.\Configure-NTP-PDC.ps1 -NtpServers $peers -Apply
-```
-
-A confirmação informa o alvo e a operação. Após aprová-la, o script revalida o alvo/política, salva backup, configura peers, provedores e anúncio, reinicia/inicia W32Time e solicita ressincronização. **Não há rollback automático; backup de Registro não desfaz o ajuste do relógio.**
-
-Quando aprovado pela rotina de automação, `-Confirm:$false` dispensa a pergunta do PowerShell; não elimina os demais controles. Não use para simplesmente evitar a revisão.
-
-## 6. Entender o resultado
-
-| Estado | Significado |
-|---|---|
-| `AuditCompleted` | Consulta finalizada; não aplicou configuração. |
-| `WhatIf` / `Declined` | Aplicação simulada ou recusada; W32Time não foi alterado. |
-| `AppliedVerified` | Configuração local e evidência de status atenderam aos critérios implementados. Não comprova precisão, autenticação do NTP ou sincronização de toda a floresta. |
-| `AppliedNeedsReview` | Houve aplicação, mas nem todos os critérios foram confirmados. Não tratar como sucesso de sincronização. |
-| `Blocked` | Nenhuma mutação W32Time foi iniciada pelo fluxo. Relatórios/backup podem ter sido criados. |
-| `FailedAfterMutationPossible` | Uma alteração foi tentada; pode haver mudança parcial. Conferir diário, estado atual e backup antes de repetir. |
-
-Saídas: HTML PT-BR/EN-US, JSON técnico, snapshot anterior, diagnósticos brutos, diário de ações e, em Apply aprovado, exportação anterior do Registro. Esses arquivos podem conter nomes internos, IPs e identidade do operador; não os publique no Git.
-
-**Validação:** testes automatizados em Windows PowerShell 5.1, PowerShell 7 em Windows e mocks no Linux. Nenhum PDC real foi configurado durante o desenvolvimento. Veja [evidências](docs/EVIDENCE.json), [CI](https://github.com/fmodel7/scripts/actions/runs/40010481878), [manual detalhado](docs/MANUAL.pt-BR.md) e [aceitação no ambiente](docs/ACCEPTANCE.pt-BR.md).
+[CI](https://github.com/fmodel7/scripts/actions/runs/43437702532): 151 assertions / 19 simulated workflows per environment: Windows PowerShell 5.1, PowerShell 7 Windows and Linux mocks. No real PDC or clock was changed.

@@ -1,16 +1,18 @@
 # Histórico / Changelog
 
-## 1.0.0 — 2026-10-23
+## 2.0.0 — 2026-11-13
 
-Primeira publicação revisada do Configure-NTP-PDC, originalmente sem número de versão.
+- Dois PS1 independentes: PDC raiz com fontes embutidas e demais servidores com DOMHIER.
+- Two standalone PS1 files: root PDC with embedded sources and other servers using DOMHIER.
+- Sem parâmetros aplica após confirmação; -WhatIf faz pré-validação sem gravar arquivos. No -Apply or other custom parameters.
+- Backup, journal, mutex local, verificação de configuração, timeout e relatório HTML/JSON.
+- Manuais PT-BR/EN-US reescritos, PDFs, guias individuais e suíte offline nova.
+- Política de saída: Configured não certifica sincronismo / does not certify synchronization.
 
-- Audit padrão; Apply explícito com ShouldProcess/WhatIf.
-- Identificação do PDC do domínio raiz pelo contexto do computador e revalidações.
-- Guardas de política, serviço, peer local, persistência e concorrência.
-- Peers configuráveis, client mode/fallback e AnnounceFlags automático por padrão.
-- Backup anterior, identidade do operador, diário e relatórios HTML PT-BR/EN-US/JSON.
-- Exit codes, timeouts, ausência de retry de mutações e critérios conservadores de evidência.
-- Testes de funções, 18 fluxos simulados, três entradas CLI isoladas e CI 5.1/7.
-- Nenhuma integração de VM, GPO, firewall, fuso ou limite de correção de fase alterado automaticamente.
+Breaking change: replace old flags and automation. Do not combine source files or test counts from 1.0.0 with this version. The former parser-based time-status verdict is no longer exposed; diagnostics require operator review.
 
-First reviewed publication of the originally unversioned script. Audit by default; guarded forest-root PDC application, explicit peers, backup/journal/operator identity, bilingual reports/manuals and offline tests. No real PDC changes were performed during development.
+## 1.0.0 — histórico preservado / preserved history
+
+[Código, manuais, PDFs e pacote anteriores / Previous code, manuals, PDFs and package](https://github.com/fmodel7/scripts/tree/14d2d2bdd1ba5986a4c4d741a34751b92a0a6b49/scripts/configure-ntp-pdc).
+
+The new package replaces old files on main; Git history is retained. O repositório privado Infratech não é alterado.
