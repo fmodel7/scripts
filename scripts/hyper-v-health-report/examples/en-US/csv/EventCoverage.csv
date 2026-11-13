@@ -1,0 +1,2 @@
+﻿"Host","LogName","StartUtc","EndUtc","Status","Rows","Truncated","Limit","Error"
+"HV-LAB02","Microsoft-Windows-Hyper-V-VMMS-Admin","2026-11-06T18:00:00Z","2026-11-13T18:00:00Z","Collected","1","False","200",""

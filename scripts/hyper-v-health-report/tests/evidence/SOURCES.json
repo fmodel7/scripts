@@ -1,0 +1,140 @@
+{
+  "reviewedUtc": "2026-11-13",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Hyper-V module",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v"
+    },
+    {
+      "id": "S02",
+      "title": "Hyper-V checkpoints",
+      "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/checkpoints"
+    },
+    {
+      "id": "S03",
+      "title": "Checkpoint and differencing disk troubleshooting",
+      "url": "https://learn.microsoft.com/en-us/troubleshoot/windows-server/virtualization/hyper-v-snapshots-checkpoints-differencing-disks"
+    },
+    {
+      "id": "S04",
+      "title": "Get-Volume",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/storage/get-volume?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S05",
+      "title": "Hyper-V memory performance",
+      "url": "https://learn.microsoft.com/en-us/windows-server/administration/performance-tuning/role/hyper-v-server/memory-performance"
+    },
+    {
+      "id": "S06",
+      "title": "Hyper-V Replica overview",
+      "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/replication-overview"
+    },
+    {
+      "id": "S07",
+      "title": "Get-VHD and in-use disk ownership",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v/get-vhd?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S08",
+      "title": "Hyper-V Virtual Switch",
+      "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/virtual-switch"
+    },
+    {
+      "id": "S09",
+      "title": "Plan for Hyper-V security",
+      "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/plan/plan-hyper-v-security-in-windows-server"
+    },
+    {
+      "id": "S10",
+      "title": "Windows Update RebootRequired API (not called by this script)",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-isysteminformation-get_rebootrequired"
+    },
+    {
+      "id": "S11",
+      "title": "Get-ClusterResource",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/failoverclusters/get-clusterresource?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S12",
+      "title": "Cluster Shared Volumes overview",
+      "url": "https://learn.microsoft.com/en-us/windows-server/failover-clustering/failover-cluster-csvs"
+    },
+    {
+      "id": "S13",
+      "title": "Detect and manage SMB versions",
+      "url": "https://learn.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+    },
+    {
+      "id": "S14",
+      "title": "Get-WinEvent",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent"
+    },
+    {
+      "id": "S15",
+      "title": "Hyper-V processor performance",
+      "url": "https://learn.microsoft.com/en-us/windows-server/administration/performance-tuning/role/hyper-v-server/processor-performance"
+    },
+    {
+      "id": "S16",
+      "title": "Manage Hyper-V integration services",
+      "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/manage/manage-hyper-v-integration-services"
+    },
+    {
+      "id": "S17",
+      "title": "Get-VMHostNumaNode",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v/get-vmhostnumanode?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S18",
+      "title": "Measure-VM and resource-metering requirements/units",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v/measure-vm?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S19",
+      "title": "PowerShell Remoting second hop",
+      "url": "https://learn.microsoft.com/en-us/powershell/scripting/security/remoting/ps-remoting-second-hop"
+    },
+    {
+      "id": "S20",
+      "title": "Get-BpaResult: reads an existing scan",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/bestpractices/get-bparesult?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S21",
+      "title": "Get-VMHostSupportedVersion",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v/get-vmhostsupportedversion?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S22",
+      "title": "Win32_DeviceGuard and VBS status",
+      "url": "https://learn.microsoft.com/en-us/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity"
+    },
+    {
+      "id": "S23",
+      "title": "Get-SmbConnection and logon context",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/smbshare/get-smbconnection?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S24",
+      "title": "PowerShell execution policies",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-5.1"
+    },
+    {
+      "id": "S25",
+      "title": "Get-VMSecurity",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v/get-vmsecurity?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S26",
+      "title": "Measure-VMReplication monitoring interval",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/hyper-v/measure-vmreplication?view=windowsserver2025-ps"
+    },
+    {
+      "id": "S27",
+      "title": "Replicate a virtual machine",
+      "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/replication-virtual-machines"
+    }
+  ]
+}

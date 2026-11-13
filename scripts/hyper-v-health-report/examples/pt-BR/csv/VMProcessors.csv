@@ -1,0 +1,1 @@
+﻿"Host","VMId","VMName","Count","Reserve","Maximum","RelativeWeight","CompatibilityForMigrationEnabled","CompatibilityForOlderOperatingSystemsEnabled","ExposeVirtualizationExtensions","HwThreadCountPerCore","MaximumCountPerNumaNode","MaximumCountPerNumaSocket","EnableHostResourceProtection"

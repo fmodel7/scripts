@@ -1,0 +1,3 @@
+﻿"Host","CollectedVMRows","RunningVMRows","LogicalProcessors","ConfiguredVcpu","RunningVcpu","RunningVcpuPerLogicalProcessor","AssignedMemoryBytes","ConfiguredStartupMemoryBytes","HostFreeMemoryPercent","OldCheckpointRows","WarningFindings","CriticalFindings","CollectionProblems","InventoryStatus","Observation"
+"HV-LAB01","1","1","32","4","4","0.12","8589934592","4294967296","25","0","0","0","0","Collected","Fotografia da coleta; totais podem mudar durante Live Migration. Zero linhas coletadas não prova ausência."
+"HV-LAB02","1","0","16","8","0","0","0","17179869184","6.25","1","3","2","0","Collected","Fotografia da coleta; totais podem mudar durante Live Migration. Zero linhas coletadas não prova ausência."

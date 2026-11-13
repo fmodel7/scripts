@@ -1,0 +1,2 @@
+﻿"Host","LogName","TimeCreatedUtc","EventId","Level","Provider","RecordId","Message"
+"HV-LAB02","Microsoft-Windows-Hyper-V-VMMS-Admin","2026-11-13T18:00:00Z","16060","2","Microsoft-Windows-Hyper-V-VMMS","1","Synthetic event for reading practice. Do not diagnose a real host from this example."

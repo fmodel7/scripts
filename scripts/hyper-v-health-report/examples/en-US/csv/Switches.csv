@@ -1,0 +1,2 @@
+﻿"Host","Name","Id","SwitchType","NetAdapterInterfaceDescription","AllowManagementOS","EmbeddedTeamingEnabled","IovEnabled","IovSupport","BandwidthReservationMode"
+"HV-LAB01","Production SET","","External","","True","True","False","",""

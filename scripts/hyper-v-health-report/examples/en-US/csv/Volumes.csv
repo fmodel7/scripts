@@ -1,0 +1,3 @@
+﻿"Host","Path","UniqueId","DriveLetter","FileSystemLabel","FileSystemType","HealthStatus","OperationalStatus","DriveType","SizeBytes","FreeBytes","FreePercent"
+"HV-LAB01","\\?\Volume{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}\","LAB-VOL1","C","OS","ReFS","Healthy","OK","Fixed","1099511627776","429496729600","39.06"
+"HV-LAB02","\\?\Volume{bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb}\","LAB-VOL2","D","VM data","ReFS","Healthy","OK","Fixed","1099511627776","42949672960","3.91"

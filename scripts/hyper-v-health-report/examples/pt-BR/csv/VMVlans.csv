@@ -1,0 +1,2 @@
+﻿"Host","VMId","VMName","AdapterName","OperationMode","AccessVlanId","NativeVlanId","AllowedVlanIdList","PrimaryVlanId","SecondaryVlanId","SecondaryVlanIdList"
+"HV-LAB01","11111111-1111-4111-8111-111111111111","APP-LAB01","Network Adapter","Access","120","","","","",""

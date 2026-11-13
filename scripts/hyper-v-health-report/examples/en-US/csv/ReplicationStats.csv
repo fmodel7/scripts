@@ -1,0 +1,1 @@
+﻿"Host","VMId","VMName","ReplicationHealth","ReplicationState","LastReplicationTime","LastApplyTime","AverageReplicationLatency","AverageReplicationSize","PendingReplicationSize","MissedReplicationCount","SuccessfulReplicationCount","MonitoringStartTime","MonitoringInterval"

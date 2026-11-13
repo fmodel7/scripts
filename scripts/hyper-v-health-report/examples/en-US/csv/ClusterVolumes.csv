@@ -1,0 +1,2 @@
+﻿"Host","Name","OwnerNode","State","Path","PartitionName","FileSystem","SizeBytes","FreeBytes","FreePercent","RedirectedAccess","FaultState"
+"HV-LAB01","Cluster Disk 1","HV-LAB01","Online","C:\ClusterStorage\Volume1","\\?\Volume{cccccccc-cccc-cccc-cccc-cccccccccccc}\","ReFS","2199023255552","1099511627776","50","False","NoFaults"

@@ -1,0 +1,2 @@
+﻿"Host","VMId","VMName","State","Health","Mode","RelationshipType","PrimaryServer","ReplicaServer","ReplicaPort","AuthenticationType","FrequencySec","LastReplicationTimeUtc","RecoveryHistory","AutoResynchronizeEnabled","ResynchronizeStartTime","ResynchronizeEndTime"
+"HV-LAB02","22222222-2222-4222-8222-222222222222","DB-LAB01","Replicating","Warning","Primary","","HV-LAB02","HV-DR01","","Kerberos","300","2026-11-13T17:50:00Z","","","",""

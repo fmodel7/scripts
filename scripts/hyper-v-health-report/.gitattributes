@@ -1,0 +1,9 @@
+*.ps1 -text
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.csv -text
+*.zip binary
+.gitignore text eol=lf
+.gitattributes text eol=lf
+*.txt text eol=lf
