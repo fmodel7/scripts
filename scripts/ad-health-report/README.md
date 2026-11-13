@@ -5,7 +5,7 @@ F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Revisão com 
 
 Inventário e revisão assistida de Active Directory em um PS1, com **HTML interativo offline, 63 CSVs, JSON e evidências**. Coleta por consulta; nenhuma correção automática no ambiente.
 
-[English](README.en-US.md) · [Manual PT-BR](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf) · [Fontes Microsoft](docs/SOURCES.pt-BR.md) · [Dicionário de dados](docs/DATA-DICTIONARY.pt-BR.md)
+[English](README.en-US.md) · [Manual PT-BR](docs/MANUAL.pt-BR.md) · [Fontes Microsoft](docs/MANUAL.pt-BR.md#45-fontes-microsoft-e-critérios) · [Campos CSV](docs/MANUAL.pt-BR.md#43-campos-adicionais-dos-csvs)
 
 ## Baixar e abrir
 
@@ -70,6 +70,8 @@ Substitua os caminhos pelos reais. Esse modo aceita também PowerShell 7 e não 
 
 Revisão de valores selecionados **não é baseline SCT completa nem certificação de conformidade**. Última KB não prova atualização completa; evidência de backup não prova restauração; flag de criptografia não prova uso real; dados desconhecidos não viram sucesso. Limites são explícitos no manual.
 
-[Testes e aceitação](docs/TESTING.pt-BR.md) · [Evidências](docs/EVIDENCE.json) · [Changelog](CHANGELOG.md) · [CI](https://github.com/fmodel7/scripts/actions)
+[Testes e aceitação](docs/MANUAL.pt-BR.md#44-validação-e-aceite-em-laboratório) · [Evidências técnicas](tests/evidence/EVIDENCE.json) · [Changelog](CHANGELOG.md) · [CI](https://github.com/fmodel7/scripts/actions)
 
 A validação automatizada usa dados fictícios. Não foi avaliada uma floresta real nesta entrega. Relatórios reais podem conter identidades, topologia e políticas sensíveis: não publique esses dados no GitHub.
+
+A documentação está concentrada em **um manual por idioma**. Em `docs`, o único arquivo adicional é `baseline.example.json`, utilizado pelo script.

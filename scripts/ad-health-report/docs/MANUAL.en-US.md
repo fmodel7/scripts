@@ -2,7 +2,9 @@
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
 F. Model · fmodel@fmodel.com.br · Revision assistance: Akira (ChatGPT)  
-[Português](MANUAL.pt-BR.md) · [Home](../README.en-US.md) · [Evidence](EVIDENCE.json)
+[Português](MANUAL.pt-BR.md) · [Home](../README.en-US.md) · [Evidence](../tests/evidence/EVIDENCE.json)
+
+**Quick links:** [Run comprehensive collection](#30-comprehensive-12-profile-and-execution) · [Validation](#44-validation-and-lab-acceptance) · [CSV fields](#43-additional-csv-fields) · [Sources](#45-microsoft-sources-and-criteria) · [Internals](#46-internal-structure-for-study)
 
 ## 1. Purpose and scope
 
@@ -51,7 +53,7 @@ powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
 
 The offline suite also runs with pwsh. It uses synthetic data/adapters without needing a domain, RSAT or Administrator. Automated checks exercise implemented behavior, including data handling and output, but do not prove integration with a real forest.
 
-See EVIDENCE.json for actual tested environments, source version/hashes and limits. Passing a synthetic suite is not operational acceptance in the company's AD environment. Do not load test adapters as command replacements in a production administration session.
+See ../tests/evidence/EVIDENCE.json for actual tested environments, source version/hashes and limits. Passing a synthetic suite is not operational acceptance in the company's AD environment. Do not load test adapters as command replacements in a production administration session.
 
 ## 6. First real collection
 
@@ -261,7 +263,7 @@ Primary references supporting cmdlet use and interpretation. This project is not
 - Group members: https://learn.microsoft.com/en-us/powershell/module/activedirectory/get-adgroupmember
 - Resultant password policy: https://learn.microsoft.com/en-us/powershell/module/activedirectory/get-aduserresultantpasswordpolicy
 
-[Home](../README.en-US.md) · [Version evidence](EVIDENCE.json)
+[Home](../README.en-US.md) · [Version evidence](../tests/evidence/EVIDENCE.json)
 
 ## 22. Implemented finding rules
 
@@ -575,7 +577,7 @@ LogConfiguration contains enabled, MaximumBytes, mode, record count, oldest reco
 
 ## 35. Security value review and caller-provided profiles
 
-RegistryEvidence stores value, kind, path, observation and errors. The default catalog has 12 selected reads for LDAP signing/CBT, NoLMHash, NTLM level/minimum session security, local-account/anonymous restrictions, UAC, audit subcategories and Script Block Logging. SOURCES.json and the PS1 contain rule references and selected values.
+RegistryEvidence stores value, kind, path, observation and errors. The default catalog has 12 selected reads for LDAP signing/CBT, NoLMHash, NTLM level/minimum session security, local-account/anonymous restrictions, UAC, audit subcategories and Script Block Logging. ../tests/evidence/SOURCES.json and the PS1 contain rule references and selected values.
 
 SecurityReview compares observed DWORD values using EqualsAny/ContainsBits, plus eight SMB/Spooler/firewall observations and four RID-500 rights observations when RSoP is requested. This is a Microsoft-guidance-based selected review: **not the complete SCT package, CIS audit, compliance assessment or Microsoft certification**. LDAP/NTLM settings require compatibility/exception review before changes outside this tool.
 
@@ -639,11 +641,13 @@ powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
 powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
 ```
 
-Automated coverage uses synthetic data/adapters, local files and harmless native helpers. Tests regression, XML/XXE, flags, GPO identity, caps, owned jobs, unknown values, export, render and hashes. It does not query real AD/remoting/DCDiag/repadmin infrastructure. See TESTING.en-US.md and EVIDENCE.json for actual successful runs. Perform acceptance in an authorized lab with real permissions/languages, RODC/separate DNS and multiple domains before operational use.
+Automated coverage uses synthetic data/adapters, local files and harmless native helpers. Tests regression, XML/XXE, flags, GPO identity, caps, owned jobs, unknown values, export, render and hashes. It does not query real AD/remoting/DCDiag/repadmin infrastructure. See section 44 and ../tests/evidence/EVIDENCE.json for actual successful runs. Perform acceptance in an authorized lab with real permissions/languages, RODC/separate DNS and multiple domains before operational use.
 
-## 41. Sources and data dictionary
+## 41. Documentation layout
 
-CSV-SCHEMAS.json lists all 63 files and every column extracted from the code. DATA-DICTIONARY.en-US.md maps datasets and semantics. SOURCES.en-US.md/SOURCES.json contain official references and selected catalog values. AssessmentSources travels with HTML/CSV/JSON outputs. References are reading links; the collector does not automatically access those websites.
+This is the complete English manual. The [PT-BR manual](MANUAL.pt-BR.md) is the Portuguese version. All 63 dataset fields are documented in sections 23, 29 and 43; validation in section 44; Microsoft sources in section 45; and internals in section 46. You do not need to choose between several documents covering the same topic.
+
+The docs directory contains only the two manuals and baseline.example.json, used by BaselineFile. Machine-readable schema/source/evidence records live in [tests/evidence](../tests/evidence/). They support maintenance/validation and are not additional manuals. Generated HTML/CSV/JSON reports are unchanged.
 
 ## 42. Lifecycle review and additional role groups by SID
 
@@ -654,3 +658,442 @@ Product references include [Server 2012 R2](https://learn.microsoft.com/en-us/li
 IncludeDirectorySecurity complements PrivilegedMembers with Domain Controllers (516), Read-only Domain Controllers (521), Group Policy Creator Owners (520), Print Operators (S-1-5-32-550), Distributed COM Users (S-1-5-32-562) and Cryptographic Operators (S-1-5-32-569), when present. With base groups this covers the 13 reference groups at the root; Schema/Enterprise Admins remain root-specific. SkipPrivilegedMembers also suppresses additional reads.
 
 MembershipType remains DirectOnly, without nested groups, SIDHistory or effective-rights expansion. DC groups legitimately contain DC accounts; these members do not trigger an unsafe-count rule. Group discovery uses SIDs rather than localized/renamed names.
+
+## 43. Additional CSV fields
+
+Sections 23 and 29 document the initial 30 datasets. The 33 additional datasets and their columns follow without repeating the earlier dictionary. The complete machine-readable contract is [CSV-SCHEMAS.json](../tests/evidence/CSV-SCHEMAS.json).
+
+### OptionalFeatures — optionalfeatures.csv
+
+`Forest`, `Feature`, `FeatureGuid`, `Enabled`, `EnabledScopes`, `QueryServer`, `Observation`
+
+### Sites — sites.csv
+
+`Forest`, `Name`, `DistinguishedName`, `Description`, `Subnets`, `InterSiteTopologyGenerator`
+
+### Subnets — subnets.csv
+
+`Forest`, `Name`, `Site`, `Location`, `Description`, `DistinguishedName`
+
+### SiteLinks — sitelinks.csv
+
+`Forest`, `Name`, `Cost`, `ReplicationFrequencyMinutes`, `Sites`, `DistinguishedName`
+
+### AccountSecurityFlags — accountsecurityflags.csv
+
+`Domain`, `QueryServer`, `Name`, `SamAccountName`, `ObjectClass`, `ObjectGuid`, `SID`, `DistinguishedName`, `Enabled`, `UserAccountControl`, `ReversibleEncryptionAllowed`, `UseDESKeyOnly`, `PasswordNotRequired`, `PasswordNeverExpires`, `DoesNotRequirePreAuth`, `TrustedForDelegation`, `TrustedToAuthForDelegation`, `NotDelegated`, `SmartcardRequired`, `SupportedEncryptionTypes`, `UserPrincipalName`, `Observation`
+
+### SPNInventory — spninventory.csv
+
+`Domain`, `SPN`, `NormalizedSPN`, `OwnerName`, `OwnerClass`, `OwnerGuid`, `OwnerDN`
+
+### DuplicateSPNs — duplicatespns.csv
+
+`SPN`, `OwnerCount`, `Domains`, `OwnerNames`, `OwnerGuids`, `OwnerDNs`, `AssessmentScope`, `Coverage`
+
+### DuplicateUPNs — duplicateupns.csv
+
+`UserPrincipalName`, `OwnerCount`, `Domains`, `OwnerNames`, `OwnerGuids`, `OwnerDNs`, `AssessmentScope`, `Coverage`
+
+### DirectoryCoverage — directorycoverage.csv
+
+`Domain`, `QueryServer`, `Objects`, `SPNValues`, `Truncated`, `ObjectLimit`, `SPNLimit`, `Observation`
+
+### GroupPolicies — grouppolicies.csv
+
+`Domain`, `QueryServer`, `Guid`, `Name`, `Status`, `CreatedUtc`, `ModifiedUtc`, `Owner`, `WmiFilter`, `ComputerVersionAD`, `ComputerVersionSysvol`, `UserVersionAD`, `UserVersionSysvol`, `ComputerSettings`, `UserSettings`, `LinkCount`, `Observation`, `SourceFile`
+
+### GPOLinks — gpolinks.csv
+
+`Domain`, `ScopeType`, `ScopeDN`, `ScopeName`, `GpoGuid`, `GpoDN`, `StoredPosition`, `LinkOptions`, `Enabled`, `Enforced`, `InheritanceBlocked`, `Observation`
+
+### GPOSettings — gposettings.csv
+
+`Domain`, `GpoGuid`, `GpoName`, `Area`, `SettingPath`, `Value`, `Attributes`, `SourceFile`
+
+### GPOPermissions — gpopermissions.csv
+
+`Domain`, `GpoGuid`, `GpoName`, `TrusteeName`, `TrusteeSID`, `TrusteeType`, `Permission`, `Inherited`, `SourceFile`
+
+### GPOCoverage — gpocoverage.csv
+
+`Domain`, `QueryServer`, `Discovered`, `Exported`, `Truncated`, `Limit`, `SettingsExported`, `SettingsTruncated`, `SettingsLimit`, `Observation`
+
+### SysvolFiles — sysvolfiles.csv
+
+`Domain`, `DC`, `RelativePath`, `Extension`, `Bytes`, `ModifiedUtc`, `Observation`
+
+### SysvolSummary — sysvolsummary.csv
+
+`Domain`, `DC`, `Root`, `Files`, `Directories`, `Bytes`, `Extension`, `ExtensionFiles`, `ExtensionBytes`, `Truncated`, `Limit`, `DurationSeconds`, `Observation`
+
+### DnsServerConfiguration — dnsserverconfiguration.csv
+
+`Domain`, `DC`, `Component`, `Property`, `Value`, `Observation`
+
+### DnsZones — dnszones.csv
+
+`Domain`, `DC`, `ZoneName`, `ZoneType`, `IsDsIntegrated`, `IsReverseLookupZone`, `DynamicUpdate`, `ReplicationScope`, `AgingEnabled`, `NoRefreshInterval`, `RefreshInterval`, `Observation`
+
+### DnsRootHints — dnsroothints.csv
+
+`Domain`, `DC`, `RecordType`, `HostName`, `NameServer`, `Address`, `Observation`
+
+### DnsZoneIndicators — dnszoneindicators.csv
+
+`Partition`, `Name`, `DistinguishedName`, `ObjectClass`, `QueryServer`, `Observation`
+
+### BackupEvidence — backupevidence.csv
+
+`Domain`, `DC`, `Source`, `Status`, `ExitCode`, `TimedOut`, `Partition`, `LastBackupUtc`, `AgeDays`, `Observation`, `RawText`, `SourceFile`
+
+### HostHardware — hosthardware.csv
+
+`Domain`, `DC`, `Manufacturer`, `Model`, `LogicalProcessors`, `PhysicalCores`, `Sockets`, `PhysicalMemoryBytes`, `OSBuild`, `UBR`, `InstallDateUtc`, `BIOSVersion`, `BIOSReleaseUtc`, `Observation`
+
+### InstalledSoftware — installedsoftware.csv
+
+`Domain`, `DC`, `RegistryView`, `ProductKey`, `DisplayName`, `DisplayVersion`, `Publisher`, `InstallDateRaw`, `InstallLocation`, `Observation`
+
+### Hotfixes — hotfixes.csv
+
+`Domain`, `DC`, `HotfixId`, `Description`, `InstalledOnRaw`, `InstalledUtc`, `InstalledBy`, `Observation`
+
+### HostSecurity — hostsecurity.csv
+
+`Domain`, `DC`, `Component`, `Setting`, `Value`, `Observation`, `Source`
+
+### RegistryEvidence — registryevidence.csv
+
+`Domain`, `DC`, `RuleId`, `RegistryPath`, `ValueName`, `ValueKind`, `Value`, `Observation`, `Error`
+
+### SecurityReview — securityreview.csv
+
+`Domain`, `DC`, `RuleId`, `Title`, `Profile`, `Expected`, `Observed`, `Comparison`, `Status`, `OSBuild`, `Reference`, `Observation`
+
+### RSoPSettings — rsopsettings.csv
+
+`Domain`, `DC`, `Area`, `SettingPath`, `Value`, `Attributes`, `SourceFile`
+
+### UserRightsAssignments — userrightsassignments.csv
+
+`Domain`, `DC`, `Right`, `PrincipalSID`, `PrincipalName`, `SourceGpo`, `Observation`, `SourceFile`
+
+### SecurityEvents — securityevents.csv
+
+`Domain`, `DC`, `LogName`, `TimeCreatedUtc`, `EventId`, `Level`, `Provider`, `RecordId`, `Message`, `MessageStatus`, `EventDataJson`, `Interpretation`
+
+### LogConfiguration — logconfiguration.csv
+
+`Domain`, `DC`, `LogName`, `Enabled`, `MaximumBytes`, `LogMode`, `RecordCount`, `OldestRecordNumber`, `LastWriteUtc`, `Observation`
+
+### AuditPolicy — auditpolicy.csv
+
+`Domain`, `DC`, `SubcategoryGuid`, `Value`, `SourceFile`, `Observation`
+
+### AssessmentSources — assessmentsources.csv
+
+`Id`, `Topic`, `Reference`, `AccessedDate`, `Usage`, `Limitations`
+
+### Units and semantics
+
+Bytes/CapacityBytes/FreeBytes/MaximumBytes/PhysicalMemoryBytes are bytes; FreeGiB divides by 1024³. Percentages range 0–100. DurationSeconds/ProcessingSeconds are seconds; AgeDays is days; UTC uses ISO 8601. AD/SYSVOL versions are counters, not Windows releases.
+
+StoredPosition is raw attribute order; RegistryView is an Uninstall view, not proven binary architecture. LogicalProcessors differs from PhysicalCores. SupportedEncryptionTypes/UAC are bitmasks. Expected/Observed qualify individual rule scope only.
+
+SettingPath identifies indexed XML leaves/attributes; Value/Attributes preserve data. SourceFile references local native evidence. RawText is unparsed evidence, not a language-based pass verdict. JSON in Value/EventDataJson retains localized/original fields.
+
+Observation/Status/Coverage and Truncated/Limit specify source and limits. Read manual sections 30–40 for collectors. RootDomain/Domain/Forest/DC/QueryServer/ScopeDN are distinct contexts, and query targets are explicit.
+
+## 44. Validation and lab acceptance
+
+Operational source passed [CI](https://github.com/fmodel7/scripts/actions/runs/43498148487), commit `7d037054f9917e465610c4ba845d14376323fd0d`. Delivered operational files match it. ../tests/evidence/EVIDENCE.json/MANIFEST-SHA256.txt record hashes.
+
+| Runtime | Regression | Operational | Comprehensive | End-to-end scenarios |
+|---|---|---|---|---|
+| Windows PowerShell 5.1 | 1843 | 650 | 699 | 36 |
+| PowerShell 7 Windows | 1839 | 650 | 699 | 36 |
+| PowerShell 7 Linux | 1843 | 650 | 699 | 36 |
+
+Test columns are assertions. Four harmless native helper checks are omitted under PowerShell 7 Windows. There are 36 scenarios per runtime, not real DC assessments or compliance certification.
+
+### Run without a domain
+
+```powershell
+powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
+```
+
+pwsh also works. Suites load functions through AST without the operational entry. No domain/RSAT/elevation required. Synthetic adapters replace AD, DNS, CIM/remoting, GPO, events and diagnostics. Local files and harmless helper processes exercise local boundaries.
+
+### Coverage
+
+- Inventory, domain/forest discovery, SIDs, skips, missing attributes, replication, findings and exit codes.
+- ICMP does not gate collectors; DNS, volumes/mount points/NTDS, memory/boot, signed offsets, bounded events and coverage/errors.
+- UAC, distinct-owner SPN/UPN duplicates across two domains, denied/mismatched GPOs, nonzero-version empty extension data, links/flags, RSoP/rights by SID.
+- DNS administration, host/software/QFE, backup evidence and registry value comparison; unknown/missing data does not become success.
+- Namespaced/repeated XML, prohibited DTD/XXE, malformed/oversized XML and normalization caps.
+- SYSVOL traversal uses synthetic local files, not a share. Job ownership/cleanup uses adapters without stopping unrelated jobs.
+- Windows PowerShell 5.1 JSON arrays, offline render, allowed dataset/path names, manifest evidence copying, changed hashes and adjacent ZIP output.
+- All 63 CSVs, formula neutralization, UTF-8, JSON and HTML encoding of markup-bearing names/messages.
+
+Actual GroupPolicy/DnsServer modules and remoting endpoints were not accessed. Remote worker was statically reviewed without a live session. Tests do not establish installed module/permission compatibility in your infrastructure.
+
+### HTML and package
+
+SYNTHETIC includes fictional data in 63 tables across two domains/DCs. Browser checks search, expansion, CSV links, encoding, no external requests/dialogs/JavaScript errors and mobile layout; see ../tests/evidence/RENDERER-TESTS.json. Local links, manuals, recursive manifest and ZIP contents are checked during packaging.
+
+### Authorized lab acceptance
+
+1. Verify Windows PowerShell 5.1 x64, required modules and approved read account; begin with default inventory.
+2. Test individual options and ADWS/LDAP, SMB, WSMan/remoting, event/RPC and DNS rights/connectivity. The tool enables none of them.
+3. Compare ADUC/ADAC, GPMC, Event Viewer, DNS and backup samples; verify selected domain/DC, source and timestamps.
+4. Exercise multiple domains, RODC/separate DNS if available, localized servers, denied access and an unavailable collector; verify partial results.
+5. Select the approved OS/role baseline; exercise differing, absent and unexpected-type values. Supplied profile is partial, not complete SCT.
+6. Adjust limits and inspect Coverage/GPOCoverage/DirectoryCoverage/EventLogCoverage, durations and truncation.
+7. Open HTML/CSV, verify hashes, render offline and create ZIP. Restrict real data access and do not publish it on GitHub.
+
+No real AD was used. Production transport, permissions and installed module versions require lab acceptance.
+
+## 45. Microsoft sources and criteria
+
+Consulted 2026-11-13. Links support query design and interpretation, not certification, complete baseline coverage or production validation.
+
+### W32TIME · Windows Time configuration
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings)
+
+Preserve raw W32Time evidence and machine/policy registry values. Configuration and measured offset do not certify UTC accuracy.
+
+### ADMIN500 · Role-specific built-in Administrator guidance
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-d--securing-built-in-administrator-accounts-in-active-directory)
+
+Inventory rights by SID without a DC deny-right verdict. The cited deny-right recommendations target workstations/member servers.
+
+### GPO-PERMISSIONS · Group Policy permissions
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gppermission?view=windowsserver2025-ps)
+
+Read trustee permissions per GPO. Does not establish effective privilege across nested groups.
+
+### AD-FEATURES · AD optional features
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/activedirectory/get-adoptionalfeature?view=windowsserver2025-ps)
+
+Feature GUID and EnabledScopes. Read-only observation; no activation.
+
+### AD-SPN · SPN and UPN uniqueness
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/component-updates/spn-and-upn-uniqueness)
+
+Compare distinct object owners within exported scope. Not proof of forest-wide uniqueness with incomplete/domain-only collection.
+
+### AD-UAC · Account flags
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/useraccountcontrol-manipulate-account-properties)
+
+Decode documented UAC bits. Flags are configuration, not actual authentication/password contents.
+
+### GPO · Group Policy XML report
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gporeport?view=windowsserver2025-ps)
+
+Explicit Domain/Server/Guid; preserve XML. No claim of effective policy or conflict resolution.
+
+### RSOP · Resultant Set of Policy
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gpresultantsetofpolicy?view=windowsserver2025-ps)
+
+Computer-specific XML evidence. Requires target permissions; not effective privileges analysis.
+
+### DNS-CONFIG · DNS server configuration
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/dnsserver/get-dnsserver?view=windowsserver2025-ps)
+
+Inventory configuration without changing DNS. Recursion/forwarder/scavenging choices are architecture dependent.
+
+### DNS-RECURSION · DNS recursion and forwarders
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/networking/dns/quickstart-install-configure-dns-server)
+
+Interpret configuration with server role. Disabling recursion also disables forwarders.
+
+### BACKUP · AD partition backup evidence
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/services-hub/microsoft-engage-center/health/remediation-steps-ad/investigate-why-active-directory-directory-partitions-are-not-backed-up-for-longer-than-half-the-tom)
+
+Read repadmin /showbackup output. No restoration test, RPO or component-coverage proof.
+
+### HOTFIX · QFE inventory limits
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-hotfix?view=powershell-5.1)
+
+Inventory QFE/KB evidence. Does not enumerate all update types or prove patch compliance.
+
+### SECURITY-GUIDANCE · Microsoft Security Compliance Toolkit
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/security-compliance-toolkit-10)
+
+Guide baseline selection and value comparison. Built-in selected guidance review is not a complete SCT baseline.
+
+### SMB · SMB signing
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing)
+
+Observe effective client/server signing requirement. Compatibility and approved exceptions require review.
+
+### SPOOLER · Identity infrastructure security
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/defender-for-identity/security-posture-assessments/identity-infrastructure)
+
+Separate Spooler security review. Stopped/Disabled is distinct from core AD services expected Running.
+
+### LDAP · LDAP signing
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/identity/manage-ldap-signing-group-policy)
+
+Selected LDAPServerIntegrity comparison. Absent registry value does not establish effective default.
+
+### LDAP-CBT · LDAP channel binding
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/ldap-channel-binding)
+
+Preserve channel binding configuration. No bind test or client compatibility certification.
+
+### AUDIT · Audit policy query
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/auditpol-get)
+
+Read CSV by subcategory GUID. Retain localized settings; no English pass/fail parser.
+
+### EVENT-4624 · Successful logon event fields
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624)
+
+Use EventData LogonType rather than message text. Type 8 alone does not establish cleartext transmission.
+
+### FUNCTIONAL-LEVELS · AD DS functional levels
+
+[Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels)
+
+Separate OS/build from DFL/FFL. 2019/2022 OS does not imply 2019/2022 functional levels.
+
+### Selected value catalog
+
+| RuleId | Registry / value | Expected | Comparison |
+|---|---|---|---|
+| [LDAP-SIGNING](https://learn.microsoft.com/en-us/windows-server/identity/manage-ldap-signing-group-policy) | SYSTEM\CurrentControlSet\Services\NTDS\Parameters / LDAPServerIntegrity | 2 | EqualsAny |
+| [LDAP-CBT](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/ldap-channel-binding) | SYSTEM\CurrentControlSet\Services\NTDS\Parameters / LdapEnforceChannelBinding | 2 | EqualsAny |
+| [NO-LM-HASH](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-do-not-store-lan-manager-hash-value-on-next-password-change) | SYSTEM\CurrentControlSet\Control\Lsa / NoLMHash | 1 | EqualsAny |
+| [NTLM-LEVEL](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-lan-manager-authentication-level) | SYSTEM\CurrentControlSet\Control\Lsa / LmCompatibilityLevel | 5 | EqualsAny |
+| [NO-BLANK-REMOTE](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/accounts-limit-local-account-use-of-blank-passwords-to-console-logon-only) | SYSTEM\CurrentControlSet\Control\Lsa / LimitBlankPasswordUse | 1 | EqualsAny |
+| [RESTRICT-SAM](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-access-do-not-allow-anonymous-enumeration-of-sam-accounts) | SYSTEM\CurrentControlSet\Control\Lsa / RestrictAnonymousSAM | 1 | EqualsAny / NotApplicableToDomainControllers |
+| [NULL-SESSIONS](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-access-restrict-anonymous-access-to-named-pipes-and-shares) | SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters / RestrictNullSessAccess | 1 | EqualsAny |
+| [UAC](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-account-control-run-all-administrators-in-admin-approval-mode) | SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System / EnableLUA | 1 | EqualsAny |
+| [AUDIT-SUBCATEGORY](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/audit-force-audit-policy-subcategory-settings-to-override) | SYSTEM\CurrentControlSet\Control\Lsa / SCENoApplyLegacyAuditPolicy | 1 | EqualsAny |
+| [PS-LOGGING](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-5.1) | SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging / EnableScriptBlockLogging | 1 | EqualsAny |
+| [NTLM-MIN-CLIENT](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-minimum-session-security-for-ntlm-ssp-based-including-secure-rpc-clients) | SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0 / NTLMMinClientSec | 537395200 | ContainsBits |
+| [NTLM-MIN-SERVER](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-minimum-session-security-for-ntlm-ssp-based-including-secure-rpc-servers) | SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0 / NTLMMinServerSec | 537395200 | ContainsBits |
+
+An absent value does not establish the effective default. Read the manual for DWORD typing, OS/role scope, compatibility and the partial BaselineFile format.
+
+ADxRay and ALI TAJRAN were requirements/comparison references; new implementations are independent. Historical credits and limits remain in the manuals.
+
+### OS-LIFECYCLE · Microsoft Lifecycle
+
+[Microsoft Lifecycle](https://learn.microsoft.com/en-us/lifecycle/). Product references and regular end dates are used as review hints; AD OS attributes, editions, LTSC/LTSB, ESU and contracts require confirmation. Catalog checked 2026-11-13. No automatic unsupported verdict.
+
+## 46. Internal structure for study
+
+One operational PS1 with local functions and test query adapters. Existing tables remain; additional collectors use the same export contract. Module/remoting jobs are owned and cleaned up by reference; no global Get-Job.
+
+<details>
+<summary>PS1 function and source-line map</summary>
+
+| Function | Line |
+|---|---|
+| Get-AdField | [L75](../Export-ADHealthReport.ps1#L75) |
+| Convert-AdDate | [L81](../Export-ADHealthReport.ps1#L81) |
+| Convert-AdSid | [L86](../Export-ADHealthReport.ps1#L86) |
+| Get-AdParentDn | [L93](../Export-ADHealthReport.ps1#L93) |
+| Get-AdSchemaLabel | [L102](../Export-ADHealthReport.ps1#L102) |
+| Get-AdComputerClass | [L107](../Export-ADHealthReport.ps1#L107) |
+| Invoke-AdQuery | [L117](../Export-ADHealthReport.ps1#L117) |
+| Initialize-AdRuntime | [L121](../Export-ADHealthReport.ps1#L121) |
+| Get-AdSchemas | [L127](../Export-ADHealthReport.ps1#L127) |
+| Add-AdRows | [L162](../Export-ADHealthReport.ps1#L162) |
+| Invoke-AdCollection | [L166](../Export-ADHealthReport.ps1#L166) |
+| New-AdFinding | [L179](../Export-ADHealthReport.ps1#L179) |
+| Convert-AdAccount | [L183](../Export-ADHealthReport.ps1#L183) |
+| Convert-AdPolicy | [L208](../Export-ADHealthReport.ps1#L208) |
+| Get-AdServiceObservations | [L218](../Export-ADHealthReport.ps1#L218) |
+| Get-AdNativePath | [L226](../Export-ADHealthReport.ps1#L226) |
+| Invoke-AdDcdiag | [L227](../Export-ADHealthReport.ps1#L227) |
+| Resolve-AdOutputPath | [L232](../Export-ADHealthReport.ps1#L232) |
+| Convert-AdCsvValue | [L244](../Export-ADHealthReport.ps1#L244) |
+| Write-AdCsv | [L251](../Export-ADHealthReport.ps1#L251) |
+| Complete-AdFindings | [L263](../Export-ADHealthReport.ps1#L263) |
+| Invoke-AdAssessment | [L285](../Export-ADHealthReport.ps1#L285) |
+| Get-AdEffectiveOptions | [L427](../Export-ADHealthReport.ps1#L427) |
+| Get-AdDiagnosticTests | [L438](../Export-ADHealthReport.ps1#L438) |
+| Invoke-AdReadProcess | [L444](../Export-ADHealthReport.ps1#L444) |
+| Invoke-AdDnsQuery | [L455](../Export-ADHealthReport.ps1#L455) |
+| Get-AdDnsObservation | [L461](../Export-ADHealthReport.ps1#L461) |
+| Get-AdVolumeRoles | [L479](../Export-ADHealthReport.ps1#L479) |
+| Get-AdPingObservation | [L484](../Export-ADHealthReport.ps1#L484) |
+| Get-AdHostBundle | [L493](../Export-ADHealthReport.ps1#L493) |
+| Get-AdTimeNativePath | [L533](../Export-ADHealthReport.ps1#L533) |
+| Invoke-AdTimeQuery | [L534](../Export-ADHealthReport.ps1#L534) |
+| Get-AdMedian | [L541](../Export-ADHealthReport.ps1#L541) |
+| Convert-AdTimeSamples | [L546](../Export-ADHealthReport.ps1#L546) |
+| Get-AdTimeBundle | [L558](../Export-ADHealthReport.ps1#L558) |
+| Invoke-AdEventQuery | [L570](../Export-ADHealthReport.ps1#L570) |
+| Get-AdEventBundle | [L574](../Export-ADHealthReport.ps1#L574) |
+| Add-AdOperationalError | [L587](../Export-ADHealthReport.ps1#L587) |
+| Invoke-AdOperationalCollections | [L591](../Export-ADHealthReport.ps1#L591) |
+| Complete-AdOperationalFindings | [L631](../Export-ADHealthReport.ps1#L631) |
+| Get-AdExtensionDefaults | [L661](../Export-ADHealthReport.ps1#L661) |
+| Get-AdExtensionSchemas | [L664](../Export-ADHealthReport.ps1#L664) |
+| Add-AdExtensionError | [L701](../Export-ADHealthReport.ps1#L701) |
+| Read-AdJsonList | [L705](../Export-ADHealthReport.ps1#L705) |
+| Invoke-AdModuleRead | [L711](../Export-ADHealthReport.ps1#L711) |
+| Save-AdEvidence | [L723](../Export-ADHealthReport.ps1#L723) |
+| Convert-AdSafeXml | [L731](../Export-ADHealthReport.ps1#L731) |
+| Get-AdXmlText | [L738](../Export-ADHealthReport.ps1#L738) |
+| Get-AdXmlLeaves | [L742](../Export-ADHealthReport.ps1#L742) |
+| Convert-AdSecurityAccount | [L760](../Export-ADHealthReport.ps1#L760) |
+| Invoke-AdExtendedForest | [L767](../Export-ADHealthReport.ps1#L767) |
+| Convert-AdGpoLinks | [L790](../Export-ADHealthReport.ps1#L790) |
+| Invoke-AdExtendedDomain | [L799](../Export-ADHealthReport.ps1#L799) |
+| Get-AdLifecycleHint | [L846](../Export-ADHealthReport.ps1#L846) |
+| Get-AdGpoInventory | [L866](../Export-ADHealthReport.ps1#L866) |
+| Get-AdDnsConfiguration | [L897](../Export-ADHealthReport.ps1#L897) |
+| Get-AdSysvolInventory | [L926](../Export-ADHealthReport.ps1#L926) |
+| Get-AdRegistryCatalog | [L957](../Export-ADHealthReport.ps1#L957) |
+| Invoke-AdRemoteSnapshot | [L974](../Export-ADHealthReport.ps1#L974) |
+| SnapshotError | [L982](../Export-ADHealthReport.ps1#L982) |
+| Read-SnapshotCatalog | [L983](../Export-ADHealthReport.ps1#L983) |
+| Get-AdSecurityProfile | [L1067](../Export-ADHealthReport.ps1#L1067) |
+| Add-AdSecurityReview | [L1084](../Export-ADHealthReport.ps1#L1084) |
+| Get-AdBackupEvidence | [L1121](../Export-ADHealthReport.ps1#L1121) |
+| Get-AdBackupNativePath | [L1141](../Export-ADHealthReport.ps1#L1141) |
+| Invoke-AdBackupEventQuery | [L1142](../Export-ADHealthReport.ps1#L1142) |
+| Invoke-AdSecurityEventQuery | [L1149](../Export-ADHealthReport.ps1#L1149) |
+| Get-AdSecurityEvents | [L1156](../Export-ADHealthReport.ps1#L1156) |
+| Get-AdRsopInventory | [L1173](../Export-ADHealthReport.ps1#L1173) |
+| Add-AdSnapshotRows | [L1191](../Export-ADHealthReport.ps1#L1191) |
+| Invoke-AdExtendedDc | [L1196](../Export-ADHealthReport.ps1#L1196) |
+| Complete-AdExtensionFindings | [L1231](../Export-ADHealthReport.ps1#L1231) |
+| Get-AdAssessmentSources | [L1278](../Export-ADHealthReport.ps1#L1278) |
+| Write-AdAssessmentFiles | [L1304](../Export-ADHealthReport.ps1#L1304) |
+| Get-AdLocalInputFile | [L1313](../Export-ADHealthReport.ps1#L1313) |
+| Invoke-AdRenderSnapshot | [L1323](../Export-ADHealthReport.ps1#L1323) |
+| New-AdReportArchive | [L1353](../Export-ADHealthReport.ps1#L1353) |
+| Write-AdHtmlReport | [L1363](../Export-ADHealthReport.ps1#L1363) |
+| Get-AdReportProperty | [L1369](../Export-ADHealthReport.ps1#L1369) |
+| ConvertTo-AdReportText | [L1378](../Export-ADHealthReport.ps1#L1378) |
+| ConvertTo-AdReportHtml | [L1387](../Export-ADHealthReport.ps1#L1387) |
+
+</details>
