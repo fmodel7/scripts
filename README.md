@@ -16,6 +16,10 @@ Biblioteca de scripts e automações para compartilhar conhecimento e facilitar 
 
 **Windows Time 2.0.0:** [PDC e DOMHIER](scripts/configure-ntp-pdc/README.md) — dois PS1 independentes: fontes NTP no PDC raiz e hierarquia AD nos demais servidores. Inclui confirmação, backup, relatório HTML e manuais PT-BR/EN-US. Consulte o catálogo para escolher uma ferramenta. Os arquivos em templates continuam sendo modelos, não programas.
 
+## DHCP: exportação e importação
+
+[DHCP Transfer 1.0.0](scripts/dhcp-transfer/README.md) reúne **Export-DHCP.ps1** e **Import-DHCP.ps1**, com confirmação, backups, relatório HTML e guias individuais PT-BR/EN-US. A operação real usa Windows PowerShell 5.1; testes offline também rodam em PowerShell 7. Consulte o plano de migração e os limites antes de importar.
+
 ## Como cada script será organizado
 
 ```text
@@ -52,5 +56,6 @@ A visibilidade pública, por si só, não define uma licença de reutilização.
 [Como contribuir](CONTRIBUTING.md) · [Dados e credenciais](SECURITY.md) · [Histórico](CHANGELOG.md)
 
 Só publicar conteúdo que você tenha direito de compartilhar. Os scripts privados do Infratech e dados de clientes não são transferidos automaticamente para esta biblioteca.
+
 
 

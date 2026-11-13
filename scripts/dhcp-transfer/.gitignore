@@ -1,0 +1,6 @@
+*.xml
+*.sha256
+*.log
+Export-*/
+Import-*/
+TestResults/
