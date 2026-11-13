@@ -1,0 +1,2 @@
+﻿"Host","Name","Domain","ClusterFunctionalLevel","DynamicQuorum","DynamicWitness","QuarantineThreshold","QuarantineDuration","SameSubnetDelay","SameSubnetThreshold","CrossSubnetDelay","CrossSubnetThreshold"
+"HV-LAB01","HV-LAB-CLUSTER","lab.example","12","1","","","","","","",""

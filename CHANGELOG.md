@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-13 — Hyper-V Health Report 1.0.0
+
+- Adiciona scripts/hyper-v-health-report: inventário/revisão de leitura local/remota e descoberta de cluster por nó real.
+- 54 CSVs, HTML offline pesquisável, JSON/manifesto/ZIP opcional; 23 regras contextuais, cobertura/erros, limites e jobs próprios.
+- Host/VM/NUMA, storage/cadeias VHD, checkpoints/Replica, redes/SET/VLAN/offloads, segurança/SMB, eventos e BPA existente opcional.
+- Exemplos fictícios PT-BR/EN-US, dois manuais completos e 27 fontes Microsoft. Testes sintéticos em Windows PowerShell 5.1 e PS7 Windows/Linux; aceite em Hyper-V real pendente.
+
 ## 2026-11-13 — AD Health Report 1.2.0
 
 - Perfil ComprehensiveAssessment: 33 conjuntos novos, 63 CSVs totais, GPO/RSoP, SPNs/UPNs, Lixeira/topologia, DNS administrativo, SYSVOL, host/software/QFE, segurança/eventos/auditoria e evidências de backup.
@@ -51,6 +58,7 @@
 - Modelos PowerShell PT-BR/EN-US/de-DE e orientações para iniciantes.
 - Nenhum script privado, credencial ou dado real importado.
 - Nenhum script executável publicado nesta etapa.
+
 
 
 

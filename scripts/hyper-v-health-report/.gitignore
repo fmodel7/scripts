@@ -1,0 +1,4 @@
+HyperV-Reports/
+HyperV-*/
+*.local.json
+*.log

@@ -1,0 +1,2 @@
+﻿"Host","VMId","VMName","Name","Id","ParentSnapshotId","ParentSnapshotName","CreationTimeUtc","AgeDays","SnapshotType"
+"HV-LAB02","22222222-2222-4222-8222-222222222222","DB-LAB01","Before lab update","33333333-3333-4333-8333-333333333333","","","2026-10-20T12:00:00Z","24","Standard"

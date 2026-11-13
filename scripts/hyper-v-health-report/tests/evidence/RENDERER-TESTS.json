@@ -1,0 +1,22 @@
+{
+  "checks": [
+    "54 dataset sections",
+    "synthetic banner visible",
+    "54 CSV links resolve locally",
+    "body does not overflow at 1920px",
+    "body does not overflow at 1366px",
+    "body does not overflow at 390px",
+    "global search",
+    "severity filter",
+    "local table search",
+    "collapse all",
+    "navigation opens section",
+    "expand all",
+    "print control",
+    "English interface and recommendations",
+    "no JavaScript errors",
+    "no external network requests"
+  ],
+  "passed": 16,
+  "realInfrastructure": false
+}

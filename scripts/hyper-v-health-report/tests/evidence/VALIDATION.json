@@ -1,0 +1,78 @@
+{
+  "tool": "Hyper-V Health Report",
+  "version": "1.0.0",
+  "schemaVersion": 1,
+  "validatedUtc": "2026-11-13",
+  "sourceSha256": "2a004d6f49d9ac1168da742e0619f1a9cc81c8d3cc6df2a84cd19381e9a6affe",
+  "sourceGitBlob": "c71ee732918dd9a141de240beaf1cdcf21bf4249",
+  "sourceCommit": "caa1030b6717c0099241c2f05855fc864e1bfe46",
+  "ciRun": "https://github.com/fmodel7/scripts/actions/runs/43524624515",
+  "environments": [
+    {
+      "name": "Windows PowerShell 5.1",
+      "id": 132227190972,
+      "conclusion": "success",
+      "pass": [
+        "2026-11-13T23:07:19.7704988Z PASS: 373 checks; serialization, assessment, files, security and CLI. Runtime: 5.1.26100.33648\r",
+        "2026-11-13T23:07:25.0164585Z PASS: 57 collector/transport checks; 13 host scenarios + cluster + 4 mock job paths + real local synthetic job. Runtime: 5.1.26100.33648\r"
+      ]
+    },
+    {
+      "name": "PowerShell 7 - Linux mocks",
+      "id": 132227191401,
+      "conclusion": "success",
+      "pass": [
+        "2026-11-13T23:07:20.1802252Z PASS: 373 checks; serialization, assessment, files, security and CLI. Runtime: 7.6.10",
+        "2026-11-13T23:07:23.1170721Z PASS: 57 collector/transport checks; 13 host scenarios + cluster + 4 mock job paths + real local synthetic job. Runtime: 7.6.10"
+      ]
+    },
+    {
+      "name": "PowerShell 7 - Windows",
+      "id": 132227191417,
+      "conclusion": "success",
+      "pass": [
+        "2026-11-13T23:07:08.5429903Z PASS: 373 checks; serialization, assessment, files, security and CLI. Runtime: 7.6.9\r",
+        "2026-11-13T23:07:10.9564722Z PASS: 57 collector/transport checks; 13 host scenarios + cluster + 4 mock job paths + real local synthetic job. Runtime: 7.6.9\r"
+      ]
+    }
+  ],
+  "checksPerEnvironment": 430,
+  "totalChecksAcrossThreeCiEnvironments": 1290,
+  "browser": {
+    "checks": [
+      "54 dataset sections",
+      "synthetic banner visible",
+      "54 CSV links resolve locally",
+      "body does not overflow at 1920px",
+      "body does not overflow at 1366px",
+      "body does not overflow at 390px",
+      "global search",
+      "severity filter",
+      "local table search",
+      "collapse all",
+      "navigation opens section",
+      "expand all",
+      "print control",
+      "English interface and recommendations",
+      "no JavaScript errors",
+      "no external network requests"
+    ],
+    "passed": 16,
+    "realInfrastructure": false
+  },
+  "testSha256": {
+    "Test-HyperVCollectors.ps1": "bcb834a3d2023260d43e99724a7513ac822ea8aa35b6dfe1e74e8aa7e8d1e76c",
+    "Test-HyperVHealthReport.ps1": "d6dc215390640b721a3b84e2d57f570d3273569d25dcec86aa33595a813912a3"
+  },
+  "realLocalBackgroundProcessTested": true,
+  "realHyperVTested": false,
+  "realWinRMTested": false,
+  "realClusterTested": false,
+  "realSmbTested": false,
+  "notes": [
+    "Windows providers and WinRM are synthetic in tests.",
+    "Real local child-process test uses a fixed fictional worker.",
+    "Browser validation uses only fictional report data.",
+    "No real guest/host collection, failover, migration, backup or restore was performed."
+  ]
+}

@@ -1,0 +1,808 @@
+{
+  "Hosts": {
+    "label": "Hosts / Hosts",
+    "columns": [
+      "Host",
+      "CollectedUtc",
+      "Manufacturer",
+      "Model",
+      "Domain",
+      "OSCaption",
+      "OSVersion",
+      "Build",
+      "LastBootUtc",
+      "UptimeHours",
+      "MemoryTotalBytes",
+      "MemoryFreeBytes",
+      "MemoryFreePercent",
+      "LogicalProcessors",
+      "PhysicalProcessors",
+      "HypervisorPresent"
+    ]
+  },
+  "HostSettings": {
+    "label": "Configuração dos hosts / Host configuration",
+    "columns": [
+      "Host",
+      "VirtualMachinePath",
+      "VirtualHardDiskPath",
+      "NumaSpanningEnabled",
+      "VirtualMachineMigrationEnabled",
+      "VirtualMachineMigrationAuthenticationType",
+      "VirtualMachineMigrationPerformanceOption",
+      "MaximumVirtualMachineMigrations",
+      "MaximumStorageMigrations",
+      "UseAnyNetworkForMigration",
+      "MacAddressMinimum",
+      "MacAddressMaximum",
+      "EnableEnhancedSessionMode"
+    ]
+  },
+  "Processors": {
+    "label": "Processadores / Processors",
+    "columns": [
+      "Host",
+      "DeviceID",
+      "Name",
+      "Manufacturer",
+      "NumberOfCores",
+      "NumberOfLogicalProcessors",
+      "MaxClockSpeed",
+      "LoadPercentage",
+      "VirtualizationFirmwareEnabled",
+      "SecondLevelAddressTranslationExtensions"
+    ]
+  },
+  "NumaNodes": {
+    "label": "NUMA / NUMA",
+    "columns": [
+      "Host",
+      "NodeId",
+      "ProcessorCount",
+      "MemoryTotal",
+      "MemoryAvailable"
+    ]
+  },
+  "SupportedVersions": {
+    "label": "Versões de VM aceitas / Supported VM versions",
+    "columns": [
+      "Host",
+      "Name",
+      "Version",
+      "IsDefault"
+    ]
+  },
+  "Services": {
+    "label": "Serviços / Services",
+    "columns": [
+      "Host",
+      "Name",
+      "State",
+      "StartMode",
+      "Status"
+    ]
+  },
+  "Hotfixes": {
+    "label": "Atualizações QFE / QFE updates",
+    "columns": [
+      "Host",
+      "HotFixID",
+      "Description",
+      "InstalledOn"
+    ]
+  },
+  "RebootSignals": {
+    "label": "Indícios de reinicialização / Reboot signals",
+    "columns": [
+      "Host",
+      "Signal",
+      "Present",
+      "Detail"
+    ]
+  },
+  "Volumes": {
+    "label": "Volumes / Volumes",
+    "columns": [
+      "Host",
+      "Path",
+      "UniqueId",
+      "DriveLetter",
+      "FileSystemLabel",
+      "FileSystemType",
+      "HealthStatus",
+      "OperationalStatus",
+      "DriveType",
+      "SizeBytes",
+      "FreeBytes",
+      "FreePercent"
+    ]
+  },
+  "PhysicalDisks": {
+    "label": "Discos físicos / Physical disks",
+    "columns": [
+      "Host",
+      "FriendlyName",
+      "UniqueId",
+      "MediaType",
+      "BusType",
+      "HealthStatus",
+      "OperationalStatus",
+      "Size",
+      "CanPool",
+      "Usage"
+    ]
+  },
+  "StoragePools": {
+    "label": "Pools de armazenamento / Storage pools",
+    "columns": [
+      "Host",
+      "FriendlyName",
+      "UniqueId",
+      "IsPrimordial",
+      "HealthStatus",
+      "OperationalStatus",
+      "Size",
+      "AllocatedSize"
+    ]
+  },
+  "NetworkAdapters": {
+    "label": "Interfaces do host / Host adapters",
+    "columns": [
+      "Host",
+      "Name",
+      "InterfaceDescription",
+      "InterfaceIndex",
+      "Status",
+      "MacAddress",
+      "LinkSpeed",
+      "DriverInformation",
+      "DriverVersion",
+      "DriverDate",
+      "NdisVersion",
+      "Virtual",
+      "HardwareInterface"
+    ]
+  },
+  "NetworkIPs": {
+    "label": "Endereços do host / Host IP addresses",
+    "columns": [
+      "Host",
+      "InterfaceAlias",
+      "InterfaceIndex",
+      "AddressFamily",
+      "IPAddress",
+      "PrefixLength",
+      "AddressState",
+      "PrefixOrigin",
+      "SuffixOrigin"
+    ]
+  },
+  "Switches": {
+    "label": "Switches virtuais / Virtual switches",
+    "columns": [
+      "Host",
+      "Name",
+      "Id",
+      "SwitchType",
+      "NetAdapterInterfaceDescription",
+      "AllowManagementOS",
+      "EmbeddedTeamingEnabled",
+      "IovEnabled",
+      "IovSupport",
+      "BandwidthReservationMode"
+    ]
+  },
+  "SwitchTeams": {
+    "label": "Switch Embedded Teaming / Switch Embedded Teaming",
+    "columns": [
+      "Host",
+      "Name",
+      "NetAdapterInterfaceDescription",
+      "TeamingMode",
+      "LoadBalancingAlgorithm"
+    ]
+  },
+  "MigrationNetworks": {
+    "label": "Redes de Live Migration / Live Migration networks",
+    "columns": [
+      "Host",
+      "Subnet",
+      "Priority"
+    ]
+  },
+  "HostReplica": {
+    "label": "Serviço Hyper-V Replica / Hyper-V Replica service",
+    "columns": [
+      "Host",
+      "ReplicationEnabled",
+      "AllowedAuthenticationType",
+      "KerberosAuthenticationPort",
+      "CertificateAuthenticationPort",
+      "DefaultStorageLocation",
+      "ReplicationAllowedFromAnyServer"
+    ]
+  },
+  "VMs": {
+    "label": "Máquinas virtuais / Virtual machines",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Generation",
+      "Version",
+      "State",
+      "Status",
+      "OperationalStatus",
+      "UptimeHours",
+      "CPUUsage",
+      "ProcessorCount",
+      "MemoryAssigned",
+      "MemoryDemand",
+      "MemoryStatus",
+      "DynamicMemoryEnabled",
+      "MemoryStartup",
+      "AutomaticStartAction",
+      "AutomaticStopAction",
+      "AutomaticStartDelay",
+      "CheckpointType",
+      "AutomaticCheckpointsEnabled",
+      "ReplicationState",
+      "ReplicationHealth",
+      "IntegrationServicesState",
+      "IntegrationServicesVersion",
+      "ResourceMeteringEnabled",
+      "IsClustered",
+      "ConfigurationLocation",
+      "SnapshotFileLocation",
+      "SmartPagingFilePath",
+      "Notes"
+    ]
+  },
+  "VMProcessors": {
+    "label": "CPU das VMs / VM CPU settings",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Count",
+      "Reserve",
+      "Maximum",
+      "RelativeWeight",
+      "CompatibilityForMigrationEnabled",
+      "CompatibilityForOlderOperatingSystemsEnabled",
+      "ExposeVirtualizationExtensions",
+      "HwThreadCountPerCore",
+      "MaximumCountPerNumaNode",
+      "MaximumCountPerNumaSocket",
+      "EnableHostResourceProtection"
+    ]
+  },
+  "VMMemory": {
+    "label": "Memória das VMs / VM memory settings",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "DynamicMemoryEnabled",
+      "Startup",
+      "Minimum",
+      "Maximum",
+      "Buffer",
+      "Priority",
+      "MaximumAmountPerNumaNode"
+    ]
+  },
+  "VMDisks": {
+    "label": "Discos conectados / Attached disks",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "ControllerType",
+      "ControllerNumber",
+      "ControllerLocation",
+      "Path",
+      "DiskNumber",
+      "SupportPersistentReservations",
+      "MaximumIOPS",
+      "MinimumIOPS",
+      "QoSPolicyID"
+    ]
+  },
+  "VHDChains": {
+    "label": "VHD e cadeia de pais / VHD parent chains",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "RootPath",
+      "Depth",
+      "Path",
+      "ParentPath",
+      "VhdFormat",
+      "VhdType",
+      "FileSizeBytes",
+      "VirtualSizeBytes",
+      "MinimumSizeBytes",
+      "FragmentationPercentage",
+      "LogicalSectorSize",
+      "PhysicalSectorSize",
+      "BlockSize",
+      "Attached",
+      "DiskIdentifier",
+      "ReadStatus",
+      "Error"
+    ]
+  },
+  "VMNetworkAdapters": {
+    "label": "Rede das VMs / VM networking",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Name",
+      "Id",
+      "IsLegacy",
+      "SwitchName",
+      "SwitchId",
+      "Status",
+      "MacAddress",
+      "DynamicMacAddressEnabled",
+      "IPAddresses",
+      "MacAddressSpoofing",
+      "DhcpGuard",
+      "RouterGuard",
+      "PortMirroring",
+      "ProtectedNetwork",
+      "IovWeight",
+      "VmqWeight",
+      "MinimumBandwidthAbsolute",
+      "MinimumBandwidthWeight",
+      "MaximumBandwidth"
+    ]
+  },
+  "VMVlans": {
+    "label": "VLAN das VMs / VM VLAN settings",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "AdapterName",
+      "OperationMode",
+      "AccessVlanId",
+      "NativeVlanId",
+      "AllowedVlanIdList",
+      "PrimaryVlanId",
+      "SecondaryVlanId",
+      "SecondaryVlanIdList"
+    ]
+  },
+  "IntegrationServices": {
+    "label": "Serviços de integração / Integration services",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Name",
+      "Id",
+      "Enabled",
+      "PrimaryStatusDescription",
+      "SecondaryStatusDescription",
+      "PrimaryOperationalStatus",
+      "SecondaryOperationalStatus"
+    ]
+  },
+  "Checkpoints": {
+    "label": "Checkpoints / Checkpoints",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Name",
+      "Id",
+      "ParentSnapshotId",
+      "ParentSnapshotName",
+      "CreationTimeUtc",
+      "AgeDays",
+      "SnapshotType"
+    ]
+  },
+  "Replication": {
+    "label": "Replicação / Replication",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "State",
+      "Health",
+      "Mode",
+      "RelationshipType",
+      "PrimaryServer",
+      "ReplicaServer",
+      "ReplicaPort",
+      "AuthenticationType",
+      "FrequencySec",
+      "LastReplicationTimeUtc",
+      "RecoveryHistory",
+      "AutoResynchronizeEnabled",
+      "ResynchronizeStartTime",
+      "ResynchronizeEndTime"
+    ]
+  },
+  "ReplicationStats": {
+    "label": "Estatísticas Replica / Replica statistics",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "ReplicationHealth",
+      "ReplicationState",
+      "LastReplicationTime",
+      "LastApplyTime",
+      "AverageReplicationLatency",
+      "AverageReplicationSize",
+      "PendingReplicationSize",
+      "MissedReplicationCount",
+      "SuccessfulReplicationCount",
+      "MonitoringStartTime",
+      "MonitoringInterval"
+    ]
+  },
+  "VMFirmware": {
+    "label": "Firmware das VMs / VM firmware",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "SecureBoot",
+      "SecureBootTemplate",
+      "PreferredNetworkBootProtocol",
+      "ConsoleMode"
+    ]
+  },
+  "VMSecurity": {
+    "label": "Segurança das VMs / VM security settings",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "TpmEnabled",
+      "Shielded",
+      "EncryptStateAndVmMigrationTraffic",
+      "VirtualizationBasedSecurityOptOut",
+      "KsdEnabled"
+    ]
+  },
+  "VMResources": {
+    "label": "Medição já habilitada / Existing resource metering",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "MeteringDuration",
+      "AverageProcessorUsage",
+      "AverageMemoryUsage",
+      "MaximumMemoryUsage",
+      "MinimumMemoryUsage",
+      "TotalDiskAllocation",
+      "AggregatedAverageNormalizedIOPS",
+      "AggregatedAverageLatency",
+      "AggregatedDiskDataRead",
+      "AggregatedDiskDataWritten"
+    ]
+  },
+  "DVDDrives": {
+    "label": "Mídia óptica / Optical media",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "ControllerNumber",
+      "ControllerLocation",
+      "Path",
+      "DvdMediaType"
+    ]
+  },
+  "AssignedDevices": {
+    "label": "Dispositivos DDA / DDA devices",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Name",
+      "InstanceID",
+      "LocationPath"
+    ]
+  },
+  "FibreChannel": {
+    "label": "Fibre Channel virtual / Virtual Fibre Channel",
+    "columns": [
+      "Host",
+      "VMId",
+      "VMName",
+      "Name",
+      "SanName",
+      "WorldWideNodeNameSetA",
+      "WorldWideNodeNameSetB",
+      "WorldWidePortNameSetA",
+      "WorldWidePortNameSetB"
+    ]
+  },
+  "Cluster": {
+    "label": "Cluster / Cluster",
+    "columns": [
+      "Host",
+      "Name",
+      "Domain",
+      "ClusterFunctionalLevel",
+      "DynamicQuorum",
+      "DynamicWitness",
+      "QuarantineThreshold",
+      "QuarantineDuration",
+      "SameSubnetDelay",
+      "SameSubnetThreshold",
+      "CrossSubnetDelay",
+      "CrossSubnetThreshold"
+    ]
+  },
+  "ClusterNodes": {
+    "label": "Nós do cluster / Cluster nodes",
+    "columns": [
+      "Host",
+      "Name",
+      "Id",
+      "State",
+      "NodeWeight",
+      "DynamicWeight",
+      "DrainStatus",
+      "FaultDomain"
+    ]
+  },
+  "ClusterGroups": {
+    "label": "Grupos do cluster / Cluster roles",
+    "columns": [
+      "Host",
+      "Name",
+      "Id",
+      "State",
+      "OwnerNode",
+      "GroupType",
+      "Priority",
+      "FailoverThreshold",
+      "FailoverPeriod"
+    ]
+  },
+  "ClusterResources": {
+    "label": "Recursos do cluster / Cluster resources",
+    "columns": [
+      "Host",
+      "Name",
+      "Id",
+      "State",
+      "OwnerGroup",
+      "OwnerNode",
+      "ResourceType",
+      "IsCoreResource"
+    ]
+  },
+  "ClusterVolumes": {
+    "label": "CSV do cluster / Cluster shared volumes",
+    "columns": [
+      "Host",
+      "Name",
+      "OwnerNode",
+      "State",
+      "Path",
+      "PartitionName",
+      "FileSystem",
+      "SizeBytes",
+      "FreeBytes",
+      "FreePercent",
+      "RedirectedAccess",
+      "FaultState"
+    ]
+  },
+  "ClusterNetworks": {
+    "label": "Redes do cluster / Cluster networks",
+    "columns": [
+      "Host",
+      "Name",
+      "Address",
+      "AddressMask",
+      "Role",
+      "State",
+      "Metric",
+      "AutoMetric"
+    ]
+  },
+  "ClusterQuorum": {
+    "label": "Quorum / Quorum",
+    "columns": [
+      "Host",
+      "Cluster",
+      "QuorumType",
+      "QuorumResource"
+    ]
+  },
+  "Events": {
+    "label": "Eventos recentes / Recent events",
+    "columns": [
+      "Host",
+      "LogName",
+      "TimeCreatedUtc",
+      "EventId",
+      "Level",
+      "Provider",
+      "RecordId",
+      "Message"
+    ]
+  },
+  "EventCoverage": {
+    "label": "Cobertura dos eventos / Event coverage",
+    "columns": [
+      "Host",
+      "LogName",
+      "StartUtc",
+      "EndUtc",
+      "Status",
+      "Rows",
+      "Truncated",
+      "Limit",
+      "Error"
+    ]
+  },
+  "BpaResults": {
+    "label": "Resultados BPA existentes / Existing BPA results",
+    "columns": [
+      "Host",
+      "ModelId",
+      "ResultNumber",
+      "Severity",
+      "Category",
+      "Title",
+      "Problem",
+      "Impact",
+      "Resolution",
+      "Compliance",
+      "Excluded"
+    ]
+  },
+  "DeviceGuard": {
+    "label": "Segurança baseada em virtualização / Virtualization-based security",
+    "columns": [
+      "Host",
+      "VirtualizationBasedSecurityStatus",
+      "SecurityServicesConfigured",
+      "SecurityServicesRunning",
+      "RequiredSecurityProperties",
+      "AvailableSecurityProperties"
+    ]
+  },
+  "SmbSettings": {
+    "label": "Configuração SMB / SMB configuration",
+    "columns": [
+      "Host",
+      "Component",
+      "EnableSecuritySignature",
+      "RequireSecuritySignature",
+      "EnableSMB1Protocol",
+      "EnableSMB2Protocol",
+      "EncryptData",
+      "RejectUnencryptedAccess",
+      "EnableMultiChannel"
+    ]
+  },
+  "SmbConnections": {
+    "label": "Conexões SMB / SMB connections",
+    "columns": [
+      "Host",
+      "ServerName",
+      "ShareName",
+      "Dialect",
+      "Encrypted",
+      "Signed",
+      "ContinuouslyAvailable",
+      "NumOpens"
+    ]
+  },
+  "AdapterOffloads": {
+    "label": "Offloads de rede / Network offloads",
+    "columns": [
+      "Host",
+      "Kind",
+      "Name",
+      "InterfaceDescription",
+      "Enabled",
+      "OperationalState",
+      "SriovSupport",
+      "NumberOfReceiveQueues",
+      "NumberOfVMQs",
+      "BaseProcessorNumber",
+      "MaxProcessors"
+    ]
+  },
+  "ManagementAdapters": {
+    "label": "Rede do sistema de gerenciamento / Management OS networking",
+    "columns": [
+      "Host",
+      "Name",
+      "SwitchName",
+      "SwitchId",
+      "Status",
+      "MacAddress",
+      "IPAddresses",
+      "ManagementOS"
+    ]
+  },
+  "HostSummary": {
+    "label": "Resumo dos hosts / Host summary",
+    "columns": [
+      "Host",
+      "CollectedVMRows",
+      "RunningVMRows",
+      "LogicalProcessors",
+      "ConfiguredVcpu",
+      "RunningVcpu",
+      "RunningVcpuPerLogicalProcessor",
+      "AssignedMemoryBytes",
+      "ConfiguredStartupMemoryBytes",
+      "HostFreeMemoryPercent",
+      "OldCheckpointRows",
+      "WarningFindings",
+      "CriticalFindings",
+      "CollectionProblems",
+      "InventoryStatus",
+      "Observation"
+    ]
+  },
+  "StorageCapacity": {
+    "label": "Capacidade de VHD por volume / VHD capacity per volume",
+    "columns": [
+      "Host",
+      "VolumePath",
+      "VolumeSizeBytes",
+      "VolumeFreeBytes",
+      "UniqueVhdPaths",
+      "ObservedFileSizeBytes",
+      "ObservedVirtualSizeBytes",
+      "NominalGrowthBytes",
+      "Observation"
+    ]
+  },
+  "Findings": {
+    "label": "Achados para revisão / Findings for review",
+    "columns": [
+      "Severity",
+      "RuleId",
+      "Host",
+      "Target",
+      "Evidence",
+      "Recommendation",
+      "SourceId"
+    ]
+  },
+  "Coverage": {
+    "label": "Cobertura da coleta / Collection coverage",
+    "columns": [
+      "Host",
+      "Dataset",
+      "Scope",
+      "Status",
+      "Rows",
+      "StartedUtc",
+      "EndedUtc",
+      "DurationSeconds",
+      "Detail"
+    ]
+  },
+  "Errors": {
+    "label": "Falhas de coleta / Collection failures",
+    "columns": [
+      "Host",
+      "Dataset",
+      "Scope",
+      "ErrorType",
+      "Message"
+    ]
+  }
+}

@@ -24,6 +24,10 @@ Biblioteca de scripts e automações para compartilhar conhecimento e facilitar 
 
 [AD Health Report 1.2.0](scripts/ad-health-report/README.md) reúne inventário e evidências operacionais de AD, GPO/RSoP, SPNs/UPNs, segurança dos DCs, DNS, SYSVOL, host/software e backup, com HTML offline, 63 CSVs/JSON e ZIP opcional. Inclui exemplo fictício, fontes Microsoft e manuais PT-BR/EN-US; dados desconhecidos e cobertura parcial são explícitos.
 
+## Inventário e revisão do Hyper-V
+
+[Hyper-V Health Report 1.0.0](scripts/hyper-v-health-report/README.md) reúne hosts, VMs, armazenamento/cadeias VHD, redes, checkpoints, Replica, segurança, eventos e cluster, com HTML offline, 54 CSVs/JSON, 23 regras de revisão e ZIP opcional. Inclui exemplo fictício e manuais completos PT-BR/EN-US. Coleta real usa Windows PowerShell 5.1 x64; aceite em infraestrutura real permanece necessário.
+
 ## Como cada script será organizado
 
 ```text
@@ -60,6 +64,7 @@ A visibilidade pública, por si só, não define uma licença de reutilização.
 [Como contribuir](CONTRIBUTING.md) · [Dados e credenciais](SECURITY.md) · [Histórico](CHANGELOG.md)
 
 Só publicar conteúdo que você tenha direito de compartilhar. Os scripts privados do Infratech e dados de clientes não são transferidos automaticamente para esta biblioteca.
+
 
 
 

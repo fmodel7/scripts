@@ -1,0 +1,3 @@
+﻿"Host","CollectedUtc","Manufacturer","Model","Domain","OSCaption","OSVersion","Build","LastBootUtc","UptimeHours","MemoryTotalBytes","MemoryFreeBytes","MemoryFreePercent","LogicalProcessors","PhysicalProcessors","HypervisorPresent"
+"HV-LAB01","2026-11-13T18:00:00.0000000Z","Fictional vendor","Training server","lab.example","Microsoft Windows Server 2025 Datacenter","10.0","26100","2026-11-10T08:00:00Z","80","137438953472","34359738368","25","32","2","True"
+"HV-LAB02","2026-11-13T18:00:00.0000000Z","Fictional vendor","Training server","lab.example","Microsoft Windows Server 2022 Datacenter","10.0","20348","2026-11-01T08:00:00Z","300","68719476736","4294967296","6.25","16","1","True"
