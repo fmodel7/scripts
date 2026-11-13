@@ -1,0 +1,4 @@
+﻿"Domain","DC","Volume","DriveLetter","Label","Roles","CapacityBytes","FreeBytes","FreeGiB","FreePercent","AssessmentScope","Observation"
+"example.test","dc1.example.test","C:\","C:","OS","OS; SYSVOL","107374182400","53687091200","50","50","VisibleOrRoleMapped","Observed"
+"example.test","dc1.example.test","C:\ADData\","","AD","NTDSDatabase; NTDSLogs","214748364800","2147483648","2","1","VisibleOrRoleMapped","Observed"
+"example.test","dc1.example.test","\\?\Volume{SYNTHETIC}\","","Hidden","","104857600","52428800","0.049","50","UnmappedSystemVolume","Observed"

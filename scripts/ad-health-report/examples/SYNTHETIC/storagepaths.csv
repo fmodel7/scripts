@@ -1,0 +1,5 @@
+﻿"Domain","DC","Component","Path","Status","Volume","Error"
+"example.test","dc1.example.test","OS","C:\","Observed","C:\",""
+"example.test","dc1.example.test","NTDSDatabase","C:\ADData\NTDS\ntds.dit","Observed","C:\ADData\",""
+"example.test","dc1.example.test","NTDSLogs","C:\ADData\Logs","Observed","C:\ADData\",""
+"example.test","dc1.example.test","SYSVOL","C:\Windows\SYSVOL\sysvol","Observed","C:\",""

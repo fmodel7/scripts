@@ -1,4 +1,4 @@
-# Complete manual — FMODEL AD Health Report 1.0.0
+# Complete manual — FMODEL AD Health Report 1.1.0
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
 F. Model · fmodel@fmodel.com.br · Revision assistance: Akira (ChatGPT)  
@@ -28,7 +28,7 @@ The current token is used. No embedded password, API key or credential export is
 
 ## 4. Download, folder and VSCode
 
-Open scripts/ad-health-report on GitHub, select AD-Health-Report-v1.0.0.zip and click Download raw file, then Extract All. Alternatively use Code → Download ZIP from the repository home, extract it and open scripts/ad-health-report. Git is not required to download.
+Open scripts/ad-health-report on GitHub, select AD-Health-Report-v1.1.0.zip and click Download raw file, then Extract All. Alternatively use Code → Download ZIP from the repository home, extract it and open scripts/ad-health-report. Git is not required to download.
 
 Open the extracted folder in VSCode through File → Open Folder and select a Windows PowerShell terminal. Trust only code whose origin/content you reviewed. Do not execute within the ZIP or dot-source the entry point; invoke the file by name. Preserve UTF-8 with BOM when editing for Windows PowerShell 5.1.
 
@@ -115,7 +115,7 @@ These are collection/presentation options, not remediation switches. Smaller Pag
 
 NTDS, Netlogon, DNS, KDC, W32Time and DFSR are queried through CIM/WSMan without start, stop or restart. Observation=Observed means a record was returned; NotObserved means no matching record was observed, not a transport failure or a confirmed Stopped state. Missing status, denied access, unavailable transport or timeout require investigation; they do not automatically mean stopped service or offline DC. Whether DNS must run locally depends on DC roles/topology and cannot be decided from the service name alone.
 
-DCDiag uses a restricted test list: NetLogons, Replications, Services, Advertising and KnowsOfRoleHolders, with /q. No /fix, dynamic-DNS-update tests or comprehensive scan with additional effects is requested. The process has its own timeout, captures exit/output and saves raw logs under native. A timed-out process gets a timeout marker; its partial output is not retained. Attempting to terminate it does not turn the result into a completed test.
+The Baseline profile uses a restricted DCDiag test list: NetLogons, Replications, Services, Advertising and KnowsOfRoleHolders, with /q. No /fix, dynamic-DNS-update tests or comprehensive scan with additional effects is requested. The process has its own timeout, captures exit/output and saves raw logs under native. A timed-out process gets a timeout marker; its partial output is not retained. Attempting to terminate it does not turn the result into a completed test.
 
 /q mainly prints error messages. Empty text, exit zero or process completion does not prove complete health. Rows are classified for review, such as CompletedReviewRequired, Timeout or CommandError. English “passed test” phrases are not required. DCDiag's own connectivity test depends on ICMP; successful independent AD queries do not eliminate that native diagnostic limitation.
 
@@ -357,8 +357,130 @@ Severity, RuleId, Category, Domain, Target, Evidence, Recommendation
 
 ### Coverage
 
-Dataset, Scope, Status, Rows, StartedUtc, EndedUtc
+Dataset, Scope, Status, Rows, StartedUtc, EndedUtc, DurationSeconds
 
 ### CollectionErrors
 
 Dataset, Scope, ErrorType, Message
+
+## 24. Full profile and scope
+
+FullAssessment enables IncludeOperationalChecks, IncludeEventLogs, IncludeServiceChecks and IncludeDcDiagnostics and selects DiagnosticProfile=Extended. The preset always chooses Extended, even if Baseline was supplied too. Without the preset, options can be enabled individually. Scope remains Domain by default; depth does not automatically expand the number of domains.
+
+```powershell
+.\Export-ADHealthReport.ps1 -FullAssessment
+.\Export-ADHealthReport.ps1 -FullAssessment -Scope Forest -WhatIf
+```
+
+WhatIf performs only documented bootstrap and does not run the new probes. Expanded collection needs additional rights/connectivity: WSMan/CIM, registry reads, DNS, RPC/Event Log and administrative diagnostics. AD read access does not automatically grant those rights. Failed collectors do not gate independent checks.
+
+## 25. New parameters
+
+| Parameter | Default/range | Effect |
+|---|---|---|
+| FullAssessment | false | Full preset above, retaining selected scope. |
+| IncludeOperationalChecks | false | DNS, informational ICMP, host/volumes/registry and time. |
+| IncludeEventLogs | false | Critical/error/warning events from four selected logs. |
+| DiagnosticProfile | Baseline; Baseline/Extended | 5 or 17 tests when IncludeDcDiagnostics is enabled. |
+| DnsServer | Empty | Uses collector-configured resolvers unless another DNS server is supplied. |
+| TimeSamples | 3; 3–10 | Requested stripchart samples per DC. |
+| TimeWarningSeconds | 1; 0.001–3600 | Medium review threshold for median absolute offset. |
+| TimeCriticalSeconds | 5; 0.002–86400 | High threshold, greater than warning. |
+| DiskWarningPercent | 15; 0.01–100 | Free-space percentage warning. |
+| DiskCriticalPercent | 5; 0–99 | Critical percentage, below warning. |
+| DiskWarningGiB | 10; 0.01–1000000 | Free-space GiB warning. |
+| DiskCriticalGiB | 5; 0–999999 | Critical GiB, below warning. |
+| EventHours | 24; 1–168 | Retrospective event window. |
+| MaxEventsPerLog | 100; 1–1000 | Per-log/per-DC cap, explicitly recorded. |
+
+Disk thresholds use unrounded values: critical when percentage OR GiB reaches its critical threshold; warning when either warning threshold is reached. These are configurable project operational criteria, not a universal Microsoft standard.
+
+## 26. DNS, ICMP, host and storage
+
+DNS queries DC A/AAAA and _ldap._tcp.dc._msdcs.DOMAIN / _kerberos._tcp.DOMAIN SRV records. Resolver, TTL, target/port/priority/weight are recorded as applicable. The default resolver belongs to the collector, not necessarily that DC's DNS service. This does not validate all DNS records/resolvers. Missing AAAA alone is not failure; transport/access errors differ from NotPresent. Missing both host addresses or an SRV record prompts review.
+
+ICMP sends one attempt with up to five seconds for sending; name resolution has its own timing. NoReply does not prove a DC offline or gate CIM, AD, time or DCDiag. DCDiag can depend on ICMP internally regardless of this separation.
+
+The CIM bundle reads OS and fixed volumes once each, reusing a session removed in finally. It records UTC boot, uptime hours and total/free memory bytes. Boot within 24 hours is Info for maintenance correlation, not automatic failure; clock-inconsistent uptime remains unknown.
+
+It reads DSA Database file and Database log files path under NTDS/Parameters and SysVol under Netlogon/Parameters through CIM registry access, without changing registry values. Longest matching volume path maps roles, including folder mount points. Denied reads, unexpanded variables and unmapped paths remain explicit. NTDS/SYSVOL are not assumed to reside on C:.
+
+All returned fixed volumes are exported. Capacity alerts evaluate volumes with a drive letter, visible mount path or identified role; hidden unbound system volumes remain UnmappedSystemVolume and do not receive generic GiB alerts. This does not replace system/recovery partition review. Bytes are retained; GiB means 1024³. Space and memory are snapshots, without cleanup or continuous RAM-pressure measurement.
+
+## 27. Time, events and extended DCDiag
+
+Time uses multiple w32tm /stripchart samples, retaining sign and computing signed median, median absolute value and maximum absolute value. Negative offsets matter and thresholds use unrounded measurements. Parsing requires recognized sample lines and invariant numeric conversion; unknown output, insufficient samples, error or timeout does not become zero.
+
+Reference is always CollectorLocalClock: the collection computer's clock. This does not certify UTC accuracy or NTP synchronization. An incorrect collector clock can alert on every DC. Review reference, network delay/jitter and DC source before acting. Stripchart uses a different source-port/path from the W32Time client; response does not prove the service's network path. Read-only /query source, status /verbose and configuration output is retained without interpreting translated labels. No /resync, /config or clock adjustment runs.
+
+Events query System, Directory Service, DFS Replication and DNS Server for levels 1/2/3 in the selected window. At most cap+1 is requested to detect truncation, then cap rows are exported and EventLogCoverage retained. These are recent obtained events, not complete history. No matches is a successful empty query; absent DNS log can be inapplicable, while other absent logs/access errors remain limitations. Unformattable messages preserve event metadata with MessageStatus=Unavailable. Historical events do not establish current failure.
+
+Extended retains five Baseline tests and adds DFSREvent, SysVolCheck, KccEvent, MachineAccount, NCSecDesc, ObjectsReplicated, RidManager, SystemLog, VerifyReferences, CheckSDRefDom, CrossRefValidation and LocatorCheck. Connectivity is run by the framework. Legacy FrsEvent is not selected automatically. Intersite, /fix, /c, /e and DNS dynamic-update tests are excluded. Native results remain review-required; exit zero does not certify health.
+
+TimeoutSeconds remains per native process/CIM operation, not global. DNS uses QuickTimeout; Event Log RPC does not receive this timeout parameter. Discovery, AD queries, events and disk I/O may exceed it. Processing is sequential to control load; plan for DC count, tests and samples.
+
+## 28. Summary, durations and additional findings
+
+DCSummary combines DNS-observed addresses, uptime, lowest assessed free GiB/percentage, median absolute offset, event count/truncation and duration. GiB and percentage minima can come from different volumes; use Disks to identify each. Uncollected metrics remain unknown rather than manufactured zeros. Section statuses describe evidence coverage, not health approval. Observation is Incomplete, ReviewRequired or CollectedEvidenceOnly.
+
+Coverage includes DurationSeconds; Timings.csv records collector duration. HostBundle measures shared CIM/registry reads, while HostMetrics/Disks/StoragePaths measure extraction from that bundle. DCProcessing measures the complete DC stage including replication/checks, excluding final run export. Do not add parent DCProcessing to child durations as independent work. Stopwatch.TotalSeconds retains minutes unlike the Seconds component.
+
+New rules: DC-DISK-SPACE (High/Medium), DC-TIME-OFFSET (High/Medium), DC-EVENTS-REVIEW (Medium), DC-DNS-SRV-NOT-PRESENT and DC-DNS-HOST-NOT-PRESENT (Medium), DC-RECENT-BOOT (Info). Disk rules use assessable volumes/configured thresholds; time requires recognized sampling. Findings support human review without repair, deletion or automatic changes.
+
+## 29. Integration and new outputs
+
+Operational features were identified by comparison with Get-ADHealth.ps1, whose header credits ALI TAJRAN: https://www.alitajran.com/active-directory-health-check-powershell-script/ . This tool's collectors/data handling are independently implemented; its English parser, obsolete SMTP and active replication tests were not incorporated. No email is sent; reports remain local.
+
+Additional references: https://learn.microsoft.com/en-us/powershell/module/dnsclient/resolve-dnsname ; https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent ; https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings . No real DC was assessed during development; registry, WinRM/RPC, DNS and time interpretation need authorized acceptance.
+
+The previous 18 datasets remain plus 12 additions, totaling 30 CSVs. Events have explicit window/caps; all data obtained under those limits is exported to CSV/JSON and rendered up to MaxHtmlRows. New fields:
+
+### Connectivity — connectivity.csv
+
+Domain, DC, Probe, Status, RoundtripMs, Address, Error
+
+### DNS — dns.csv
+
+Domain, DC, QueryName, QueryType, Resolver, Status, Address, Target, Port, Priority, Weight, TTL, Error
+
+### HostMetrics — hostmetrics.csv
+
+Domain, DC, CollectedUtc, OSName, OSVersion, Build, SystemDrive, LastBootUtc, UptimeHours, MemoryTotalBytes, MemoryFreeBytes, MemoryFreePercent, Observation
+
+### Disks — disks.csv
+
+Domain, DC, Volume, DriveLetter, Label, Roles, CapacityBytes, FreeBytes, FreeGiB, FreePercent, AssessmentScope, Observation
+
+### StoragePaths — storagepaths.csv
+
+Domain, DC, Component, Path, Status, Volume, Error
+
+### TimeSamples — timesamples.csv
+
+Domain, DC, Sample, CollectedUtc, Reference, OffsetSeconds, AbsoluteOffsetSeconds, RawLine
+
+### TimeSummary — timesummary.csv
+
+Domain, DC, Reference, RequestedSamples, ParsedSamples, Status, MedianOffsetSeconds, MedianAbsoluteOffsetSeconds, MaximumAbsoluteOffsetSeconds, ExitCode, TimedOut, RawText
+
+### TimeConfiguration — timeconfiguration.csv
+
+Domain, DC, Query, Status, ExitCode, TimedOut, RawText
+
+### Events — events.csv
+
+Domain, DC, LogName, TimeCreatedUtc, EventId, Level, Provider, RecordId, Message, MessageStatus
+
+### EventLogCoverage — eventlogcoverage.csv
+
+Domain, DC, LogName, StartUtc, EndUtc, Status, Exported, Truncated, Limit, Error
+
+### DCSummary — dcsummary.csv
+
+Domain, DC, Site, DnsAddresses, UptimeHours, LowestAssessedFreeGiB, LowestAssessedFreePercent, MedianAbsoluteOffsetSeconds, RecentEventRows, RecentEventsTruncated, ProcessingSeconds, Observation, CollectionErrors, Findings, Replication, Connectivity, DNS, HostMetrics, Disks, StoragePaths, TimeSummary, Services, EventLogCoverage, NativeDiagnostics
+
+### Timings — timings.csv
+
+Dataset, Scope, Status, Rows, DurationSeconds
+
+DCSummary: Domain, DC, Site, DnsAddresses, UptimeHours, LowestAssessedFreeGiB, LowestAssessedFreePercent, MedianAbsoluteOffsetSeconds, RecentEventRows, RecentEventsTruncated, ProcessingSeconds, Observation, CollectionErrors, Findings, Replication, Connectivity, DNS, HostMetrics, Disks, StoragePaths, TimeSummary, Services, EventLogCoverage, NativeDiagnostics

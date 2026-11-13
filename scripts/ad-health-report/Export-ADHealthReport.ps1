@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-FMODEL AD Health Report 1.0.0 - read-only inventory and review evidence.
+FMODEL AD Health Report 1.1.0 - read-only inventory and review evidence.
 .DESCRIPTION
 Reads AD through RSAT ActiveDirectory, writes HTML/CSV/JSON locally. No repairs.
 Operational runtime: 64-bit Windows PowerShell 5.1. No default elevation requirement.
@@ -30,7 +30,21 @@ param(
     [ValidateRange(10,10000)][int]$MaxHtmlRows=1000,
     [ValidateRange(1,1000)][int]$PageSize=500,
     [switch]$SkipUserInventory,
-    [switch]$SkipPrivilegedMembers
+    [switch]$SkipPrivilegedMembers,
+    [switch]$FullAssessment,
+    [switch]$IncludeOperationalChecks,
+    [switch]$IncludeEventLogs,
+    [ValidateSet('Baseline','Extended')][string]$DiagnosticProfile='Baseline',
+    [string]$DnsServer='',
+    [ValidateRange(3,10)][int]$TimeSamples=3,
+    [ValidateRange(0.001,3600)][double]$TimeWarningSeconds=1.0,
+    [ValidateRange(0.002,86400)][double]$TimeCriticalSeconds=5.0,
+    [ValidateRange(0.01,100)][double]$DiskWarningPercent=15.0,
+    [ValidateRange(0,99)][double]$DiskCriticalPercent=5.0,
+    [ValidateRange(0.01,1000000)][double]$DiskWarningGiB=10.0,
+    [ValidateRange(0,999999)][double]$DiskCriticalGiB=5.0,
+    [ValidateRange(1,168)][int]$EventHours=24,
+    [ValidateRange(1,1000)][int]$MaxEventsPerLog=100
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -105,7 +119,19 @@ function Get-AdSchemas {
         Services='Domain,DC,Name,State,StartMode,Observation'
         NativeDiagnostics='Domain,DC,Test,Status,ExitCode,TimedOut,OutputFile'
         Findings='Severity,RuleId,Category,Domain,Target,Evidence,Recommendation'
-        Coverage='Dataset,Scope,Status,Rows,StartedUtc,EndedUtc'
+        Connectivity='Domain,DC,Probe,Status,RoundtripMs,Address,Error'
+        DNS='Domain,DC,QueryName,QueryType,Resolver,Status,Address,Target,Port,Priority,Weight,TTL,Error'
+        HostMetrics='Domain,DC,CollectedUtc,OSName,OSVersion,Build,SystemDrive,LastBootUtc,UptimeHours,MemoryTotalBytes,MemoryFreeBytes,MemoryFreePercent,Observation'
+        Disks='Domain,DC,Volume,DriveLetter,Label,Roles,CapacityBytes,FreeBytes,FreeGiB,FreePercent,AssessmentScope,Observation'
+        StoragePaths='Domain,DC,Component,Path,Status,Volume,Error'
+        TimeSamples='Domain,DC,Sample,CollectedUtc,Reference,OffsetSeconds,AbsoluteOffsetSeconds,RawLine'
+        TimeSummary='Domain,DC,Reference,RequestedSamples,ParsedSamples,Status,MedianOffsetSeconds,MedianAbsoluteOffsetSeconds,MaximumAbsoluteOffsetSeconds,ExitCode,TimedOut,RawText'
+        TimeConfiguration='Domain,DC,Query,Status,ExitCode,TimedOut,RawText'
+        Events='Domain,DC,LogName,TimeCreatedUtc,EventId,Level,Provider,RecordId,Message,MessageStatus'
+        EventLogCoverage='Domain,DC,LogName,StartUtc,EndUtc,Status,Exported,Truncated,Limit,Error'
+        DCSummary='Domain,DC,Site,DnsAddresses,UptimeHours,LowestAssessedFreeGiB,LowestAssessedFreePercent,MedianAbsoluteOffsetSeconds,RecentEventRows,RecentEventsTruncated,ProcessingSeconds,Observation,CollectionErrors,Findings,Replication,Connectivity,DNS,HostMetrics,Disks,StoragePaths,TimeSummary,Services,EventLogCoverage,NativeDiagnostics'
+        Timings='Dataset,Scope,Status,Rows,DurationSeconds'
+        Coverage='Dataset,Scope,Status,Rows,StartedUtc,EndedUtc,DurationSeconds'
         CollectionErrors='Dataset,Scope,ErrorType,Message'
     }
 }
@@ -115,7 +141,7 @@ function Add-AdRows {
 }
 function Invoke-AdCollection {
     param($Report,[string]$Dataset,[string]$Scope,[scriptblock]$Read,[switch]$Skip)
-    $start=[datetime]::UtcNow.ToString('o');$status='Collected';$count=0
+    $watch=[Diagnostics.Stopwatch]::StartNew();$start=[datetime]::UtcNow.ToString('o');$status='Collected';$count=0
     if($Skip){$status='NotRequested'}else{
         try{$rows=@(& $Read);Add-AdRows $Report $Dataset $rows;$count=$rows.Count}
         catch{
@@ -123,7 +149,8 @@ function Invoke-AdCollection {
             Add-AdRows $Report 'CollectionErrors' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;ErrorType=$_.Exception.GetType().FullName;Message=$_.Exception.Message})
         }
     }
-    Add-AdRows $Report 'Coverage' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;Status=$status;Rows=$count;StartedUtc=$start;EndedUtc=[datetime]::UtcNow.ToString('o')})
+    Add-AdRows $Report 'Timings' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;Status=$status;Rows=$count;DurationSeconds=$watch.Elapsed.TotalSeconds})
+    Add-AdRows $Report 'Coverage' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;Status=$status;Rows=$count;StartedUtc=$start;EndedUtc=[datetime]::UtcNow.ToString('o');DurationSeconds=$watch.Elapsed.TotalSeconds})
 }
 function New-AdFinding {
     param($Report,[string]$Severity,[string]$RuleId,[string]$Category,[string]$Domain,[string]$Target,[string]$Evidence,[string]$Recommendation)
@@ -174,21 +201,9 @@ function Get-AdServiceObservations {
 }
 function Get-AdNativePath { Join-Path ([Environment]::SystemDirectory) 'dcdiag.exe' }
 function Invoke-AdDcdiag {
-    param([string]$DC,[ValidateSet('NetLogons','Replications','Services','Advertising','KnowsOfRoleHolders')][string]$Test,[int]$TimeoutSeconds)
+    param([string]$DC,[ValidateSet('NetLogons','Replications','Services','Advertising','KnowsOfRoleHolders','DFSREvent','SysVolCheck','KccEvent','MachineAccount','NCSecDesc','ObjectsReplicated','RidManager','SystemLog','VerifyReferences','CheckSDRefDom','CrossRefValidation','LocatorCheck')][string]$Test,[int]$TimeoutSeconds)
     if($DC -notmatch '^[a-zA-Z0-9][a-zA-Z0-9.-]*$'){throw 'Invalid DC hostname.'}
-    $psi=New-Object Diagnostics.ProcessStartInfo
-    $psi.FileName=Get-AdNativePath
-    $psi.Arguments="/s:$DC /test:$Test /q"
-    $psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.RedirectStandardOutput=$true;$psi.RedirectStandardError=$true
-    $p=New-Object Diagnostics.Process;$p.StartInfo=$psi
-    try{
-        $null=$p.Start();$out=$p.StandardOutput.ReadToEndAsync();$err=$p.StandardError.ReadToEndAsync()
-        if(-not $p.WaitForExit($TimeoutSeconds*1000)){
-            try{$p.Kill()}catch{}
-            return [pscustomobject]@{ExitCode=$null;TimedOut=$true;Text='Timeout. Partial native output not retained.'}
-        }
-        [pscustomobject]@{ExitCode=$p.ExitCode;TimedOut=$false;Text=($out.GetAwaiter().GetResult()+[Environment]::NewLine+$err.GetAwaiter().GetResult())}
-    }finally{$p.Dispose()}
+    Invoke-AdReadProcess (Get-AdNativePath) "/s:$DC /test:$Test /q" $TimeoutSeconds
 }
 function Resolve-AdOutputPath {
     param([string]$Path)
@@ -245,6 +260,7 @@ function Complete-AdFindings {
 }
 function Invoke-AdAssessment {
     param($Options,$Caller)
+    $Options=Get-AdEffectiveOptions $Options
     Initialize-AdRuntime
     $server=[string]$Options.Server
     if(-not $server){$d=Invoke-AdQuery 'Get-ADDomain' @{Current='LocalComputer'};$server=$d.DNSRoot}
@@ -258,7 +274,7 @@ function Invoke-AdAssessment {
     $folder=Join-Path $base ('Run-{0}-{1}' -f [datetime]::UtcNow.ToString('yyyyMMdd-HHmmss'),[guid]::NewGuid().ToString('N'))
     $null=New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
     $optionsCopy=[ordered]@{};foreach($p in $Options.PSObject.Properties){$optionsCopy[$p.Name]=$p.Value};$optionsCopy.Server=$server
-    $report=[pscustomobject]@{SchemaVersion=1;Version='1.0.0';RunId=[IO.Path]::GetFileName($folder);StartedUtc=[datetime]::UtcNow.ToString('o');EndedUtc='';Status='Collecting';Parameters=[pscustomobject]$optionsCopy;Datasets=[ordered]@{}}
+    $report=[pscustomobject]@{SchemaVersion=1;Version='1.1.0';RunId=[IO.Path]::GetFileName($folder);StartedUtc=[datetime]::UtcNow.ToString('o');EndedUtc='';Status='Collecting';Parameters=[pscustomobject]$optionsCopy;Datasets=[ordered]@{}}
     $schemas=Get-AdSchemas;foreach($name in $schemas.Keys){$report.Datasets[$name]=New-Object 'Collections.Generic.List[object]'}
     Invoke-AdCollection $report 'Forest' $forest.Name {
         $schema=Invoke-AdQuery 'Get-ADObject' @{Identity=$root.schemaNamingContext;Properties=@('objectVersion');Server=$server}
@@ -329,6 +345,7 @@ function Invoke-AdAssessment {
             } -Skip:$Options.SkipPrivilegedMembers
         }
         foreach($dcRow in @($report.Datasets.DomainControllers|Where-Object{$_.Domain -eq $dnsDomain})){
+            $dcWatch=[Diagnostics.Stopwatch]::StartNew()
             $dcName=[string]$dcRow.HostName
             Invoke-AdCollection $report 'Replication' $dcName {
                 foreach($p in (Invoke-AdQuery 'Get-ADReplicationPartnerMetadata' @{Target=$dcName;Scope='Server';Partition='*';PartnerType='Inbound'})){
@@ -343,7 +360,7 @@ function Invoke-AdAssessment {
             Invoke-AdCollection $report 'Services' $dcName {Get-AdServiceObservations $dcName $Options.TimeoutSeconds $dnsDomain} -Skip:(-not $Options.IncludeServiceChecks)
             if($Options.IncludeDcDiagnostics){
                 $nativeFolder=Join-Path $folder 'native';$null=New-Item -ItemType Directory -Path $nativeFolder -Force
-                foreach($test in @('NetLogons','Replications','Services','Advertising','KnowsOfRoleHolders')){
+                foreach($test in @(Get-AdDiagnosticTests $Options.DiagnosticProfile)){
                     Invoke-AdCollection $report 'NativeDiagnostics' "$dcName / $test" {
                         $native=Invoke-AdDcdiag $dcName $test $Options.TimeoutSeconds
                         $nativeName=('{0}-{1}.txt' -f $test,[guid]::NewGuid().ToString('N'))
@@ -356,6 +373,8 @@ function Invoke-AdAssessment {
                     }
                 }
             }else{Invoke-AdCollection $report 'NativeDiagnostics' $dcName {} -Skip}
+            Invoke-AdOperationalCollections $report $Options $dnsDomain $dcName
+            Add-AdRows $report 'Timings' @([pscustomobject]@{Dataset='DCProcessing';Scope=$dcName;Status='Completed';Rows=1;DurationSeconds=$dcWatch.Elapsed.TotalSeconds})
         }
         $counts=@{};foreach($kind in @('Computers','Users','Groups')){
             $coverage=@($report.Datasets.Coverage|Where-Object{$_.Dataset -eq $kind -and $_.Scope -eq $dnsDomain})
@@ -367,6 +386,7 @@ function Invoke-AdAssessment {
         }
     }
     Complete-AdFindings $report
+    Complete-AdOperationalFindings $report
     $report.EndedUtc=[datetime]::UtcNow.ToString('o')
     $important=@($report.Datasets.Findings|Where-Object{$_.Severity -in @('High','Medium')}).Count
     $report.Status=if($report.Datasets.CollectionErrors.Count){'Partial'}elseif($important){'CompletedWithFindings'}else{'Completed'}
@@ -376,6 +396,236 @@ function Invoke-AdAssessment {
     $hashes=Get-ChildItem -LiteralPath $folder -File -Recurse | ForEach-Object{[pscustomobject]@{Path=$_.FullName.Substring($folder.Length+1).Replace('\','/');SHA256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();Bytes=$_.Length}}
     [IO.File]::WriteAllText((Join-Path $folder 'run-manifest.json'),(@($hashes)|ConvertTo-Json -Depth 4),(New-Object Text.UTF8Encoding($false)))
     [pscustomobject]@{Status=$report.Status;ExitCode=if($report.Status -eq 'Completed'){0}else{2};RunFolder=$folder;Findings=$report.Datasets.Findings.Count;CollectionErrors=$report.Datasets.CollectionErrors.Count}
+}
+
+function Get-AdEffectiveOptions {
+    param($InputOptions)
+    $defaults=[ordered]@{Server='';Scope='Domain';OutputPath='';InactiveDays=90;IncludeServiceChecks=$false;IncludeDcDiagnostics=$false;TimeoutSeconds=60;MaxHtmlRows=1000;PageSize=500;SkipUserInventory=$false;SkipPrivilegedMembers=$false;FullAssessment=$false;IncludeOperationalChecks=$false;IncludeEventLogs=$false;DiagnosticProfile='Baseline';DnsServer='';TimeSamples=3;TimeWarningSeconds=1.0;TimeCriticalSeconds=5.0;DiskWarningPercent=15.0;DiskCriticalPercent=5.0;DiskWarningGiB=10.0;DiskCriticalGiB=5.0;EventHours=24;MaxEventsPerLog=100}
+    foreach($key in @($defaults.Keys)){$p=$InputOptions.PSObject.Properties[$key];if($null -ne $p){$defaults[$key]=$p.Value}}
+    if($defaults.FullAssessment){foreach($k in @('IncludeServiceChecks','IncludeDcDiagnostics','IncludeOperationalChecks','IncludeEventLogs')){$defaults[$k]=$true};$defaults.DiagnosticProfile='Extended'}
+    if($defaults.TimeCriticalSeconds -le $defaults.TimeWarningSeconds -or $defaults.DiskCriticalPercent -ge $defaults.DiskWarningPercent -or $defaults.DiskCriticalGiB -ge $defaults.DiskWarningGiB){throw 'Critical thresholds must be stricter than warning thresholds.'}
+    [pscustomobject]$defaults
+}
+function Get-AdDiagnosticTests {
+    param([ValidateSet('Baseline','Extended')][string]$Profile)
+    $tests=@('NetLogons','Replications','Services','Advertising','KnowsOfRoleHolders')
+    if($Profile -eq 'Extended'){$tests+=@('DFSREvent','SysVolCheck','KccEvent','MachineAccount','NCSecDesc','ObjectsReplicated','RidManager','SystemLog','VerifyReferences','CheckSDRefDom','CrossRefValidation','LocatorCheck')}
+    $tests
+}
+function Invoke-AdReadProcess {
+    param([string]$File,[string]$Arguments,[int]$TimeoutSeconds)
+    $psi=New-Object Diagnostics.ProcessStartInfo
+    $psi.FileName=$File;$psi.Arguments=$Arguments;$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.RedirectStandardOutput=$true;$psi.RedirectStandardError=$true
+    $p=New-Object Diagnostics.Process;$p.StartInfo=$psi
+    try{
+        $null=$p.Start();$out=$p.StandardOutput.ReadToEndAsync();$err=$p.StandardError.ReadToEndAsync()
+        if(-not $p.WaitForExit($TimeoutSeconds*1000)){try{$p.Kill()}catch{};return [pscustomobject]@{ExitCode=$null;TimedOut=$true;Text='Timeout. Partial native output not retained.'}}
+        [pscustomobject]@{ExitCode=$p.ExitCode;TimedOut=$false;Text=($out.GetAwaiter().GetResult()+[Environment]::NewLine+$err.GetAwaiter().GetResult())}
+    }finally{$p.Dispose()}
+}
+function Invoke-AdDnsQuery {
+    param([string]$Name,[ValidateSet('A','AAAA','SRV')][string]$Type,[string]$Resolver)
+    $arguments=@{Name=$Name;Type=$Type;DnsOnly=$true;NoHostsFile=$true;QuickTimeout=$true;ErrorAction='Stop'}
+    if($Resolver){$arguments.Server=$Resolver}
+    Resolve-DnsName @arguments
+}
+function Get-AdDnsObservation {
+    param([string]$Domain,[string]$DC,[string]$Name,[string]$Type,[string]$Resolver)
+    try{
+        $records=@(Invoke-AdDnsQuery $Name $Type $Resolver);$matched=$false
+        foreach($r in $records){
+            $address=Get-AdField $r 'IPAddress';$target=Get-AdField $r 'NameTarget'
+            if(($Type -eq 'SRV' -and $target) -or ($Type -ne 'SRV' -and $address)){
+                $matched=$true
+                [pscustomobject]@{Domain=$Domain;DC=$DC;QueryName=$Name;QueryType=$Type;Resolver=if($Resolver){$Resolver}else{'CollectorConfiguredDNS'};Status='Observed';Address=$address;Target=$target;Port=Get-AdField $r 'Port';Priority=Get-AdField $r 'Priority';Weight=Get-AdField $r 'Weight';TTL=Get-AdField $r 'TTL';Error=''}
+            }
+        }
+        if(-not $matched){[pscustomobject]@{Domain=$Domain;DC=$DC;QueryName=$Name;QueryType=$Type;Resolver=if($Resolver){$Resolver}else{'CollectorConfiguredDNS'};Status='NotPresent';Address='';Target='';Port=$null;Priority=$null;Weight=$null;TTL=$null;Error='No matching record returned.'}}
+    }catch{
+        $id=$_.FullyQualifiedErrorId
+        $status=if($id -match '^(DNS_ERROR_RCODE_NAME_ERROR|DNS_INFO_NO_RECORDS)(,|$)'){'NotPresent'}else{'QueryError'}
+        [pscustomobject]@{Domain=$Domain;DC=$DC;QueryName=$Name;QueryType=$Type;Resolver=if($Resolver){$Resolver}else{'CollectorConfiguredDNS'};Status=$status;Address='';Target='';Port=$null;Priority=$null;Weight=$null;TTL=$null;Error=$_.Exception.Message}
+    }
+}
+function Get-AdVolumeRoles {
+    param([string]$Volume,[object[]]$Paths)
+    $roles=foreach($p in $Paths){if($p.Status -eq 'Observed' -and $p.Volume -ieq $Volume){$p.Component}}
+    @($roles)-join '; '
+}
+function Get-AdPingObservation {
+    param([string]$Domain,[string]$DC,[int]$TimeoutSeconds)
+    $ping=New-Object Net.NetworkInformation.Ping
+    try{
+        $reply=$ping.Send($DC,[math]::Min(5000,$TimeoutSeconds*1000))
+        [pscustomobject]@{Domain=$Domain;DC=$DC;Probe='ICMP';Status=if($reply.Status -eq 'Success'){'Reply'}else{'NoReply'};RoundtripMs=if($reply.Status -eq 'Success'){$reply.RoundtripTime}else{$null};Address=if($reply.Address){$reply.Address.ToString()}else{''};Error=if($reply.Status -eq 'Success'){''}else{$reply.Status.ToString()}}
+    }catch{[pscustomobject]@{Domain=$Domain;DC=$DC;Probe='ICMP';Status='Error';RoundtripMs=$null;Address='';Error=$_.Exception.Message}}
+    finally{$ping.Dispose()}
+}
+function Get-AdHostBundle {
+    param([string]$Domain,[string]$DC,[int]$TimeoutSeconds)
+    $hostRows=@();$diskRows=@();$paths=@();$errors=New-Object 'Collections.Generic.List[object]';$session=$null;$os=$null;$volumes=@()
+    try{
+        $session=New-CimSession -ComputerName $DC -OperationTimeoutSec $TimeoutSeconds -ErrorAction Stop
+        try{
+            $os=Get-CimInstance -CimSession $session -ClassName Win32_OperatingSystem -OperationTimeoutSec $TimeoutSeconds -ErrorAction Stop
+            $boot=Convert-AdDate $os.LastBootUpTime;$hours=$null;$observation='Observed'
+            if($boot){$hours=([datetime]::UtcNow-([datetime]$boot).ToUniversalTime()).TotalHours;if($hours -lt 0){$observation='ClockInconsistent';$hours=$null}}
+            $total=[long]$os.TotalVisibleMemorySize*1KB;$free=[long]$os.FreePhysicalMemory*1KB
+            $hostRows=@([pscustomobject]@{Domain=$Domain;DC=$DC;CollectedUtc=[datetime]::UtcNow.ToString('o');OSName=$os.Caption;OSVersion=$os.Version;Build=$os.BuildNumber;SystemDrive=$os.SystemDrive;LastBootUtc=$boot;UptimeHours=$hours;MemoryTotalBytes=$total;MemoryFreeBytes=$free;MemoryFreePercent=if($total -gt 0){[math]::Round(100.0*$free/$total,2)}else{$null};Observation=$observation})
+            $paths+= [pscustomobject]@{Domain=$Domain;DC=$DC;Component='OS';Path=($os.SystemDrive+'\');Status='Observed';Volume='';Error=''}
+        }catch{$errors.Add([pscustomobject]@{Component='HostMetrics';Message=$_.Exception.Message})}
+        try{$volumes=@(Get-CimInstance -CimSession $session -ClassName Win32_Volume -Filter 'DriveType=3' -OperationTimeoutSec $TimeoutSeconds -ErrorAction Stop)}catch{$errors.Add([pscustomobject]@{Component='Disks';Message=$_.Exception.Message})}
+        $registry=@(@('NTDSDatabase','SYSTEM\CurrentControlSet\Services\NTDS\Parameters','DSA Database file'),@('NTDSLogs','SYSTEM\CurrentControlSet\Services\NTDS\Parameters','Database log files path'),@('SYSVOL','SYSTEM\CurrentControlSet\Services\Netlogon\Parameters','SysVol'))
+        foreach($item in $registry){
+            try{
+                $registryArguments=@{hDefKey=[uint32]2147483650;sSubKeyName=$item[1];sValueName=$item[2]}
+                $value=Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv -MethodName GetStringValue -Arguments $registryArguments -OperationTimeoutSec $TimeoutSeconds -ErrorAction Stop
+                if($value.ReturnValue -eq 13){$value=Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv -MethodName GetExpandedStringValue -Arguments $registryArguments -OperationTimeoutSec $TimeoutSeconds -ErrorAction Stop}
+                if($value.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($value.sValue)){throw "Registry read return=$($value.ReturnValue)"}
+                $path=[string]$value.sValue;$status=if($path.Contains('%')){'Unexpanded'}else{'Observed'}
+                $paths+=[pscustomobject]@{Domain=$Domain;DC=$DC;Component=$item[0];Path=$path;Status=$status;Volume='';Error=''}
+            }catch{$paths+=[pscustomobject]@{Domain=$Domain;DC=$DC;Component=$item[0];Path='';Status='RegistryError';Volume='';Error=$_.Exception.Message}}
+        }
+        foreach($p in $paths){
+            if($p.Status -eq 'Observed'){
+                $match=@($volumes|Where-Object{$_.Name -and $p.Path.StartsWith([string]$_.Name,[StringComparison]::OrdinalIgnoreCase)}|Sort-Object @{Expression={$_.Name.Length};Descending=$true})
+                if($match.Count){$p.Volume=[string]$match[0].Name}else{$p.Status='VolumeUnmapped'}
+            }
+        }
+        $diskRows=@(foreach($v in $volumes){
+            $capacity=Get-AdField $v 'Capacity';$free=Get-AdField $v 'FreeSpace';$usable=$null -ne $capacity -and [double]$capacity -gt 0 -and $null -ne $free
+            $roles=Get-AdVolumeRoles ([string]$v.Name) $paths
+            [pscustomobject]@{Domain=$Domain;DC=$DC;Volume=$v.Name;DriveLetter=$v.DriveLetter;Label=$v.Label;Roles=$roles;CapacityBytes=$capacity;FreeBytes=$free;FreeGiB=if($usable){[math]::Round([double]$free/1GB,3)}else{$null};FreePercent=if($usable){[math]::Round(100.0*[double]$free/[double]$capacity,3)}else{$null};AssessmentScope=if($roles -or $v.DriveLetter -or $v.Name -match '^[A-Za-z]:\\'){'VisibleOrRoleMapped'}else{'UnmappedSystemVolume'};Observation=if($usable){'Observed'}else{'UnknownCapacity'}}
+        })
+    }catch{foreach($component in @('HostMetrics','Disks','StoragePaths')){$errors.Add([pscustomobject]@{Component=$component;Message=$_.Exception.Message})}}
+    finally{if($session){Remove-CimSession -CimSession $session -ErrorAction SilentlyContinue}}
+    [pscustomobject]@{HostRows=$hostRows;DiskRows=$diskRows;Paths=$paths;Errors=@($errors.ToArray())}
+}
+function Get-AdTimeNativePath {Join-Path ([Environment]::SystemDirectory) 'w32tm.exe'}
+function Invoke-AdTimeQuery {
+    param([string]$DC,[ValidateSet('Stripchart','Source','Status','Configuration')][string]$Query,[int]$Samples,[int]$TimeoutSeconds)
+    if($DC -notmatch '^[a-zA-Z0-9][a-zA-Z0-9.-]*$'){throw 'Invalid DC hostname.'}
+    $nativeArguments=if($Query -eq 'Stripchart'){"/stripchart /computer:$DC /samples:$Samples /period:1 /dataonly"}else{"/query /computer:$DC /$($Query.ToLowerInvariant())"}
+    if($Query -eq 'Status'){$nativeArguments+=' /verbose'}
+    Invoke-AdReadProcess (Get-AdTimeNativePath) $nativeArguments $TimeoutSeconds
+}
+function Get-AdMedian {
+    param([double[]]$Values)
+    if($Values.Count -eq 0){return $null};$sorted=@($Values|Sort-Object);$m=[int][math]::Floor($sorted.Count/2)
+    if($sorted.Count%2){return $sorted[$m]};($sorted[$m-1]+$sorted[$m])/2.0
+}
+function Convert-AdTimeSamples {
+    param([string]$Text,[string]$Domain,[string]$DC)
+    $i=0
+    foreach($line in ($Text -split '\r?\n')){
+        if($line -match '^\s*\d{1,2}:\d{2}:\d{2}[^,]*,\s*(?<Offset>[+-]\d+(?:[.,]\d+)?)s\s*$'){
+            $number=0.0
+            if([double]::TryParse($Matches.Offset.Replace(',','.'),[Globalization.NumberStyles]::Float,[Globalization.CultureInfo]::InvariantCulture,[ref]$number)){
+                $i++;[pscustomobject]@{Domain=$Domain;DC=$DC;Sample=$i;CollectedUtc=[datetime]::UtcNow.ToString('o');Reference='CollectorLocalClock';OffsetSeconds=$number;AbsoluteOffsetSeconds=[math]::Abs($number);RawLine=$line}
+            }
+        }
+    }
+}
+function Get-AdTimeBundle {
+    param([string]$Domain,[string]$DC,[int]$Samples,[int]$TimeoutSeconds)
+    $native=Invoke-AdTimeQuery $DC Stripchart $Samples $TimeoutSeconds
+    $rows=@(Convert-AdTimeSamples $native.Text $Domain $DC)
+    $status=if($native.TimedOut){'Timeout'}elseif($native.ExitCode -ne 0){'CommandError'}elseif($rows.Count -lt $Samples){'InsufficientOrUnrecognizedSamples'}else{'Measured'}
+    $summary=[pscustomobject]@{Domain=$Domain;DC=$DC;Reference='CollectorLocalClock';RequestedSamples=$Samples;ParsedSamples=$rows.Count;Status=$status;MedianOffsetSeconds=if($rows.Count){Get-AdMedian @($rows.OffsetSeconds)}else{$null};MedianAbsoluteOffsetSeconds=if($rows.Count){Get-AdMedian @($rows.AbsoluteOffsetSeconds)}else{$null};MaximumAbsoluteOffsetSeconds=if($rows.Count){($rows.AbsoluteOffsetSeconds|Measure-Object -Maximum).Maximum}else{$null};ExitCode=$native.ExitCode;TimedOut=$native.TimedOut;RawText=$native.Text}
+    $config=@(foreach($q in @('Source','Status','Configuration')){
+        try{$n=Invoke-AdTimeQuery $DC $q $Samples $TimeoutSeconds;[pscustomobject]@{Domain=$Domain;DC=$DC;Query=$q;Status=if($n.TimedOut){'Timeout'}elseif($n.ExitCode -ne 0){'CommandError'}else{'CompletedReviewRequired'};ExitCode=$n.ExitCode;TimedOut=$n.TimedOut;RawText=$n.Text}}
+        catch{[pscustomobject]@{Domain=$Domain;DC=$DC;Query=$q;Status='QueryError';ExitCode=$null;TimedOut=$false;RawText=$_.Exception.Message}}
+    })
+    [pscustomobject]@{Samples=$rows;Summary=$summary;Configuration=$config}
+}
+function Invoke-AdEventQuery {
+    param([string]$DC,[string]$Log,[datetime]$Start,[datetime]$End,[int]$Maximum)
+    Get-WinEvent -ComputerName $DC -FilterHashtable @{LogName=$Log;StartTime=$Start;EndTime=$End;Level=@(1,2,3)} -MaxEvents $Maximum -ErrorAction Stop
+}
+function Get-AdEventBundle {
+    param([string]$Domain,[string]$DC,[string]$Log,[int]$Hours,[int]$Maximum)
+    $end=[datetime]::UtcNow;$start=$end.AddHours(-$Hours);$events=@();$status='Collected';$errorText=''
+    try{$events=@(Invoke-AdEventQuery $DC $Log $start $end ($Maximum+1))}
+    catch{if($_.FullyQualifiedErrorId -like 'NoMatchingEventsFound*'){$status='Collected'}elseif($_.FullyQualifiedErrorId -like 'NoMatchingLogsFound*'){$status='NotPresent';$errorText=$_.Exception.Message}else{$status='QueryError';$errorText=$_.Exception.Message}}
+    $truncated=$events.Count -gt $Maximum
+    $rows=@(foreach($e in @($events|Select-Object -First $Maximum)){
+        $messageStatus='Formatted';try{$message=Get-AdField $e 'Message'}catch{$message='Message unavailable: '+$_.Exception.Message;$messageStatus='Unavailable'}
+        [pscustomobject]@{Domain=$Domain;DC=$DC;LogName=$Log;TimeCreatedUtc=Convert-AdDate $e.TimeCreated;EventId=$e.Id;Level=$e.Level;Provider=$e.ProviderName;RecordId=$e.RecordId;Message=$message;MessageStatus=$messageStatus}
+    })
+    $coverage=[pscustomobject]@{Domain=$Domain;DC=$DC;LogName=$Log;StartUtc=$start.ToString('o');EndUtc=$end.ToString('o');Status=$status;Exported=$rows.Count;Truncated=$truncated;Limit=$Maximum;Error=$errorText}
+    [pscustomobject]@{Rows=$rows;Coverage=$coverage}
+}
+function Add-AdOperationalError {
+    param($Report,[string]$Dataset,[string]$Scope,[string]$Message)
+    Add-AdRows $Report 'CollectionErrors' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;ErrorType='OperationalObservationIncomplete';Message=$Message})
+}
+function Invoke-AdOperationalCollections {
+    param($Report,$Options,[string]$Domain,[string]$DC)
+    $scope=$DC
+    if($Options.IncludeOperationalChecks){
+        Invoke-AdCollection $Report 'Connectivity' $scope {Get-AdPingObservation $Domain $DC $Options.TimeoutSeconds}
+        Invoke-AdCollection $Report 'DNS' $scope {
+            foreach($type in @('A','AAAA')){Get-AdDnsObservation $Domain $DC $DC $type $Options.DnsServer}
+            foreach($query in @("_ldap._tcp.dc._msdcs.$Domain","_kerberos._tcp.$Domain")){Get-AdDnsObservation $Domain $DC $query 'SRV' $Options.DnsServer}
+        }
+        foreach($row in @($Report.Datasets.DNS|Where-Object{$_.DC -eq $DC -and $_.Status -eq 'QueryError'})){Add-AdOperationalError $Report DNS $DC $row.Error}
+        foreach($row in @($Report.Datasets.Connectivity|Where-Object{$_.DC -eq $DC -and $_.Status -eq 'Error'})){Add-AdOperationalError $Report Connectivity $DC $row.Error}
+        $hostWatch=[Diagnostics.Stopwatch]::StartNew()
+        try{$bundle=Get-AdHostBundle $Domain $DC $Options.TimeoutSeconds}catch{$bundle=[pscustomobject]@{HostRows=@();DiskRows=@();Paths=@();Errors=@([pscustomobject]@{Component='HostMetrics';Message=$_.Exception.Message},[pscustomobject]@{Component='Disks';Message=$_.Exception.Message},[pscustomobject]@{Component='StoragePaths';Message=$_.Exception.Message})}}
+        Add-AdRows $Report 'Timings' @([pscustomobject]@{Dataset='HostBundle';Scope=$DC;Status=if($bundle.Errors.Count){'Incomplete'}else{'Collected'};Rows=(@($bundle.HostRows).Count+@($bundle.DiskRows).Count+@($bundle.Paths).Count);DurationSeconds=$hostWatch.Elapsed.TotalSeconds})
+        foreach($pair in @(@('HostMetrics','HostRows'),@('Disks','DiskRows'),@('StoragePaths','Paths'))){
+            $dataset=$pair[0];$property=$pair[1]
+            Invoke-AdCollection $Report $dataset $scope { $problem=@($bundle.Errors|Where-Object{$_.Component -eq $dataset});if($problem.Count){throw $problem[0].Message};$bundle.$property }
+        }
+        foreach($path in @($Report.Datasets.StoragePaths|Where-Object{$_.DC -eq $DC -and $_.Status -ne 'Observed'})){Add-AdOperationalError $Report StoragePaths $DC "$($path.Component): $($path.Status); $($path.Error)"}
+        foreach($disk in @($Report.Datasets.Disks|Where-Object{$_.DC -eq $DC -and $_.Observation -ne 'Observed'})){Add-AdOperationalError $Report Disks $DC "$($disk.Volume): $($disk.Observation)"}
+        Invoke-AdCollection $Report 'TimeSummary' $scope {
+            $timeBundle=Get-AdTimeBundle $Domain $DC $Options.TimeSamples $Options.TimeoutSeconds
+            Add-AdRows $Report 'TimeSamples' $timeBundle.Samples
+            Add-AdRows $Report 'TimeConfiguration' $timeBundle.Configuration
+            $timeBundle.Summary
+        }
+        foreach($row in @($Report.Datasets.TimeSummary|Where-Object{$_.DC -eq $DC -and $_.Status -ne 'Measured'})){Add-AdOperationalError $Report TimeSummary $DC $row.Status}
+        foreach($row in @($Report.Datasets.TimeConfiguration|Where-Object{$_.DC -eq $DC -and $_.Status -ne 'CompletedReviewRequired'})){Add-AdOperationalError $Report TimeConfiguration $DC "$($row.Query): $($row.Status)"}
+    }else{foreach($d in @('Connectivity','DNS','HostMetrics','Disks','StoragePaths','TimeSummary','TimeSamples','TimeConfiguration')){Invoke-AdCollection $Report $d $scope {} -Skip}}
+    if($Options.IncludeEventLogs){
+        foreach($log in @('System','Directory Service','DFS Replication','DNS Server')){
+            Invoke-AdCollection $Report 'EventLogCoverage' "$DC / $log" {
+                $events=Get-AdEventBundle $Domain $DC $log $Options.EventHours $Options.MaxEventsPerLog
+                Add-AdRows $Report 'Events' $events.Rows
+                $events.Coverage
+            }
+        }
+        foreach($row in @($Report.Datasets.EventLogCoverage|Where-Object{$_.DC -eq $DC -and ($_.Status -eq 'QueryError' -or ($_.Status -eq 'NotPresent' -and $_.LogName -ne 'DNS Server'))})){Add-AdOperationalError $Report Events $DC "$($row.LogName): $($row.Status); $($row.Error)"}
+    }else{foreach($d in @('Events','EventLogCoverage')){Invoke-AdCollection $Report $d $scope {} -Skip}}
+}
+function Complete-AdOperationalFindings {
+    param($Report)
+    $o=$Report.Parameters
+    foreach($disk in $Report.Datasets.Disks){
+        if($disk.Observation -ne 'Observed' -or $disk.AssessmentScope -ne 'VisibleOrRoleMapped'){continue}
+        $freeGiB=[double]$disk.FreeBytes/1GB;$freePercent=100.0*[double]$disk.FreeBytes/[double]$disk.CapacityBytes
+        $level=if($freePercent -le $o.DiskCriticalPercent -or $freeGiB -le $o.DiskCriticalGiB){'High'}elseif($freePercent -le $o.DiskWarningPercent -or $freeGiB -le $o.DiskWarningGiB){'Medium'}else{''}
+        if($level){New-AdFinding $Report $level 'DC-DISK-SPACE' Disks $disk.Domain $disk.DC "$($disk.Volume): $($disk.FreeGiB) GiB / $($disk.FreePercent)% free; roles=$($disk.Roles)" 'Review capacity and configured thresholds. No files were deleted.'}
+    }
+    foreach($h in $Report.Datasets.HostMetrics){if($null -ne $h.UptimeHours -and $h.UptimeHours -le 24){New-AdFinding $Report Info 'DC-RECENT-BOOT' HostMetrics $h.Domain $h.DC "UptimeHours=$($h.UptimeHours)" 'Correlate with planned maintenance; a recent boot alone is not a failure.'}}
+    foreach($t in $Report.Datasets.TimeSummary){if($t.Status -eq 'Measured' -and $null -ne $t.MedianAbsoluteOffsetSeconds -and $t.MedianAbsoluteOffsetSeconds -ge $o.TimeWarningSeconds){$severity=if($t.MedianAbsoluteOffsetSeconds -ge $o.TimeCriticalSeconds){'High'}else{'Medium'};New-AdFinding $Report $severity 'DC-TIME-OFFSET' TimeSummary $t.Domain $t.DC "Median absolute offset=$($t.MedianAbsoluteOffsetSeconds)s relative to collector clock." 'Verify the collector reference, network delay and DC time source; no clock was changed.'}}
+    foreach($e in $Report.Datasets.EventLogCoverage){if($e.Status -eq 'Collected' -and $e.Exported -gt 0){New-AdFinding $Report Medium 'DC-EVENTS-REVIEW' Events $e.Domain $e.DC "$($e.LogName): $($e.Exported) warning/error/critical events; truncated=$($e.Truncated); since=$($e.StartUtc)" 'Review event IDs and timestamps; historical events do not prove a current outage.'}}
+    foreach($dc in $Report.Datasets.DomainControllers){
+        $dns=@($Report.Datasets.DNS|Where-Object{$_.DC -eq $dc.HostName})
+        foreach($q in @($dns|Where-Object{$_.QueryType -eq 'SRV' -and $_.Status -eq 'NotPresent'})){New-AdFinding $Report Medium 'DC-DNS-SRV-NOT-PRESENT' DNS $dc.Domain $dc.HostName "$($q.QueryName) not returned by $($q.Resolver)." 'Review resolver configuration and AD service registration; do not create records automatically.'}
+        $hosts=@($dns|Where-Object{$_.QueryName -eq $dc.HostName -and $_.QueryType -in @('A','AAAA')})
+        if($hosts.Count -eq 2 -and @($hosts|Where-Object{$_.Status -ne 'NotPresent'}).Count -eq 0){New-AdFinding $Report Medium 'DC-DNS-HOST-NOT-PRESENT' DNS $dc.Domain $dc.HostName 'Neither A nor AAAA was returned.' 'Review DNS and the selected resolver. A missing AAAA record alone is not a failure.'}
+        $coverage=@($Report.Datasets.Coverage|Where-Object{$_.Scope -eq $dc.HostName -or $_.Scope.StartsWith($dc.HostName+' / ')})
+        $errors=@($Report.Datasets.CollectionErrors|Where-Object{$_.Scope -eq $dc.HostName -or $_.Scope.StartsWith($dc.HostName+' / ')})
+        $findings=@($Report.Datasets.Findings|Where-Object{$_.Target -eq $dc.HostName})
+        $hostRows=@($Report.Datasets.HostMetrics|Where-Object{$_.DC -eq $dc.HostName});$diskRows=@($Report.Datasets.Disks|Where-Object{$_.DC -eq $dc.HostName -and $_.AssessmentScope -eq 'VisibleOrRoleMapped' -and $_.Observation -eq 'Observed'});$timeRows=@($Report.Datasets.TimeSummary|Where-Object{$_.DC -eq $dc.HostName});$eventRows=@($Report.Datasets.EventLogCoverage|Where-Object{$_.DC -eq $dc.HostName});$duration=@($Report.Datasets.Timings|Where-Object{$_.Dataset -eq 'DCProcessing' -and $_.Scope -eq $dc.HostName})
+        $summary=[ordered]@{Domain=$dc.Domain;DC=$dc.HostName;Site=$dc.Site;DnsAddresses=(@($dns|Where-Object{$_.Address}|ForEach-Object{$_.Address}|Sort-Object -Unique)-join '; ');UptimeHours=if($hostRows.Count){$hostRows[0].UptimeHours}else{$null};LowestAssessedFreeGiB=if($diskRows.Count){($diskRows.FreeGiB|Measure-Object -Minimum).Minimum}else{$null};LowestAssessedFreePercent=if($diskRows.Count){($diskRows.FreePercent|Measure-Object -Minimum).Minimum}else{$null};MedianAbsoluteOffsetSeconds=if($timeRows.Count -and $timeRows[0].Status -eq 'Measured'){$timeRows[0].MedianAbsoluteOffsetSeconds}else{$null};RecentEventRows=if($eventRows.Count){($eventRows.Exported|Measure-Object -Sum).Sum}else{$null};RecentEventsTruncated=if($eventRows.Count){@($eventRows|Where-Object{$_.Truncated}).Count -gt 0}else{$null};ProcessingSeconds=if($duration.Count){$duration[0].DurationSeconds}else{$null};Observation=if($errors.Count){'Incomplete'}elseif(@($findings|Where-Object{$_.Severity -in @('High','Medium')}).Count){'ReviewRequired'}else{'CollectedEvidenceOnly'};CollectionErrors=$errors.Count;Findings=$findings.Count}
+        foreach($name in @('Replication','Connectivity','DNS','HostMetrics','Disks','StoragePaths','TimeSummary','Services','EventLogCoverage','NativeDiagnostics')){
+            $items=@($coverage|Where-Object{$_.Dataset -eq $name});$sectionErrors=@($errors|Where-Object{$_.Dataset -eq $name -or ($name -eq 'TimeSummary' -and $_.Dataset -eq 'TimeConfiguration') -or ($name -eq 'EventLogCoverage' -and $_.Dataset -eq 'Events')});$summary[$name]=if($sectionErrors.Count){'Incomplete'}elseif(-not $items.Count){'Unknown'}elseif(@($items|Where-Object{$_.Status -eq 'Failed'}).Count){'Failed'}elseif(@($items|Where-Object{$_.Status -eq 'Collected'}).Count){'Collected'}else{'NotRequested'}
+        }
+        Add-AdRows $Report 'DCSummary' @([pscustomobject]$summary)
+    }
 }
 
 function Write-AdHtmlReport {
@@ -426,12 +676,24 @@ function Write-AdHtmlReport {
         @{Key='Forest';Label='Floresta / Forest';Open=$true},
         @{Key='Domains';Label='Domínios / Domains';Open=$true},
         @{Key='ComputerSummary';Label='Resumo dos computadores / Computer summary';Open=$true},
+        @{Key='DCSummary';Label='Resumo operacional dos DCs / DC operational summary';Open=$true},
         @{Key='DomainControllers';Label='Controladores de domínio / Domain controllers';Open=$true},
         @{Key='OrganizationalUnits';Label='Unidades organizacionais / Organizational units';Open=$false},
         @{Key='PasswordPolicies';Label='Políticas de senha / Password policies';Open=$false},
         @{Key='Trusts';Label='Relações de confiança / Trust relationships';Open=$false},
         @{Key='Replication';Label='Replicação / Replication';Open=$false},
         @{Key='ReplicationFailures';Label='Falhas de replicação / Replication failures';Open=$true},
+        @{Key='Connectivity';Label='ICMP informativo / Informational ICMP';Open=$false},
+        @{Key='DNS';Label='DNS e descoberta AD / DNS and AD discovery';Open=$false},
+        @{Key='HostMetrics';Label='Inicialização e memória / Boot and memory';Open=$false},
+        @{Key='Disks';Label='Capacidade de volumes / Volume capacity';Open=$false},
+        @{Key='StoragePaths';Label='Caminhos NTDS e SYSVOL / NTDS and SYSVOL paths';Open=$false},
+        @{Key='TimeSummary';Label='Diferença de horário / Time offset';Open=$false},
+        @{Key='TimeSamples';Label='Amostras de horário / Time samples';Open=$false},
+        @{Key='TimeConfiguration';Label='Evidências W32Time / W32Time evidence';Open=$false},
+        @{Key='Events';Label='Eventos recentes / Recent events';Open=$false},
+        @{Key='EventLogCoverage';Label='Cobertura de eventos / Event log coverage';Open=$false},
+        @{Key='Timings';Label='Duração por coletor / Collector durations';Open=$false},
         @{Key='Services';Label='Serviços dos DCs / DC services';Open=$false},
         @{Key='NativeDiagnostics';Label='Diagnósticos nativos / Native diagnostics';Open=$false},
         @{Key='PrivilegedMembers';Label='Membros de grupos privilegiados / Privileged group members';Open=$false},
@@ -569,7 +831,7 @@ details{background:white;border:1px solid var(--line);border-radius:10px;margin:
 }
 
 
-$options=[pscustomobject]@{Server=$Server;Scope=$Scope;OutputPath=$OutputPath;InactiveDays=$InactiveDays;IncludeServiceChecks=[bool]$IncludeServiceChecks;IncludeDcDiagnostics=[bool]$IncludeDcDiagnostics;TimeoutSeconds=$TimeoutSeconds;MaxHtmlRows=$MaxHtmlRows;PageSize=$PageSize;SkipUserInventory=[bool]$SkipUserInventory;SkipPrivilegedMembers=[bool]$SkipPrivilegedMembers}
+$options=[pscustomobject]@{Server=$Server;Scope=$Scope;OutputPath=$OutputPath;InactiveDays=$InactiveDays;IncludeServiceChecks=[bool]$IncludeServiceChecks;IncludeDcDiagnostics=[bool]$IncludeDcDiagnostics;TimeoutSeconds=$TimeoutSeconds;MaxHtmlRows=$MaxHtmlRows;PageSize=$PageSize;SkipUserInventory=[bool]$SkipUserInventory;SkipPrivilegedMembers=[bool]$SkipPrivilegedMembers;FullAssessment=[bool]$FullAssessment;IncludeOperationalChecks=[bool]$IncludeOperationalChecks;IncludeEventLogs=[bool]$IncludeEventLogs;DiagnosticProfile=$DiagnosticProfile;DnsServer=$DnsServer;TimeSamples=$TimeSamples;TimeWarningSeconds=$TimeWarningSeconds;TimeCriticalSeconds=$TimeCriticalSeconds;DiskWarningPercent=$DiskWarningPercent;DiskCriticalPercent=$DiskCriticalPercent;DiskWarningGiB=$DiskWarningGiB;DiskCriticalGiB=$DiskCriticalGiB;EventHours=$EventHours;MaxEventsPerLog=$MaxEventsPerLog}
 try {
     $result=Invoke-AdAssessment $options $PSCmdlet
     $result|Format-List Status,RunFolder,Findings,CollectionErrors|Out-Host

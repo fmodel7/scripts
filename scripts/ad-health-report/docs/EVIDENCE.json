@@ -1,35 +1,34 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "review_date": "2026-11-13",
-  "source_commit": "89a87e1da3d3d4af7ea0acefbb5a66e6fe9a22d9",
+  "source_commit": "c8d0f20c276ee82abce9e16f5575c9a6221db55a",
   "source_sha256": {
-    "Export-ADHealthReport.ps1": "a6bb86511e2b4106e71e400a1f795a5a57f0e92c09306eac6d9ea5504173acd9",
-    "tests/Test-AdHealth.ps1": "1d17e9cdb372c0b24ad89325a717ea6c3bd3505151937db391047c449b4e749e"
+    "Export-ADHealthReport.ps1": "d2376031cf67dbae89a2ed6773e1b4359c8e25008ad22c4169885810eec56b9e",
+    "tests/Test-AdHealth.ps1": "1d17e9cdb372c0b24ad89325a717ea6c3bd3505151937db391047c449b4e749e",
+    "tests/Test-AdOperations.ps1": "9ff2c07a2b17872b1900023e902c2f17419467a3ee8eeffc91d08da41b59994c"
   },
-  "original_sha256": "1e133a501096dca5a60910772e4d5f58c28862cbb7494738181ac70c13359432",
-  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/43456162109",
+  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/43465971682",
   "ci_status": "success",
   "ci_platforms": [
     {
-      "runtime": "Windows PowerShell 5.1 / Windows",
-      "assertions": 673,
-      "native_process_helper_checks": true
+      "runtime": "Windows PowerShell 5.1",
+      "regression_assertions": 985,
+      "operational_assertions": 353
     },
     {
-      "runtime": "PowerShell 7 / Windows",
-      "assertions": 669,
-      "native_process_helper_checks": false
+      "runtime": "PowerShell 7 Windows",
+      "regression_assertions": 981,
+      "operational_assertions": 353
     },
     {
-      "runtime": "PowerShell 7 / Linux",
-      "assertions": 673,
-      "native_process_helper_checks": true
+      "runtime": "PowerShell 7 Linux",
+      "regression_assertions": 985,
+      "operational_assertions": 353
     }
   ],
-  "synthetic_workflows_per_environment": 15,
-  "operational_runtime": "64-bit Windows PowerShell 5.1 with ActiveDirectory/RSAT",
-  "real_AD_CIM_dcdiag_tested": false,
-  "real_directory_changed": false,
-  "browser_renderer_tested_with_synthetic_data": true,
-  "native_helper_note": "Harmless C# or shell executable, never actual dcdiag."
+  "synthetic_workflows_per_environment": 25,
+  "operational_runtime": "64-bit Windows PowerShell 5.1 and RSAT",
+  "real_AD_DNS_CIM_RPC_W32Time_dcdiag_tested": false,
+  "real_directory_or_clock_changed": false,
+  "browser_renderer_tested_with_synthetic_data": true
 }

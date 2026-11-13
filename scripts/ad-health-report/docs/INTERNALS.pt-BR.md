@@ -1,108 +1,48 @@
-# Referência interna — 1.0.0
+# Referência interna — 1.1.0
 
-As funções são detalhes internos, não uma API pública. Execute o PS1 como arquivo; os testes extraem funções somente em processos de teste.
+Funções internas do único PS1; não faça dot-sourcing da entrada. As regras, modelos, parâmetros e limites estão no manual.
 
-## Get-AdField
-
-Lê propriedade opcional sem converter ausência em falso/zero. [Source](../Export-ADHealthReport.ps1#L38).
-
-## Convert-AdDate
-
-Normaliza datas UTC; ausentes/inválidas ficam vazias. [Source](../Export-ADHealthReport.ps1#L44).
-
-## Convert-AdSid
-
-Normaliza SID em texto. [Source](../Export-ADHealthReport.ps1#L49).
-
-## Get-AdParentDn
-
-Obtém DN pai respeitando vírgulas escapadas. [Source](../Export-ADHealthReport.ps1#L56).
-
-## Get-AdSchemaLabel
-
-Mapeia versão de schema, preservando desconhecido. [Source](../Export-ADHealthReport.ps1#L65).
-
-## Get-AdComputerClass
-
-Classifica por UAC/OS como pista de inventário. [Source](../Export-ADHealthReport.ps1#L70).
-
-## Invoke-AdQuery
-
-Adaptador de comandos Get-AD com lista fechada e ErrorAction Stop. [Source](../Export-ADHealthReport.ps1#L80).
-
-## Initialize-AdRuntime
-
-Valida Windows/64 bits/5.1 e carrega ActiveDirectory. [Source](../Export-ADHealthReport.ps1#L84).
-
-## Get-AdSchemas
-
-Contrato dos 18 cabeçalhos CSV. [Source](../Export-ADHealthReport.ps1#L90).
-
-## Add-AdRows
-
-Acumula linhas normalizadas por conjunto. [Source](../Export-ADHealthReport.ps1#L112).
-
-## Invoke-AdCollection
-
-Registra sucesso, falha ou não solicitado, com cobertura e erros. [Source](../Export-ADHealthReport.ps1#L116).
-
-## New-AdFinding
-
-Acrescenta evidência e recomendação para revisão humana. [Source](../Export-ADHealthReport.ps1#L128).
-
-## Convert-AdAccount
-
-Seleciona campos de usuários/computadores sem segredos. [Source](../Export-ADHealthReport.ps1#L132).
-
-## Convert-AdPolicy
-
-Normaliza política e intervalos de tempo. [Source](../Export-ADHealthReport.ps1#L157).
-
-## Get-AdServiceObservations
-
-Consulta seis serviços por CIM, preservando NotObserved. [Source](../Export-ADHealthReport.ps1#L167).
-
-## Get-AdNativePath
-
-Seleciona dcdiag em SystemDirectory. [Source](../Export-ADHealthReport.ps1#L175).
-
-## Invoke-AdDcdiag
-
-Lista fechada de testes, sem shell, saída/erro e timeout por processo. [Source](../Export-ADHealthReport.ps1#L176).
-
-## Resolve-AdOutputPath
-
-Resolve diretório FileSystem local e bloqueia curingas/rede. [Source](../Export-ADHealthReport.ps1#L193).
-
-## Convert-AdCsvValue
-
-Neutraliza início de fórmula em CSV sem alterar JSON. [Source](../Export-ADHealthReport.ps1#L205).
-
-## Write-AdCsv
-
-Grava CSV com BOM UTF-8, aspas e cabeçalhos estáveis. [Source](../Export-ADHealthReport.ps1#L212).
-
-## Complete-AdFindings
-
-Executa regras documentadas sobre dados já coletados. [Source](../Export-ADHealthReport.ps1#L224).
-
-## Invoke-AdAssessment
-
-Coordena bootstrap, escopo, coletores, exportação e manifesto. [Source](../Export-ADHealthReport.ps1#L246).
-
-## Write-AdHtmlReport
-
-Gera dashboard offline com dados codificados, busca e CSP nonce. [Source](../Export-ADHealthReport.ps1#L381).
-
-## Get-AdReportProperty
-
-Lê propriedades do modelo de apresentação. [Source](../Export-ADHealthReport.ps1#L387).
-
-## ConvertTo-AdReportText
-
-Formata valores para apresentação. [Source](../Export-ADHealthReport.ps1#L396).
-
-## ConvertTo-AdReportHtml
-
-Codifica texto inserido em HTML. [Source](../Export-ADHealthReport.ps1#L405).
-
+- [Get-AdField](../Export-ADHealthReport.ps1#L51)
+- [Convert-AdDate](../Export-ADHealthReport.ps1#L58)
+- [Convert-AdSid](../Export-ADHealthReport.ps1#L63)
+- [Get-AdParentDn](../Export-ADHealthReport.ps1#L70)
+- [Get-AdSchemaLabel](../Export-ADHealthReport.ps1#L79)
+- [Get-AdComputerClass](../Export-ADHealthReport.ps1#L84)
+- [Invoke-AdQuery](../Export-ADHealthReport.ps1#L94)
+- [Initialize-AdRuntime](../Export-ADHealthReport.ps1#L98)
+- [Get-AdSchemas](../Export-ADHealthReport.ps1#L104)
+- [Add-AdRows](../Export-ADHealthReport.ps1#L138)
+- [Invoke-AdCollection](../Export-ADHealthReport.ps1#L142)
+- [New-AdFinding](../Export-ADHealthReport.ps1#L155)
+- [Convert-AdAccount](../Export-ADHealthReport.ps1#L159)
+- [Convert-AdPolicy](../Export-ADHealthReport.ps1#L184)
+- [Get-AdServiceObservations](../Export-ADHealthReport.ps1#L194)
+- [Get-AdNativePath](../Export-ADHealthReport.ps1#L202)
+- [Invoke-AdDcdiag](../Export-ADHealthReport.ps1#L203)
+- [Resolve-AdOutputPath](../Export-ADHealthReport.ps1#L208)
+- [Convert-AdCsvValue](../Export-ADHealthReport.ps1#L220)
+- [Write-AdCsv](../Export-ADHealthReport.ps1#L227)
+- [Complete-AdFindings](../Export-ADHealthReport.ps1#L239)
+- [Invoke-AdAssessment](../Export-ADHealthReport.ps1#L261)
+- [Get-AdEffectiveOptions](../Export-ADHealthReport.ps1#L400)
+- [Get-AdDiagnosticTests](../Export-ADHealthReport.ps1#L409)
+- [Invoke-AdReadProcess](../Export-ADHealthReport.ps1#L415)
+- [Invoke-AdDnsQuery](../Export-ADHealthReport.ps1#L426)
+- [Get-AdDnsObservation](../Export-ADHealthReport.ps1#L432)
+- [Get-AdVolumeRoles](../Export-ADHealthReport.ps1#L450)
+- [Get-AdPingObservation](../Export-ADHealthReport.ps1#L455)
+- [Get-AdHostBundle](../Export-ADHealthReport.ps1#L464)
+- [Get-AdTimeNativePath](../Export-ADHealthReport.ps1#L504)
+- [Invoke-AdTimeQuery](../Export-ADHealthReport.ps1#L505)
+- [Get-AdMedian](../Export-ADHealthReport.ps1#L512)
+- [Convert-AdTimeSamples](../Export-ADHealthReport.ps1#L517)
+- [Get-AdTimeBundle](../Export-ADHealthReport.ps1#L529)
+- [Invoke-AdEventQuery](../Export-ADHealthReport.ps1#L541)
+- [Get-AdEventBundle](../Export-ADHealthReport.ps1#L545)
+- [Add-AdOperationalError](../Export-ADHealthReport.ps1#L558)
+- [Invoke-AdOperationalCollections](../Export-ADHealthReport.ps1#L562)
+- [Complete-AdOperationalFindings](../Export-ADHealthReport.ps1#L602)
+- [Write-AdHtmlReport](../Export-ADHealthReport.ps1#L630)
+- [Get-AdReportProperty](../Export-ADHealthReport.ps1#L636)
+- [ConvertTo-AdReportText](../Export-ADHealthReport.ps1#L645)
+- [ConvertTo-AdReportHtml](../Export-ADHealthReport.ps1#L654)

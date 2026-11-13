@@ -1,4 +1,4 @@
-# FMODEL AD Health Report 1.0.0
+# FMODEL AD Health Report 1.1.0
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
 F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Revision assistance: Akira (ChatGPT)
@@ -17,9 +17,21 @@ Active Directory inventory and assisted assessment with an **interactive offline
 
 **Finishing collection does not prove AD health or compliance.** Permissions, scope and optional checks limit coverage. Missing data is not automatically zero or a positive result.
 
+## Expanded unified collection — 1.1
+
+To combine inventory and operational checks in one PS1:
+
+```powershell
+.\Export-ADHealthReport.ps1 -FullAssessment
+```
+
+FullAssessment enables A/AAAA/SRV DNS, informational ICMP, boot/memory, volumes and NTDS/SYSVOL paths, W32Time samples/evidence, recent events, services and the 17 selected extended DCDiag tests. Default collection remains lighter. FullAssessment expands depth; scope remains Domain. Add -Scope Forest for all authorized domains.
+
+HTML includes a consolidated DC table with metrics/statuses; every dataset has CSV. Unknown data/access denial never becomes success. Event window/caps are explicit; CSVs preserve all obtained rows within those limits. Review the new parameters before full production collection.
+
 ## Download
 
-[Download AD-Health-Report-v1.0.0.zip](AD-Health-Report-v1.0.0.zip?raw=true). If the file page opens, click **Download raw file**, then **Extract All**.
+[Download AD-Health-Report-v1.1.0.zip](AD-Health-Report-v1.1.0.zip?raw=true). If the file page opens, click **Download raw file**, then **Extract All**.
 
 Alternatively use **Code → Download ZIP → Extract All → scripts/ad-health-report** from the repository. Git installation is unnecessary. Open the extracted folder, not the ZIP preview.
 
@@ -85,6 +97,6 @@ No production forest was validated for this delivery. Automated tests and their 
 
 ## Preview and validation
 
-After extracting the ZIP, open [examples/SYNTHETIC/Report.html](examples/SYNTHETIC/Report.html) to explore fictional data without a domain. The example includes all 18 CSVs and matching JSON; it is not evidence of a real environment.
+After extracting the ZIP, open [examples/SYNTHETIC/Report.html](examples/SYNTHETIC/Report.html) to explore fictional data without a domain. The example includes all 30 CSVs and matching JSON; it is not evidence of a real environment.
 
-[CI](https://github.com/fmodel7/scripts/actions/runs/43456162109) · [Testing](docs/TESTING.en-US.md) · [Internal reference](docs/INTERNALS.en-US.md)
+[CI](https://github.com/fmodel7/scripts/actions/runs/43465971682) · [Testing](docs/TESTING.en-US.md) · [Internal reference](docs/INTERNALS.en-US.md)

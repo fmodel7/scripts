@@ -1,1 +1,2 @@
 ﻿"Domain","DC","Name","State","StartMode","Observation"
+"example.test","dc1.example.test","NTDS","Running","Auto","Observed"

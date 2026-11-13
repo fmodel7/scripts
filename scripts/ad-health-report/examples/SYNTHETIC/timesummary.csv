@@ -1,0 +1,4 @@
+﻿"Domain","DC","Reference","RequestedSamples","ParsedSamples","Status","MedianOffsetSeconds","MedianAbsoluteOffsetSeconds","MaximumAbsoluteOffsetSeconds","ExitCode","TimedOut","RawText"
+"example.test","dc1.example.test","CollectorLocalClock","3","3","Measured","'-3.5","3.5","4.5","0","False","12:00:00, -02.5000000s
+12:00:01, -03.5000000s
+12:00:02, -04.5000000s"

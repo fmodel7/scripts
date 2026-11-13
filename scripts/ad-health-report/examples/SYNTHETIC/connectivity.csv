@@ -1,0 +1,2 @@
+﻿"Domain","DC","Probe","Status","RoundtripMs","Address","Error"
+"example.test","dc1.example.test","ICMP","NoReply","","","SYNTHETIC ICMP BLOCKED"

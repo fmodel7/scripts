@@ -1,13 +1,13 @@
 [
   {
     "Path": "README.md",
-    "SHA256": "d67e1d5260608a57e52ac29257f2d95d9f4a67c792a3a9ac4c2321ce8cbc6138",
-    "Bytes": 531
+    "SHA256": "007a7d7122ba56e615e87b7559e8e5214bdb8df38bee786031b7594a54e6fbf0",
+    "Bytes": 450
   },
   {
     "Path": "Report.html",
-    "SHA256": "62ab9540aaf6b6e5400f5122e59f18395abc3b4c7c6349fe7e10fd6d02f693c7",
-    "Bytes": 42641
+    "SHA256": "9d1fdd2cb0c7897ef87132bedbe49dd3d533ac747cb5163f7c990c1d88beb75e",
+    "Bytes": 66102
   },
   {
     "Path": "collectionerrors.csv",
@@ -16,7 +16,7 @@
   },
   {
     "Path": "computers.csv",
-    "SHA256": "4719f59e861e6d33e2b1ce6fbf0b1387d0dea3dde83976cad4dcea4dc1e490b2",
+    "SHA256": "556b237f2fc719f8b9498a10ebe699d410f17a40b1d4d762375f59c7ba603ba0",
     "Bytes": 2150
   },
   {
@@ -25,9 +25,29 @@
     "Bytes": 267
   },
   {
+    "Path": "connectivity.csv",
+    "SHA256": "78813216b75b502c3401453a6524e5a4e1fe656d838cf6722d215ea3ec59c860",
+    "Bytes": 148
+  },
+  {
     "Path": "coverage.csv",
-    "SHA256": "f51154878b9eac351af023944100535cb78645ec8aeaeb3b67d80617b3a36f17",
-    "Bytes": 2435
+    "SHA256": "2b07875f31afe5433ed7c1047726a959478508cc4c5ed83787830b36d21352b0",
+    "Bytes": 6298
+  },
+  {
+    "Path": "dcsummary.csv",
+    "SHA256": "a363bf578de12cdd877788c80629a31ad90836c020727c89ff6d7a3711fe20e1",
+    "Bytes": 642
+  },
+  {
+    "Path": "disks.csv",
+    "SHA256": "1fe6ac0a868b7f7e5c35af0b057da61d0fb18c37b4a2959739e8f27cd03def21",
+    "Bytes": 568
+  },
+  {
+    "Path": "dns.csv",
+    "SHA256": "7049163fa2fb5c20408baf57b0065525101ab135a8c76f1271fe182d7c04ff88",
+    "Bytes": 707
   },
   {
     "Path": "domaincontrollers.csv",
@@ -40,9 +60,19 @@
     "Bytes": 316
   },
   {
+    "Path": "eventlogcoverage.csv",
+    "SHA256": "83eaccfcc35e45d4acf6f94c54b9108a356fedd0153ffaff1e166b044354b6ad",
+    "Bytes": 662
+  },
+  {
+    "Path": "events.csv",
+    "SHA256": "2906bd0fcbcd3ea08cb2d6b9a3fab4e4ce2584f80cbc00bc8c7db622fed85775",
+    "Bytes": 416
+  },
+  {
     "Path": "findings.csv",
-    "SHA256": "69c8bd0476d44dae2fcf17adb683086aba6deeb3d60c5fe2b9151f544335e285",
-    "Bytes": 1572
+    "SHA256": "5ca74c40fab49865255f292ab54e047b453132e10ff5ab11006593f349b96f4a",
+    "Bytes": 924
   },
   {
     "Path": "forest.csv",
@@ -51,23 +81,113 @@
   },
   {
     "Path": "groups.csv",
-    "SHA256": "a7d67f2a7655e3a6bc055ab7e34430c77ab2ab18236be3a67e4be9af4b10c6d6",
+    "SHA256": "84b0c99ba7a89e3769c2d67eadef62e30a7c0983a497c684783473c937df5c64",
     "Bytes": 1758
   },
   {
+    "Path": "hostmetrics.csv",
+    "SHA256": "a2543a8ddc6281f71cfc8e3df5348efeb148db3911b5fdd3f3f0bab798804064",
+    "Bytes": 378
+  },
+  {
+    "Path": "native/Advertising-753c0e6a35fb45c3830c0577a7f43501.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/CheckSDRefDom-b077671e04704c1daa4226cd5a523a1e.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/CrossRefValidation-4150276ec3d14aba845a57700c403d26.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/DFSREvent-06c2ce0b414e459b91a2a7e025cf604d.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/KccEvent-e60fef1e153f48eab8e08ad121e172b3.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/KnowsOfRoleHolders-a6aac171d92640da8af90c4f872ab914.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/LocatorCheck-9f424de05bd440028f45d08699667bec.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/MachineAccount-823521a1ffe9442db060ae014f350cd7.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/NCSecDesc-f9e646c73dd24bd0b25f4cdb219ac82f.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/NetLogons-a5d436d48f77402fb2c4abfeca85409a.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/ObjectsReplicated-088cb37030514f7b9b9fc32804771d15.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/Replications-5a3f6192c18d49838ac7a6f5ae58eb73.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/RidManager-c1f766ce9e054f05b3fdf7d1f5a83f78.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/Services-7e200b0190ed458ea98fda13cfbe19bd.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/SysVolCheck-a008b28f53cb482a8c3c5f5e8b06179b.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/SystemLog-853e95b18773432fa5f0b3309273e9a0.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
+    "Path": "native/VerifyReferences-d34e2b0f4eef4a79865da8df2ca8b275.txt",
+    "SHA256": "31ebb994fe4b44d46f5d622d2b63dccabc40b1a1c03c1771bda4d3046cd0737d",
+    "Bytes": 24
+  },
+  {
     "Path": "nativediagnostics.csv",
-    "SHA256": "4a68fa500041756e6ab065fa307fbbdd63aef5793f2f9e3984eb240649bcc20e",
-    "Bytes": 68
+    "SHA256": "b858f94a5ab6427d797c58ddc791525d6547b968a7fa0d59dc28f6fddedb7e7d",
+    "Bytes": 2550
   },
   {
     "Path": "organizationalunits.csv",
-    "SHA256": "ba17f2532898bdc3425df513e68af01cfce2b3795ceda574bc4d86c404675956",
+    "SHA256": "b3f50c2eb975e3d6bb6d09f742afcf0f376195e48a6563d9ae5408a8663f081b",
     "Bytes": 267
   },
   {
     "Path": "passwordpolicies.csv",
-    "SHA256": "9111da12949b69ef627166a13fda881a844c2b3883ed34c3e74ca159cd2c672a",
-    "Bytes": 471
+    "SHA256": "f10a293076a2a09bcc2d4a4bba2b481db36e40b7ebc1cce139062f16f5fd111b",
+    "Bytes": 472
   },
   {
     "Path": "privilegedmembers.csv",
@@ -76,7 +196,7 @@
   },
   {
     "Path": "replication.csv",
-    "SHA256": "5f3977e59e98d7ed9a2b107186f9d4f457d6136c547de3450fa30655736c235d",
+    "SHA256": "658d99f48db9860565b827c671c28255509e63d12814376dc536f510582941da",
     "Bytes": 300
   },
   {
@@ -86,13 +206,38 @@
   },
   {
     "Path": "report.json",
-    "SHA256": "0444554ff694cce5e4b9a009d169a94fed4227695ac08447d524ee1f36094984",
-    "Bytes": 26723
+    "SHA256": "227ce8b0d068f522ded96d612874d71d1f30b0ad0d4e328ef3446acf2d638dca",
+    "Bytes": 58725
   },
   {
     "Path": "services.csv",
-    "SHA256": "f992c95edef657e1a22f4036654097393f060f19bc4bd2e00c874b9602aaca05",
-    "Bytes": 58
+    "SHA256": "7a871d142818ef7e6d69da8d79f6b568c503ff4035c6ef34e03999e71f2684e4",
+    "Bytes": 127
+  },
+  {
+    "Path": "storagepaths.csv",
+    "SHA256": "7a6e3f560adcac86f08abf9fe7a2bbf17a51504e1799c09d1e1ba430dc23318e",
+    "Bytes": 408
+  },
+  {
+    "Path": "timeconfiguration.csv",
+    "SHA256": "b99a2aa433a72fed9cea1949c47e5041b15913b2e54f78a454dec97e0fba4f13",
+    "Bytes": 409
+  },
+  {
+    "Path": "timesamples.csv",
+    "SHA256": "955c2b2ea2f17bb5441810ef9b05d125875b1ddceddd092e1db2e4de1c592c00",
+    "Bytes": 493
+  },
+  {
+    "Path": "timesummary.csv",
+    "SHA256": "72abb2d3fe4e1e78eb1982f55313a54629c0aa01af42f5f9d1668e36e6bf0116",
+    "Bytes": 366
+  },
+  {
+    "Path": "timings.csv",
+    "SHA256": "a341d1762b2a314e5853abaa05792e339e8ba7d216b76ec72cb5acae2573c980",
+    "Bytes": 3543
   },
   {
     "Path": "trusts.csv",
@@ -101,7 +246,7 @@
   },
   {
     "Path": "users.csv",
-    "SHA256": "c99ab6b963844132d8443f154e78ae404a50834911d49697efca58d0b219be92",
-    "Bytes": 1869
+    "SHA256": "7fe51a2a3e01eb1d7dcc12590b370b04d36feff67c4cd0462b52e1d7c35026c8",
+    "Bytes": 1873
   }
 ]
