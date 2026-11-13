@@ -1,0 +1,2 @@
+﻿"Domain","DC","Partition","Partner","LastReplicationAttemptUtc","LastReplicationSuccessUtc","LastReplicationResult","ConsecutiveReplicationFailures"
+"example.test","dc1.example.test","DC=example,DC=test","CN=SYNTHETIC-PARTNER","2026-11-13T15:47:44.7685136Z","2026-11-13T15:42:44.7685149Z","0","0"

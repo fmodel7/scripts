@@ -1,5 +1,12 @@
 # Histórico
 
+## 2026-11-13 — AD Health Report 1.0.0
+
+- Adiciona scripts/ad-health-report com PS1 independente, coleta de leitura por domínio/floresta, FSMO/schema, inventário, políticas/trusts e replicação.
+- HTML offline com busca, 18 CSVs completos protegidos contra fórmulas, JSON e manifesto; erros/ausência separados de contagens zero.
+- Serviços CIM e DCDiag opcionais e sem reparo; manuais PT-BR/EN-US/PDF, exemplo fictício e testes.
+- CI: 15 cenários; 673 verificações no Windows PowerShell 5.1 e Linux, 669 no PowerShell 7/Windows. Sem consulta AD/CIM/dcdiag real ou alteração de diretório.
+
 ## 2026-11-13 — DHCP Transfer 1.0.0
 
 - Adiciona scripts/dhcp-transfer com Export-DHCP.ps1 e Import-DHCP.ps1 independentes, confirmação e caminhos explícitos no alvo local/remoto.
@@ -29,6 +36,7 @@
 - Modelos PowerShell PT-BR/EN-US/de-DE e orientações para iniciantes.
 - Nenhum script privado, credencial ou dado real importado.
 - Nenhum script executável publicado nesta etapa.
+
 
 
 

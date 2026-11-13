@@ -1,0 +1,2 @@
+﻿"Domain","QueryServer","DistinguishedName","DomainMode","DomainSid","PDCEmulator","RIDMaster","InfrastructureMaster","Computers","Users","Groups"
+"example.test","dc1.example.test","DC=example,DC=test","Windows2016Domain","S-1-5-21-100-200-300","dc1.example.test","dc1.example.test","dc1.example.test","5","4","7"

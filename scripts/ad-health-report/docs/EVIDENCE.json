@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "review_date": "2026-11-13",
+  "source_commit": "89a87e1da3d3d4af7ea0acefbb5a66e6fe9a22d9",
+  "source_sha256": {
+    "Export-ADHealthReport.ps1": "a6bb86511e2b4106e71e400a1f795a5a57f0e92c09306eac6d9ea5504173acd9",
+    "tests/Test-AdHealth.ps1": "1d17e9cdb372c0b24ad89325a717ea6c3bd3505151937db391047c449b4e749e"
+  },
+  "original_sha256": "1e133a501096dca5a60910772e4d5f58c28862cbb7494738181ac70c13359432",
+  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/43456162109",
+  "ci_status": "success",
+  "ci_platforms": [
+    {
+      "runtime": "Windows PowerShell 5.1 / Windows",
+      "assertions": 673,
+      "native_process_helper_checks": true
+    },
+    {
+      "runtime": "PowerShell 7 / Windows",
+      "assertions": 669,
+      "native_process_helper_checks": false
+    },
+    {
+      "runtime": "PowerShell 7 / Linux",
+      "assertions": 673,
+      "native_process_helper_checks": true
+    }
+  ],
+  "synthetic_workflows_per_environment": 15,
+  "operational_runtime": "64-bit Windows PowerShell 5.1 with ActiveDirectory/RSAT",
+  "real_AD_CIM_dcdiag_tested": false,
+  "real_directory_changed": false,
+  "browser_renderer_tested_with_synthetic_data": true,
+  "native_helper_note": "Harmless C# or shell executable, never actual dcdiag."
+}
