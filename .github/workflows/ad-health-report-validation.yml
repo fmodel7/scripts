@@ -44,8 +44,11 @@ jobs:
           $PSVersionTable | Out-String | Out-File (Join-Path $destination 'runtime.txt')
           Get-FileHash ./Export-ADHealthReport.ps1 -Algorithm SHA256 | Format-List | Out-File (Join-Path $destination 'sha256.txt')
           $childHost=(Get-Process -Id $PID).Path
+          $ErrorActionPreference='Continue'
           & $childHost -NoProfile -File ./tests/Test-AdHealth.ps1 2>&1 | Tee-Object -FilePath (Join-Path $destination 'tests.log')
-          if($LASTEXITCODE -ne 0){throw "Offline tests failed: $LASTEXITCODE"}
+          $testExit=$LASTEXITCODE
+          $ErrorActionPreference='Stop'
+          if($testExit -ne 0){throw "Offline tests failed: $testExit"}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

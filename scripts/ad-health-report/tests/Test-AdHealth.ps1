@@ -178,7 +178,8 @@ try{
         Assert ($report.Status -eq $Expected) "$Case JSON status"
         $schemas=Get-AdSchemas
         foreach($name in $schemas.Keys){Assert (Test-Path -LiteralPath (Join-Path $result.RunFolder ($name.ToLowerInvariant()+'.csv'))) "$Case CSV $name"}
-        $manifest=@(Get-Content (Join-Path $result.RunFolder 'run-manifest.json') -Raw|ConvertFrom-Json)
+        # PS5.1 returns a JSON array as one pipeline object; do not wrap it in @().
+        $manifest=Get-Content (Join-Path $result.RunFolder 'run-manifest.json') -Raw|ConvertFrom-Json
         foreach($record in $manifest){Assert ((Get-FileHash -LiteralPath (Join-Path $result.RunFolder $record.Path) -Algorithm SHA256).Hash -ieq $record.SHA256) "$Case manifest $($record.Path)"}
         $computerCalls=@($script:queries|Where-Object{$_.Command -eq 'Get-ADComputer'})
         Assert ($computerCalls.Count -eq @($report.Datasets.Domains).Count) "$Case one computer inventory query per collected domain"
