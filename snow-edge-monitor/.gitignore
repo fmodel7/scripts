@@ -1,0 +1,37 @@
+# Local settings and secrets
+config.json
+config.*.json
+!config.example.json
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+# Browsing/session data
+edge-profile/
+**/edge-profile/
+*user-data*/
+*storage_state*.json
+*cookies*
+*.har
+*.log
+*.wav
+.private-reference/
+private-reference/
+# Python, tools, and builds
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+*.exe
+*.spec
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

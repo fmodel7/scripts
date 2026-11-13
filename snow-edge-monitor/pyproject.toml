@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snow-edge-monitor"
+version = "1.0.0"
+description = "Local Windows ServiceNow incident monitoring with Microsoft Edge"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[project.scripts]
+snow-edge-monitor = "snow_edge_monitor.__main__:main"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+include = ["snow_edge_monitor*"]
+
+[tool.setuptools.package-data]
+snow_edge_monitor = ["extract.js"]
