@@ -1,0 +1,1 @@
+<GPO xmlns='urn:synthetic'><Identifier><Identifier>{33333333-3333-3333-3333-333333333333}</Identifier><Domain>child.example.test</Domain></Identifier><Computer><VersionDirectory>7</VersionDirectory><VersionSysvol>7</VersionSysvol></Computer><User><VersionDirectory>7</VersionDirectory></User><Name>=SYNTHETIC-FORMULA</Name></GPO>

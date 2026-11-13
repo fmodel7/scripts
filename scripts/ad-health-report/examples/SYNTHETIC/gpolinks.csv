@@ -1,0 +1,4 @@
+﻿"Domain","ScopeType","ScopeDN","ScopeName","GpoGuid","GpoDN","StoredPosition","LinkOptions","Enabled","Enforced","InheritanceBlocked","Observation"
+"ForestConfiguration","Site","DC=example,DC=test","Policies","11111111-1111-1111-1111-111111111111","CN={11111111-1111-1111-1111-111111111111},CN=Policies,CN=System,DC=example,DC=test","1","0","True","False","False","StoredAttributeOrderNotEffectivePrecedence"
+"child.example.test","DomainOrOU","DC=child,DC=example,DC=test","Policies","33333333-3333-3333-3333-333333333333","CN={33333333-3333-3333-3333-333333333333},CN=Policies,CN=System,DC=child,DC=example,DC=test","1","0","True","False","False","StoredAttributeOrderNotEffectivePrecedence"
+"example.test","DomainOrOU","DC=example,DC=test","Policies","11111111-1111-1111-1111-111111111111","CN={11111111-1111-1111-1111-111111111111},CN=Policies,CN=System,DC=example,DC=test","1","0","True","False","False","StoredAttributeOrderNotEffectivePrecedence"

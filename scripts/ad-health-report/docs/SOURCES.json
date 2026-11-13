@@ -1,0 +1,297 @@
+{
+  "Sources": [
+    {
+      "Id": "OS-LIFECYCLE",
+      "Topic": "Microsoft product lifecycle",
+      "Reference": "https://learn.microsoft.com/en-us/lifecycle/",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Review selected legacy OS family references and ordinary lifecycle dates",
+      "Limitations": "AD OS strings, edition/channel, ESU and custom support require confirmation; no universal support verdict"
+    },
+    {
+      "Id": "W32TIME",
+      "Topic": "Windows Time configuration",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Preserve raw W32Time evidence and machine/policy registry values",
+      "Limitations": "Configuration and measured offset do not certify UTC accuracy"
+    },
+    {
+      "Id": "ADMIN500",
+      "Topic": "Role-specific built-in Administrator guidance",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-d--securing-built-in-administrator-accounts-in-active-directory",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Inventory rights by SID without a DC deny-right verdict",
+      "Limitations": "The cited deny-right recommendations target workstations/member servers"
+    },
+    {
+      "Id": "GPO-PERMISSIONS",
+      "Topic": "Group Policy permissions",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gppermission?view=windowsserver2025-ps",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Read trustee permissions per GPO",
+      "Limitations": "Does not establish effective privilege across nested groups"
+    },
+    {
+      "Id": "AD-FEATURES",
+      "Topic": "AD optional features",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/activedirectory/get-adoptionalfeature?view=windowsserver2025-ps",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Feature GUID and EnabledScopes",
+      "Limitations": "Read-only observation; no activation"
+    },
+    {
+      "Id": "AD-SPN",
+      "Topic": "SPN and UPN uniqueness",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/component-updates/spn-and-upn-uniqueness",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Compare distinct object owners within exported scope",
+      "Limitations": "Not proof of forest-wide uniqueness with incomplete/domain-only collection"
+    },
+    {
+      "Id": "AD-UAC",
+      "Topic": "Account flags",
+      "Reference": "https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/useraccountcontrol-manipulate-account-properties",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Decode documented UAC bits",
+      "Limitations": "Flags are configuration, not actual authentication/password contents"
+    },
+    {
+      "Id": "GPO",
+      "Topic": "Group Policy XML report",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gporeport?view=windowsserver2025-ps",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Explicit Domain/Server/Guid; preserve XML",
+      "Limitations": "No claim of effective policy or conflict resolution"
+    },
+    {
+      "Id": "RSOP",
+      "Topic": "Resultant Set of Policy",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gpresultantsetofpolicy?view=windowsserver2025-ps",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Computer-specific XML evidence",
+      "Limitations": "Requires target permissions; not effective privileges analysis"
+    },
+    {
+      "Id": "DNS-CONFIG",
+      "Topic": "DNS server configuration",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/dnsserver/get-dnsserver?view=windowsserver2025-ps",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Inventory configuration without changing DNS",
+      "Limitations": "Recursion/forwarder/scavenging choices are architecture dependent"
+    },
+    {
+      "Id": "DNS-RECURSION",
+      "Topic": "DNS recursion and forwarders",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/networking/dns/quickstart-install-configure-dns-server",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Interpret configuration with server role",
+      "Limitations": "Disabling recursion also disables forwarders"
+    },
+    {
+      "Id": "BACKUP",
+      "Topic": "AD partition backup evidence",
+      "Reference": "https://learn.microsoft.com/en-us/services-hub/microsoft-engage-center/health/remediation-steps-ad/investigate-why-active-directory-directory-partitions-are-not-backed-up-for-longer-than-half-the-tom",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Read repadmin /showbackup output",
+      "Limitations": "No restoration test, RPO or component-coverage proof"
+    },
+    {
+      "Id": "HOTFIX",
+      "Topic": "QFE inventory limits",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-hotfix?view=powershell-5.1",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Inventory QFE/KB evidence",
+      "Limitations": "Does not enumerate all update types or prove patch compliance"
+    },
+    {
+      "Id": "SECURITY-GUIDANCE",
+      "Topic": "Microsoft Security Compliance Toolkit",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/security-compliance-toolkit-10",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Guide baseline selection and value comparison",
+      "Limitations": "Built-in selected guidance review is not a complete SCT baseline"
+    },
+    {
+      "Id": "SMB",
+      "Topic": "SMB signing",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Observe effective client/server signing requirement",
+      "Limitations": "Compatibility and approved exceptions require review"
+    },
+    {
+      "Id": "SPOOLER",
+      "Topic": "Identity infrastructure security",
+      "Reference": "https://learn.microsoft.com/en-us/defender-for-identity/security-posture-assessments/identity-infrastructure",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Separate Spooler security review",
+      "Limitations": "Stopped/Disabled is distinct from core AD services expected Running"
+    },
+    {
+      "Id": "LDAP",
+      "Topic": "LDAP signing",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/manage-ldap-signing-group-policy",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Selected LDAPServerIntegrity comparison",
+      "Limitations": "Absent registry value does not establish effective default"
+    },
+    {
+      "Id": "LDAP-CBT",
+      "Topic": "LDAP channel binding",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/ldap-channel-binding",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Preserve channel binding configuration",
+      "Limitations": "No bind test or client compatibility certification"
+    },
+    {
+      "Id": "AUDIT",
+      "Topic": "Audit policy query",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/auditpol-get",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Read CSV by subcategory GUID",
+      "Limitations": "Retain localized settings; no English pass/fail parser"
+    },
+    {
+      "Id": "EVENT-4624",
+      "Topic": "Successful logon event fields",
+      "Reference": "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Use EventData LogonType rather than message text",
+      "Limitations": "Type 8 alone does not establish cleartext transmission"
+    },
+    {
+      "Id": "FUNCTIONAL-LEVELS",
+      "Topic": "AD DS functional levels",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels",
+      "AccessedDate": "2026-11-13",
+      "Usage": "Separate OS/build from DFL/FFL",
+      "Limitations": "2019/2022 OS does not imply 2019/2022 functional levels"
+    }
+  ],
+  "RegistryCatalog": [
+    {
+      "Name": "LDAPServerIntegrity",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/manage-ldap-signing-group-policy",
+      "Path": "SYSTEM\\CurrentControlSet\\Services\\NTDS\\Parameters",
+      "Title": "LDAP server signing",
+      "Expected": [
+        2
+      ],
+      "Id": "LDAP-SIGNING"
+    },
+    {
+      "Name": "LdapEnforceChannelBinding",
+      "Reference": "https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/ldap-channel-binding",
+      "Path": "SYSTEM\\CurrentControlSet\\Services\\NTDS\\Parameters",
+      "Title": "LDAP channel binding",
+      "Expected": [
+        2
+      ],
+      "Id": "LDAP-CBT"
+    },
+    {
+      "Name": "NoLMHash",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-do-not-store-lan-manager-hash-value-on-next-password-change",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+      "Title": "Do not store LM password hash",
+      "Expected": [
+        1
+      ],
+      "Id": "NO-LM-HASH"
+    },
+    {
+      "Name": "LmCompatibilityLevel",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-lan-manager-authentication-level",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+      "Title": "LAN Manager authentication level",
+      "Expected": [
+        5
+      ],
+      "Id": "NTLM-LEVEL"
+    },
+    {
+      "Name": "LimitBlankPasswordUse",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/accounts-limit-local-account-use-of-blank-passwords-to-console-logon-only",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+      "Title": "Limit blank password use",
+      "Expected": [
+        1
+      ],
+      "Id": "NO-BLANK-REMOTE"
+    },
+    {
+      "DcApplicable": false,
+      "Name": "RestrictAnonymousSAM",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-access-do-not-allow-anonymous-enumeration-of-sam-accounts",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+      "Title": "Restrict anonymous SAM enumeration",
+      "Expected": [
+        1
+      ],
+      "Id": "RESTRICT-SAM"
+    },
+    {
+      "Name": "RestrictNullSessAccess",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-access-restrict-anonymous-access-to-named-pipes-and-shares",
+      "Path": "SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters",
+      "Title": "Restrict anonymous named pipes/shares",
+      "Expected": [
+        1
+      ],
+      "Id": "NULL-SESSIONS"
+    },
+    {
+      "Name": "EnableLUA",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-account-control-run-all-administrators-in-admin-approval-mode",
+      "Path": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+      "Title": "Admin Approval Mode",
+      "Expected": [
+        1
+      ],
+      "Id": "UAC"
+    },
+    {
+      "Name": "SCENoApplyLegacyAuditPolicy",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/audit-force-audit-policy-subcategory-settings-to-override",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+      "Title": "Force audit subcategory settings",
+      "Expected": [
+        1
+      ],
+      "Id": "AUDIT-SUBCATEGORY"
+    },
+    {
+      "Name": "EnableScriptBlockLogging",
+      "Reference": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-5.1",
+      "Path": "SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+      "Title": "PowerShell script block logging",
+      "Expected": [
+        1
+      ],
+      "Id": "PS-LOGGING"
+    },
+    {
+      "Comparison": "ContainsBits",
+      "Name": "NTLMMinClientSec",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-minimum-session-security-for-ntlm-ssp-based-including-secure-rpc-clients",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0",
+      "Title": "NTLM client minimum session security",
+      "Expected": [
+        537395200
+      ],
+      "Id": "NTLM-MIN-CLIENT"
+    },
+    {
+      "Comparison": "ContainsBits",
+      "Name": "NTLMMinServerSec",
+      "Reference": "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-minimum-session-security-for-ntlm-ssp-based-including-secure-rpc-servers",
+      "Path": "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0",
+      "Title": "NTLM server minimum session security",
+      "Expected": [
+        537395200
+      ],
+      "Id": "NTLM-MIN-SERVER"
+    }
+  ]
+}

@@ -1,102 +1,75 @@
-# FMODEL AD Health Report 1.1.0
+# FMODEL AD Health Report 1.2.0
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
-F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Revision assistance: Akira (ChatGPT)
+F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Review assisted by Akira (ChatGPT)
 
-Active Directory inventory and assisted assessment with an **interactive offline HTML report, CSV and JSON**. The script queries data and writes local reports; it does not repair, remove, disable or change directory objects.
+One-PS1 Active Directory inventory and assisted review, with **offline interactive HTML, 63 CSVs, JSON and evidence**. Queries data; no automatic environment remediation.
 
-[Português](README.md) · [Complete English manual](docs/MANUAL.en-US.md) · [PDF](docs/MANUAL.en-US.pdf) · [Validation evidence](docs/EVIDENCE.json)
+[Português](README.md) · [English manual](docs/MANUAL.en-US.md) · [PDF](docs/MANUAL.en-US.pdf) · [Microsoft references](docs/SOURCES.en-US.md) · [Data dictionary](docs/DATA-DICTIONARY.en-US.md)
 
-## What is included
+## Download and open
 
-- Forest/domain, DC, OU, computer, user and group inventory.
-- FSMO roles, schema version, password policies, trusts and direct members of selected sensitive groups resolved by SID.
-- Structured replication data, collection coverage, errors and findings requiring review.
-- HTML with local search, a complete CSV per dataset and technical JSON.
-- Optional CIM/WSMan service reads and native diagnostics restricted to selected tests.
+**[Download AD-Health-Report-v1.2.0.zip](AD-Health-Report-v1.2.0.zip?raw=true)**. If the file page opens, click **Download raw file**. Right-click the ZIP → **Extract All**, then open the extracted `ad-health-report` directory.
 
-**Finishing collection does not prove AD health or compliance.** Permissions, scope and optional checks limit coverage. Missing data is not automatically zero or a positive result.
+Git is not required. Alternative: GitHub **Code → Download ZIP → Extract All → scripts/ad-health-report**. In VSCode use **File → Open Folder** and **Terminal → New Terminal**. Do not run inside the ZIP preview.
 
-## Expanded unified collection — 1.1
+## Test at home, without a domain
 
-To combine inventory and operational checks in one PS1:
-
-```powershell
-.\Export-ADHealthReport.ps1 -FullAssessment
-```
-
-FullAssessment enables A/AAAA/SRV DNS, informational ICMP, boot/memory, volumes and NTDS/SYSVOL paths, W32Time samples/evidence, recent events, services and the 17 selected extended DCDiag tests. Default collection remains lighter. FullAssessment expands depth; scope remains Domain. Add -Scope Forest for all authorized domains.
-
-HTML includes a consolidated DC table with metrics/statuses; every dataset has CSV. Unknown data/access denial never becomes success. Event window/caps are explicit; CSVs preserve all obtained rows within those limits. Review the new parameters before full production collection.
-
-## Download
-
-[Download AD-Health-Report-v1.1.0.zip](AD-Health-Report-v1.1.0.zip?raw=true). If the file page opens, click **Download raw file**, then **Extract All**.
-
-Alternatively use **Code → Download ZIP → Extract All → scripts/ad-health-report** from the repository. Git installation is unnecessary. Open the extracted folder, not the ZIP preview.
-
-## Test first without a domain
-
-From the tool folder in a normal PowerShell session:
+From the tool directory:
 
 ```powershell
 powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
 ```
 
-The suite also runs with `pwsh`. It uses synthetic data/adapters and does not validate a real forest. No RSAT, domain or elevation is required. [EVIDENCE.json](docs/EVIDENCE.json) records actual tested environments, results and limitations.
+Tests also support `pwsh`. They use synthetic data/local files; no RSAT, domain credentials or elevation required. Open **examples/SYNTHETIC/Report.html** to explore fictional results without collecting anything.
 
-## Run a real collection
+## Collect in an authorized environment
 
-Use **64-bit Windows PowerShell 5.1 (`powershell.exe`)**, the **ActiveDirectory/RSAT module** and an account with the necessary directory-read permissions. Elevation is not required by default; optional diagnostics can require additional access.
+Use **64-bit Windows PowerShell 5.1**, ActiveDirectory RSAT and an authorized domain account. Running on a DC is not required. Additional collectors need additional modules/rights/connectivity; review the manual and test in a lab first.
 
-From the extracted folder:
+Default inventory:
 
 ```powershell
-.\Export-ADHealthReport.ps1
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1
 ```
 
-This collects the **selected domain** using implemented defaults. To select a DC explicitly:
+Comprehensive domain collection:
 
 ```powershell
-.\Export-ADHealthReport.ps1 -Server dc01.example.com
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -ComprehensiveAssessment -CreateArchive
 ```
 
-Replace `dc01.example.com` with an authorized real server. The context is pinned to the DC identified by RootDSE; the example hostname is not a built-in default.
+Append `-Scope Forest` for all authorized domains, or `-Server 'REAL-DC-NAME'` to select a DC, replacing the name. `-FullAssessment` retains its 1.1 profile; the new profile is `-ComprehensiveAssessment`.
 
-## Expand collection when appropriate
+## Added capabilities
 
-Collect domains in the forest:
+- AD Recycle Bin, topology, account flags, SPN/UPN duplicates, additional role groups by SID and lifecycle review.
+- GPOs, links, XML metadata/settings, permissions, RSoP and rights by SID.
+- DNS administrative configuration, zones, aging, root hints and InProgress indicators.
+- Bounded SYSVOL metadata, hardware/BIOS, software and QFE/KB inventory.
+- SMB, Spooler, firewall, W32Time, selected registry, audit and log configuration.
+- Selected Security events, backup evidence, offline render and optional ZIP.
+
+The original 30 datasets remain, including replication, time measurements, NTDS/SYSVOL disks, memory, services and 17 selected DCDiag tests. Adds 33 datasets. An empty CSV can mean unrequested, no results or failure: **Coverage/CollectionErrors distinguish these cases**.
+
+## Results
+
+Console **RunFolder** identifies the output. Default is a unique directory under `%LOCALAPPDATA%\FMODEL\ADHealth`. Open **Report.html**; CSV files sit alongside it. Use Excel UTF-8/comma import when needed.
+
+`-CreateArchive` creates an adjacent ZIP and displays **Archive**. To regenerate reports from existing JSON:
 
 ```powershell
-.\Export-ADHealthReport.ps1 -Scope Forest
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -FromReport 'C:\Path\Run-...\report.json' -OutputPath 'C:\ADHealth-Study'
 ```
 
-Include optional services/native diagnostics:
+Replace paths. Offline rendering also supports PowerShell 7 and does not query AD. Manifest-listed evidence is copied after hash/length verification; this does not authenticate the manifest author.
 
-```powershell
-.\Export-ADHealthReport.ps1 -IncludeServiceChecks -IncludeDcDiagnostics
-```
+## Interpretation and validation
 
-These options add queries and can require different access/connectivity. They do not enable WinRM or modify firewall/services. No independent test is gated by successful ping; access failures/timeouts are collection limitations, not isolated proof that a DC is down.
+Selected value review **is not complete SCT baseline compliance or certification**. A recent KB does not prove full patch coverage; backup evidence does not prove recoverability; an encryption flag does not prove actual use. Unknown values are not success. Read the manual for explicit scope/caps.
 
-## Open HTML and CSV
+[Testing and acceptance](docs/TESTING.en-US.md) · [Evidence](docs/EVIDENCE.json) · [Changelog](CHANGELOG.md) · [CI](https://github.com/fmodel7/scripts/actions)
 
-The default output is a unique folder under `%LOCALAPPDATA%\FMODEL\ADHealth` for the executing account. Open **Report.html** using the path printed in the console.
-
-`MaxHtmlRows` limits HTML presentation only. CSV/JSON retain collected data even when browser tables are reduced. This does not recover failed/skipped queries: inspect `coverage.csv` and `collectionerrors.csv`.
-
-CSV uses commas and UTF-8 with BOM. If Excel does not detect it correctly, use **Data → From Text/CSV**, choosing UTF-8 and comma delimiters. Potential spreadsheet formulas receive an apostrophe prefix; JSON is not subjected to this spreadsheet neutralization.
-
-## Documentation and limits
-
-The [English manual](docs/MANUAL.en-US.md) and [Portuguese manual](docs/MANUAL.pt-BR.md) explain every parameter, dataset, state, permission, finding rule, limitation and authorized lab acceptance. PDF editions are in `docs`.
-
-The report does not read passwords, password hashes, LAPS secrets or gMSA keys. It is not a complete ACL, effective privilege, GPO, patch or AD security audit. Names, SIDs, memberships and topology are sensitive: **do not publish real reports in GitHub**.
-
-No production forest was validated for this delivery. Automated tests and their evidence do not replace acceptance in the authorized environment.
-
-## Preview and validation
-
-After extracting the ZIP, open [examples/SYNTHETIC/Report.html](examples/SYNTHETIC/Report.html) to explore fictional data without a domain. The example includes all 30 CSVs and matching JSON; it is not evidence of a real environment.
-
-[CI](https://github.com/fmodel7/scripts/actions/runs/43465971682) · [Testing](docs/TESTING.en-US.md) · [Internal reference](docs/INTERNALS.en-US.md)
+Automated validation uses synthetic data. No real forest was assessed for this release. Real reports may contain sensitive identities/topology/policies; do not publish them on GitHub.

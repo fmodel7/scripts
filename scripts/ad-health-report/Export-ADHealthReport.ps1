@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-FMODEL AD Health Report 1.1.0 - read-only inventory and review evidence.
+FMODEL AD Health Report 1.2.0 - read-only inventory and review evidence.
 .DESCRIPTION
 Reads AD through RSAT ActiveDirectory, writes HTML/CSV/JSON locally. No repairs.
 Operational runtime: 64-bit Windows PowerShell 5.1. No default elevation requirement.
@@ -44,7 +44,30 @@ param(
     [ValidateRange(0.01,1000000)][double]$DiskWarningGiB=10.0,
     [ValidateRange(0,999999)][double]$DiskCriticalGiB=5.0,
     [ValidateRange(1,168)][int]$EventHours=24,
-    [ValidateRange(1,1000)][int]$MaxEventsPerLog=100
+    [ValidateRange(1,1000)][int]$MaxEventsPerLog=100,
+    [switch]$ComprehensiveAssessment,
+    [switch]$IncludeDirectorySecurity,
+    [switch]$IncludeTopology,
+    [switch]$IncludeGpoInventory,
+    [switch]$IncludeSysvolInventory,
+    [switch]$IncludeDnsConfiguration,
+    [switch]$IncludeBackupEvidence,
+    [switch]$IncludeHostInventory,
+    [switch]$IncludeSecurityConfiguration,
+    [switch]$IncludeRsop,
+    [switch]$IncludeSecurityEvents,
+    [ValidateRange(100,10000000)][int]$MaxDirectoryObjects=100000,
+    [ValidateRange(100,10000000)][int]$MaxSpnValues=500000,
+    [ValidateRange(1,100000)][int]$MaxGpos=5000,
+    [ValidateRange(1000,100000000)][int]$MaxXmlCharacters=25000000,
+    [ValidateRange(1,1000000)][int]$MaxPolicySettings=100000,
+    [ValidateRange(1,1000000)][int]$MaxSysvolFiles=20000,
+    [ValidateRange(5,1800)][int]$SysvolTimeoutSeconds=120,
+    [ValidateRange(1,100000)][int]$MaxSoftwareEntries=5000,
+    [ValidateRange(1,365)][int]$BackupWarningDays=7,
+    [string]$BaselineFile='',
+    [string]$FromReport='',
+    [switch]$CreateArchive
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -92,7 +115,7 @@ function Get-AdComputerClass {
     'Other'
 }
 function Invoke-AdQuery {
-    param([ValidateSet('Get-ADRootDSE','Get-ADDomain','Get-ADForest','Get-ADObject','Get-ADDomainController','Get-ADComputer','Get-ADUser','Get-ADGroup','Get-ADGroupMember','Get-ADOrganizationalUnit','Get-ADDefaultDomainPasswordPolicy','Get-ADFineGrainedPasswordPolicy','Get-ADTrust','Get-ADReplicationPartnerMetadata','Get-ADReplicationFailure')][string]$Command,[hashtable]$Arguments)
+    param([ValidateSet('Get-ADRootDSE','Get-ADDomain','Get-ADForest','Get-ADObject','Get-ADDomainController','Get-ADComputer','Get-ADUser','Get-ADGroup','Get-ADGroupMember','Get-ADOrganizationalUnit','Get-ADDefaultDomainPasswordPolicy','Get-ADFineGrainedPasswordPolicy','Get-ADTrust','Get-ADReplicationPartnerMetadata','Get-ADReplicationFailure','Get-ADOptionalFeature','Get-ADReplicationSite','Get-ADReplicationSubnet','Get-ADReplicationSiteLink')][string]$Command,[hashtable]$Arguments)
     & ('ActiveDirectory\'+$Command) @Arguments -ErrorAction Stop
 }
 function Initialize-AdRuntime {
@@ -102,7 +125,7 @@ function Initialize-AdRuntime {
     Import-Module ActiveDirectory -ErrorAction Stop
 }
 function Get-AdSchemas {
-    [ordered]@{
+    $schemas=[ordered]@{
         Forest='Name,RootDomain,ForestMode,SchemaVersion,SchemaLabel,SchemaMaster,DomainNamingMaster,Domains,Sites'
         Domains='Domain,QueryServer,DistinguishedName,DomainMode,DomainSid,PDCEmulator,RIDMaster,InfrastructureMaster,Computers,Users,Groups'
         DomainControllers='Domain,HostName,Site,OperatingSystem,OperatingSystemVersion,IsGlobalCatalog,IsReadOnly,OperationMasterRoles'
@@ -134,6 +157,7 @@ function Get-AdSchemas {
         Coverage='Dataset,Scope,Status,Rows,StartedUtc,EndedUtc,DurationSeconds'
         CollectionErrors='Dataset,Scope,ErrorType,Message'
     }
+    $extended=Get-AdExtensionSchemas;foreach($key in $extended.Keys){$schemas[$key]=$extended[$key]};$schemas
 }
 function Add-AdRows {
     param($Report,[string]$Dataset,[object[]]$Rows)
@@ -143,7 +167,7 @@ function Invoke-AdCollection {
     param($Report,[string]$Dataset,[string]$Scope,[scriptblock]$Read,[switch]$Skip)
     $watch=[Diagnostics.Stopwatch]::StartNew();$start=[datetime]::UtcNow.ToString('o');$status='Collected';$count=0
     if($Skip){$status='NotRequested'}else{
-        try{$rows=@(& $Read);Add-AdRows $Report $Dataset $rows;$count=$rows.Count}
+        try{$before=$Report.Datasets[$Dataset].Count;$rows=@(& $Read);Add-AdRows $Report $Dataset $rows;$count=$Report.Datasets[$Dataset].Count-$before}
         catch{
             $status='Failed'
             Add-AdRows $Report 'CollectionErrors' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;ErrorType=$_.Exception.GetType().FullName;Message=$_.Exception.Message})
@@ -261,6 +285,7 @@ function Complete-AdFindings {
 function Invoke-AdAssessment {
     param($Options,$Caller)
     $Options=Get-AdEffectiveOptions $Options
+    if($Options.BaselineFile){$null=Get-AdSecurityProfile $Options.BaselineFile}
     Initialize-AdRuntime
     $server=[string]$Options.Server
     if(-not $server){$d=Invoke-AdQuery 'Get-ADDomain' @{Current='LocalComputer'};$server=$d.DNSRoot}
@@ -274,12 +299,14 @@ function Invoke-AdAssessment {
     $folder=Join-Path $base ('Run-{0}-{1}' -f [datetime]::UtcNow.ToString('yyyyMMdd-HHmmss'),[guid]::NewGuid().ToString('N'))
     $null=New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
     $optionsCopy=[ordered]@{};foreach($p in $Options.PSObject.Properties){$optionsCopy[$p.Name]=$p.Value};$optionsCopy.Server=$server
-    $report=[pscustomobject]@{SchemaVersion=1;Version='1.1.0';RunId=[IO.Path]::GetFileName($folder);StartedUtc=[datetime]::UtcNow.ToString('o');EndedUtc='';Status='Collecting';Parameters=[pscustomobject]$optionsCopy;Datasets=[ordered]@{}}
+    $report=[pscustomobject]@{SchemaVersion=1;Version='1.2.0';RunId=[IO.Path]::GetFileName($folder);StartedUtc=[datetime]::UtcNow.ToString('o');EndedUtc='';Status='Collecting';Parameters=[pscustomobject]$optionsCopy;Datasets=[ordered]@{}}
     $schemas=Get-AdSchemas;foreach($name in $schemas.Keys){$report.Datasets[$name]=New-Object 'Collections.Generic.List[object]'}
     Invoke-AdCollection $report 'Forest' $forest.Name {
         $schema=Invoke-AdQuery 'Get-ADObject' @{Identity=$root.schemaNamingContext;Properties=@('objectVersion');Server=$server}
         [pscustomobject]@{Name=$forest.Name;RootDomain=$forest.RootDomain;ForestMode=[string]$forest.ForestMode;SchemaVersion=[int]$schema.objectVersion;SchemaLabel=Get-AdSchemaLabel ([int]$schema.objectVersion);SchemaMaster=$forest.SchemaMaster;DomainNamingMaster=$forest.DomainNamingMaster;Domains=(@($forest.Domains)-join '; ');Sites=(@($forest.Sites)-join '; ')}
     }
+    Invoke-AdExtendedForest $report $Options $forest $root $server
+    Add-AdRows $report 'AssessmentSources' @(Get-AdAssessmentSources)
     $domains=if($Options.Scope -eq 'Forest'){@($forest.Domains|Sort-Object)}else{@($domain.DNSRoot)}
     foreach($dnsDomain in $domains){
         $beforeErrors=$report.Datasets.CollectionErrors.Count
@@ -332,6 +359,7 @@ function Invoke-AdAssessment {
                 [pscustomobject]@{Domain=$dnsDomain;HostName=$dc.HostName;Site=$dc.Site;OperatingSystem=$dc.OperatingSystem;OperatingSystemVersion=$dc.OperatingSystemVersion;IsGlobalCatalog=$dc.IsGlobalCatalog;IsReadOnly=$dc.IsReadOnly;OperationMasterRoles=(@($dc.OperationMasterRoles)-join '; ')}
             }
         }
+        Invoke-AdExtendedDomain $report $Options $dnsDomain $queryServer $current.DistinguishedName $folder $forest.RootDomain
         $sid=Convert-AdSid $current.DomainSID
         $groupSids=@("$sid-512",'S-1-5-32-544','S-1-5-32-548','S-1-5-32-549','S-1-5-32-551')
         if($dnsDomain -ieq $forest.RootDomain){$groupSids+=@("$sid-518","$sid-519")}
@@ -374,6 +402,7 @@ function Invoke-AdAssessment {
                 }
             }else{Invoke-AdCollection $report 'NativeDiagnostics' $dcName {} -Skip}
             Invoke-AdOperationalCollections $report $Options $dnsDomain $dcName
+            Invoke-AdExtendedDc $report $Options $dnsDomain $dcName $folder
             Add-AdRows $report 'Timings' @([pscustomobject]@{Dataset='DCProcessing';Scope=$dcName;Status='Completed';Rows=1;DurationSeconds=$dcWatch.Elapsed.TotalSeconds})
         }
         $counts=@{};foreach($kind in @('Computers','Users','Groups')){
@@ -385,23 +414,23 @@ function Invoke-AdAssessment {
             Add-AdRows $report 'ComputerSummary' @([pscustomobject]@{Domain=$dnsDomain;Category=$g.Group[0].Category;OperatingSystem=$g.Group[0].OperatingSystem;Count=$g.Count})
         }
     }
+    Complete-AdExtensionFindings $report
     Complete-AdFindings $report
     Complete-AdOperationalFindings $report
     $report.EndedUtc=[datetime]::UtcNow.ToString('o')
     $important=@($report.Datasets.Findings|Where-Object{$_.Severity -in @('High','Medium')}).Count
     $report.Status=if($report.Datasets.CollectionErrors.Count){'Partial'}elseif($important){'CompletedWithFindings'}else{'Completed'}
-    foreach($name in $schemas.Keys){Write-AdCsv (Join-Path $folder ($name.ToLowerInvariant()+'.csv')) ($schemas[$name] -split ',') @($report.Datasets[$name].ToArray())}
-    [IO.File]::WriteAllText((Join-Path $folder 'report.json'),($report|ConvertTo-Json -Depth 12),(New-Object Text.UTF8Encoding($false)))
-    Write-AdHtmlReport (Join-Path $folder 'Report.html') $report
-    $hashes=Get-ChildItem -LiteralPath $folder -File -Recurse | ForEach-Object{[pscustomobject]@{Path=$_.FullName.Substring($folder.Length+1).Replace('\','/');SHA256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();Bytes=$_.Length}}
-    [IO.File]::WriteAllText((Join-Path $folder 'run-manifest.json'),(@($hashes)|ConvertTo-Json -Depth 4),(New-Object Text.UTF8Encoding($false)))
+    Write-AdAssessmentFiles $report $folder
     [pscustomobject]@{Status=$report.Status;ExitCode=if($report.Status -eq 'Completed'){0}else{2};RunFolder=$folder;Findings=$report.Datasets.Findings.Count;CollectionErrors=$report.Datasets.CollectionErrors.Count}
 }
 
 function Get-AdEffectiveOptions {
     param($InputOptions)
     $defaults=[ordered]@{Server='';Scope='Domain';OutputPath='';InactiveDays=90;IncludeServiceChecks=$false;IncludeDcDiagnostics=$false;TimeoutSeconds=60;MaxHtmlRows=1000;PageSize=500;SkipUserInventory=$false;SkipPrivilegedMembers=$false;FullAssessment=$false;IncludeOperationalChecks=$false;IncludeEventLogs=$false;DiagnosticProfile='Baseline';DnsServer='';TimeSamples=3;TimeWarningSeconds=1.0;TimeCriticalSeconds=5.0;DiskWarningPercent=15.0;DiskCriticalPercent=5.0;DiskWarningGiB=10.0;DiskCriticalGiB=5.0;EventHours=24;MaxEventsPerLog=100}
+    $extended=Get-AdExtensionDefaults;foreach($key in $extended.Keys){$defaults[$key]=$extended[$key]}
     foreach($key in @($defaults.Keys)){$p=$InputOptions.PSObject.Properties[$key];if($null -ne $p){$defaults[$key]=$p.Value}}
+    if($defaults.ComprehensiveAssessment){$defaults.FullAssessment=$true;foreach($k in @('IncludeDirectorySecurity','IncludeTopology','IncludeGpoInventory','IncludeSysvolInventory','IncludeDnsConfiguration','IncludeBackupEvidence','IncludeHostInventory','IncludeSecurityConfiguration','IncludeRsop','IncludeSecurityEvents')){$defaults[$k]=$true}}
+    if($defaults.BaselineFile){$defaults.IncludeSecurityConfiguration=$true}
     if($defaults.FullAssessment){foreach($k in @('IncludeServiceChecks','IncludeDcDiagnostics','IncludeOperationalChecks','IncludeEventLogs')){$defaults[$k]=$true};$defaults.DiagnosticProfile='Extended'}
     if($defaults.TimeCriticalSeconds -le $defaults.TimeWarningSeconds -or $defaults.DiskCriticalPercent -ge $defaults.DiskWarningPercent -or $defaults.DiskCriticalGiB -ge $defaults.DiskWarningGiB){throw 'Critical thresholds must be stricter than warning thresholds.'}
     [pscustomobject]$defaults
@@ -628,6 +657,709 @@ function Complete-AdOperationalFindings {
     }
 }
 
+# Independently implemented collectors. No ADxRay code or HTML is incorporated.
+function Get-AdExtensionDefaults {
+    [ordered]@{ComprehensiveAssessment=$false;IncludeDirectorySecurity=$false;IncludeTopology=$false;IncludeGpoInventory=$false;IncludeSysvolInventory=$false;IncludeDnsConfiguration=$false;IncludeBackupEvidence=$false;IncludeHostInventory=$false;IncludeSecurityConfiguration=$false;IncludeRsop=$false;IncludeSecurityEvents=$false;MaxDirectoryObjects=100000;MaxSpnValues=500000;MaxGpos=5000;MaxXmlCharacters=25000000;MaxPolicySettings=100000;MaxSysvolFiles=20000;SysvolTimeoutSeconds=120;MaxSoftwareEntries=5000;BackupWarningDays=7;BaselineFile='';FromReport=''}
+}
+function Get-AdExtensionSchemas {
+    [ordered]@{
+        OptionalFeatures='Forest,Feature,FeatureGuid,Enabled,EnabledScopes,QueryServer,Observation'
+        Sites='Forest,Name,DistinguishedName,Description,Subnets,InterSiteTopologyGenerator'
+        Subnets='Forest,Name,Site,Location,Description,DistinguishedName'
+        SiteLinks='Forest,Name,Cost,ReplicationFrequencyMinutes,Sites,DistinguishedName'
+        AccountSecurityFlags='Domain,QueryServer,Name,SamAccountName,ObjectClass,ObjectGuid,SID,DistinguishedName,Enabled,UserAccountControl,ReversibleEncryptionAllowed,UseDESKeyOnly,PasswordNotRequired,PasswordNeverExpires,DoesNotRequirePreAuth,TrustedForDelegation,TrustedToAuthForDelegation,NotDelegated,SmartcardRequired,SupportedEncryptionTypes,UserPrincipalName,Observation'
+        SPNInventory='Domain,SPN,NormalizedSPN,OwnerName,OwnerClass,OwnerGuid,OwnerDN'
+        DuplicateSPNs='SPN,OwnerCount,Domains,OwnerNames,OwnerGuids,OwnerDNs,AssessmentScope,Coverage'
+        DuplicateUPNs='UserPrincipalName,OwnerCount,Domains,OwnerNames,OwnerGuids,OwnerDNs,AssessmentScope,Coverage'
+        DirectoryCoverage='Domain,QueryServer,Objects,SPNValues,Truncated,ObjectLimit,SPNLimit,Observation'
+        GroupPolicies='Domain,QueryServer,Guid,Name,Status,CreatedUtc,ModifiedUtc,Owner,WmiFilter,ComputerVersionAD,ComputerVersionSysvol,UserVersionAD,UserVersionSysvol,ComputerSettings,UserSettings,LinkCount,Observation,SourceFile'
+        GPOLinks='Domain,ScopeType,ScopeDN,ScopeName,GpoGuid,GpoDN,StoredPosition,LinkOptions,Enabled,Enforced,InheritanceBlocked,Observation'
+        GPOSettings='Domain,GpoGuid,GpoName,Area,SettingPath,Value,Attributes,SourceFile'
+        GPOPermissions='Domain,GpoGuid,GpoName,TrusteeName,TrusteeSID,TrusteeType,Permission,Inherited,SourceFile'
+        GPOCoverage='Domain,QueryServer,Discovered,Exported,Truncated,Limit,SettingsExported,SettingsTruncated,SettingsLimit,Observation'
+        SysvolFiles='Domain,DC,RelativePath,Extension,Bytes,ModifiedUtc,Observation'
+        SysvolSummary='Domain,DC,Root,Files,Directories,Bytes,Extension,ExtensionFiles,ExtensionBytes,Truncated,Limit,DurationSeconds,Observation'
+        DnsServerConfiguration='Domain,DC,Component,Property,Value,Observation'
+        DnsZones='Domain,DC,ZoneName,ZoneType,IsDsIntegrated,IsReverseLookupZone,DynamicUpdate,ReplicationScope,AgingEnabled,NoRefreshInterval,RefreshInterval,Observation'
+        DnsRootHints='Domain,DC,RecordType,HostName,NameServer,Address,Observation'
+        DnsZoneIndicators='Partition,Name,DistinguishedName,ObjectClass,QueryServer,Observation'
+        BackupEvidence='Domain,DC,Source,Status,ExitCode,TimedOut,Partition,LastBackupUtc,AgeDays,Observation,RawText,SourceFile'
+        HostHardware='Domain,DC,Manufacturer,Model,LogicalProcessors,PhysicalCores,Sockets,PhysicalMemoryBytes,OSBuild,UBR,InstallDateUtc,BIOSVersion,BIOSReleaseUtc,Observation'
+        InstalledSoftware='Domain,DC,RegistryView,ProductKey,DisplayName,DisplayVersion,Publisher,InstallDateRaw,InstallLocation,Observation'
+        Hotfixes='Domain,DC,HotfixId,Description,InstalledOnRaw,InstalledUtc,InstalledBy,Observation'
+        HostSecurity='Domain,DC,Component,Setting,Value,Observation,Source'
+        RegistryEvidence='Domain,DC,RuleId,RegistryPath,ValueName,ValueKind,Value,Observation,Error'
+        SecurityReview='Domain,DC,RuleId,Title,Profile,Expected,Observed,Comparison,Status,OSBuild,Reference,Observation'
+        RSoPSettings='Domain,DC,Area,SettingPath,Value,Attributes,SourceFile'
+        UserRightsAssignments='Domain,DC,Right,PrincipalSID,PrincipalName,SourceGpo,Observation,SourceFile'
+        SecurityEvents='Domain,DC,LogName,TimeCreatedUtc,EventId,Level,Provider,RecordId,Message,MessageStatus,EventDataJson,Interpretation'
+        LogConfiguration='Domain,DC,LogName,Enabled,MaximumBytes,LogMode,RecordCount,OldestRecordNumber,LastWriteUtc,Observation'
+        AuditPolicy='Domain,DC,SubcategoryGuid,Value,SourceFile,Observation'
+        AssessmentSources='Id,Topic,Reference,AccessedDate,Usage,Limitations'
+    }
+}
+function Add-AdExtensionError {
+    param($Report,[string]$Dataset,[string]$Scope,[string]$Message,[string]$Type='Incomplete')
+    Add-AdRows $Report 'CollectionErrors' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;ErrorType=$Type;Message=$Message})
+}
+function Read-AdJsonList {
+    param([string]$Text)
+    # PS5.1 ConvertFrom-Json can emit the array as one pipeline object.
+    $parsed=ConvertFrom-Json -InputObject $Text
+    foreach($item in $parsed){$item}
+}
+function Invoke-AdModuleRead {
+    param([ValidateSet('GroupPolicy','DnsServer')][string]$Module,[string]$Command,[hashtable]$Arguments,[int]$TimeoutSeconds=60)
+    $allow=@{GroupPolicy=@('Get-GPO','Get-GPOReport','Get-GPPermission','Get-GPResultantSetOfPolicy');DnsServer=@('Get-DnsServer','Get-DnsServerZone','Get-DnsServerZoneAging')}
+    if($Command -notin $allow[$Module]){throw 'Read command not allowed.'}
+    $job=$null
+    try{
+        $job=Start-Job -ScriptBlock {param($m,$c,$a) $ErrorActionPreference='Stop';Import-Module $m -ErrorAction Stop;& ($m+'\'+$c) @a -ErrorAction Stop} -ArgumentList @($Module,$Command,$Arguments) -ErrorAction Stop
+        $done=Wait-Job -Job $job -Timeout $TimeoutSeconds
+        if($null -eq $done){throw ('Module query timeout: '+$Module+' / '+$Command)}
+        Receive-Job -Job $job -ErrorAction Stop
+    }finally{if($null -ne $job){if($job.State -in @('Running','NotStarted','Blocked')){Stop-Job -Job $job -ErrorAction SilentlyContinue};Remove-Job -Job $job -Force -ErrorAction SilentlyContinue}}
+}
+function Save-AdEvidence {
+    param([string]$Folder,[string]$Prefix,[string]$Text,[ValidateSet('txt','xml','json')][string]$Extension='txt')
+    if($Prefix -notmatch '^[A-Za-z][A-Za-z0-9-]*$'){throw 'Invalid evidence prefix.'}
+    $dir=Join-Path $Folder 'native';$null=New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
+    $name=$Prefix+'-'+[guid]::NewGuid().ToString('N')+'.'+$Extension
+    [IO.File]::WriteAllText((Join-Path $dir $name),$Text,(New-Object Text.UTF8Encoding($false)))
+    'native/'+$name
+}
+function Convert-AdSafeXml {
+    param([string]$Text,[int]$MaxCharacters=25000000)
+    if([string]::IsNullOrWhiteSpace($Text) -or $Text.Length -gt $MaxCharacters){throw 'XML is empty or exceeds the configured character limit.'}
+    $settings=New-Object Xml.XmlReaderSettings;$settings.DtdProcessing=[Xml.DtdProcessing]::Prohibit;$settings.XmlResolver=$null;$settings.MaxCharactersInDocument=$MaxCharacters
+    $input=New-Object IO.StringReader($Text);$reader=$null
+    try{$reader=[Xml.XmlReader]::Create($input,$settings);$doc=New-Object Xml.XmlDocument;$doc.XmlResolver=$null;$doc.Load($reader);return ,$doc}finally{if($null -ne $reader){$reader.Dispose()};$input.Dispose()}
+}
+function Get-AdXmlText {
+    param([Xml.XmlNode]$Node,[string]$XPath)
+    $n=$Node.SelectSingleNode($XPath);if($null -ne $n){return [string]$n.InnerText};''
+}
+function Get-AdXmlLeaves {
+    param([Xml.XmlNode]$Node,[int]$Limit)
+    $rows=New-Object 'Collections.Generic.List[object]';$stack=New-Object 'Collections.Generic.Stack[object]'
+    $stack.Push([pscustomobject]@{Node=$Node;Path=$Node.LocalName;Depth=0});$truncated=$false
+    while($stack.Count -gt 0){
+        $item=$stack.Pop();if($item.Depth -gt 128){throw 'XML nesting exceeds 128 levels.'}
+        $children=@($item.Node.ChildNodes|Where-Object{$_.NodeType -eq [Xml.XmlNodeType]::Element})
+        $attributes=@($item.Node.Attributes|Where-Object{$_.Prefix -ne 'xmlns' -and $_.Name -ne 'xmlns'}|ForEach-Object{$_.Name+'='+$_.Value}) -join '; '
+        if($children.Count -eq 0 -or $attributes){
+            if($rows.Count -ge $Limit){$truncated=$true;break}
+            $rows.Add([pscustomobject]@{SettingPath=$item.Path;Value=if($children.Count -eq 0){$item.Node.InnerText}else{''};Attributes=$attributes})
+        }
+        $positions=@{};$next=New-Object 'Collections.Generic.List[object]'
+        foreach($child in $children){$key=$child.NamespaceURI+'|'+$child.LocalName;if(-not $positions.ContainsKey($key)){$positions[$key]=0};$positions[$key]++;$next.Add([pscustomobject]@{Node=$child;Path=$item.Path+'/'+$child.LocalName+'['+$positions[$key]+']';Depth=$item.Depth+1})}
+        for($i=$next.Count-1;$i -ge 0;$i--){$stack.Push($next[$i])}
+    }
+    [pscustomobject]@{Rows=$rows.ToArray();Truncated=$truncated}
+}
+function Convert-AdSecurityAccount {
+    param($Account,[string]$Domain,[string]$Server)
+    $uac=Get-AdField $Account 'userAccountControl';$known=$null -ne $uac
+    $r=[ordered]@{Domain=$Domain;QueryServer=$Server;Name=Get-AdField $Account 'Name';SamAccountName=Get-AdField $Account 'sAMAccountName';ObjectClass=Get-AdField $Account 'ObjectClass';ObjectGuid=[string](Get-AdField $Account 'ObjectGUID');SID=Convert-AdSid (Get-AdField $Account 'objectSid');DistinguishedName=Get-AdField $Account 'DistinguishedName';Enabled=if($known){([long]$uac -band 2) -eq 0}else{$null};UserAccountControl=$uac}
+    foreach($pair in @(@('ReversibleEncryptionAllowed',128),@('UseDESKeyOnly',2097152),@('PasswordNotRequired',32),@('PasswordNeverExpires',65536),@('DoesNotRequirePreAuth',4194304),@('TrustedForDelegation',524288),@('TrustedToAuthForDelegation',16777216),@('NotDelegated',1048576),@('SmartcardRequired',262144))){$r[$pair[0]]=if($known){([long]$uac -band [long]$pair[1]) -ne 0}else{$null}}
+    $r.SupportedEncryptionTypes=Get-AdField $Account 'msDS-SupportedEncryptionTypes';$r.UserPrincipalName=Get-AdField $Account 'userPrincipalName';$r.Observation=if($known){'Observed'}else{'UnknownUAC'};[pscustomobject]$r
+}
+function Invoke-AdExtendedForest {
+    param($Report,$Options,$Forest,$Root,[string]$Server)
+    Invoke-AdCollection $Report 'OptionalFeatures' $Forest.Name {
+        $f=Invoke-AdQuery 'Get-ADOptionalFeature' @{Identity='766ddcd8-acd0-445e-f3b9-a7f9b6744f2a';Server=$Server;Properties=@('EnabledScopes','FeatureGUID')}
+        if($null -eq $f -or $null -eq $f.PSObject.Properties['EnabledScopes']){throw 'Optional feature response did not expose EnabledScopes.'}
+        $scopes=@(Get-AdField $f 'EnabledScopes');[pscustomobject]@{Forest=$Forest.Name;Feature='Active Directory Recycle Bin';FeatureGuid='766ddcd8-acd0-445e-f3b9-a7f9b6744f2a';Enabled=(@($scopes|Where-Object{$_}).Count -gt 0);EnabledScopes=($scopes -join '; ');QueryServer=$Server;Observation='Observed'}
+    } -Skip:(-not $Options.IncludeDirectorySecurity)
+    foreach($spec in @(@('Sites','Get-ADReplicationSite'),@('Subnets','Get-ADReplicationSubnet'),@('SiteLinks','Get-ADReplicationSiteLink'))){
+        Invoke-AdCollection $Report $spec[0] $Forest.Name {
+            $all=@(Invoke-AdQuery $spec[1] @{Filter='*';Server=$Server;Properties='*'})
+            foreach($a in $all){
+                if($spec[0] -eq 'Sites'){[pscustomobject]@{Forest=$Forest.Name;Name=$a.Name;DistinguishedName=$a.DistinguishedName;Description=Get-AdField $a 'Description';Subnets=(@(Get-AdField $a 'Subnets') -join '; ');InterSiteTopologyGenerator=[string](Get-AdField $a 'InterSiteTopologyGenerator')}}
+                elseif($spec[0] -eq 'Subnets'){[pscustomobject]@{Forest=$Forest.Name;Name=$a.Name;Site=[string](Get-AdField $a 'Site');Location=Get-AdField $a 'Location';Description=Get-AdField $a 'Description';DistinguishedName=$a.DistinguishedName}}
+                else{[pscustomobject]@{Forest=$Forest.Name;Name=$a.Name;Cost=Get-AdField $a 'Cost';ReplicationFrequencyMinutes=Get-AdField $a 'ReplicationFrequencyInMinutes';Sites=(@(Get-AdField $a 'SitesIncluded') -join '; ');DistinguishedName=$a.DistinguishedName}}
+            }
+        } -Skip:(-not $Options.IncludeTopology)
+    }
+    # Site links to GPOs are forest configuration data, read once.
+    Invoke-AdCollection $Report 'GPOLinks' ($Forest.Name+' / Sites') {
+        $base='CN=Sites,'+[string]$Root.configurationNamingContext
+        foreach($s in (Invoke-AdQuery 'Get-ADObject' @{LDAPFilter='(gPLink=*)';SearchBase=$base;Server=$Server;Properties=@('gPLink','gPOptions');ResultPageSize=$Options.PageSize})){Convert-AdGpoLinks $s 'ForestConfiguration' 'Site'}
+    } -Skip:(-not $Options.IncludeGpoInventory)
+}
+function Convert-AdGpoLinks {
+    param($ScopeObject,[string]$Domain,[string]$ScopeType='DomainOrOU')
+    $raw=[string](Get-AdField $ScopeObject 'gPLink');$matches=[regex]::Matches($raw,'\[(?i:LDAP)://(?<dn>[^\]]+);(?<flags>\d+)\]')
+    if($raw -and ($matches.Value -join '') -ne $raw){throw 'Unrecognized gPLink representation; raw directory evidence requires review.'}
+    $position=0;$inheritance=Get-AdField $ScopeObject 'gPOptions'
+    foreach($m in $matches){$position++;$dn=$m.Groups['dn'].Value;$flags=[int]$m.Groups['flags'].Value;$id=[regex]::Match($dn,'(?i)^CN=\{(?<id>[0-9a-f-]{36})\},').Groups['id'].Value
+        [pscustomobject]@{Domain=$Domain;ScopeType=$ScopeType;ScopeDN=$ScopeObject.DistinguishedName;ScopeName=$ScopeObject.Name;GpoGuid=$id;GpoDN=$dn;StoredPosition=$position;LinkOptions=$flags;Enabled=($flags -band 1) -eq 0;Enforced=($flags -band 2) -ne 0;InheritanceBlocked=if($null -ne $inheritance){([int]$inheritance -band 1) -ne 0}else{$null};Observation='StoredAttributeOrderNotEffectivePrecedence'}
+    }
+}
+function Invoke-AdExtendedDomain {
+    param($Report,$Options,[string]$Domain,[string]$Server,[string]$Base,[string]$Folder,[string]$ForestRootDomain)
+    if($Options.IncludeDnsConfiguration){
+        Invoke-AdCollection $Report 'DnsZoneIndicators' $Domain {
+            $naming=Invoke-AdQuery 'Get-ADRootDSE' @{Server=$Server}
+            foreach($partition in @($naming.namingContexts|Where-Object{$_ -match '(?i)^DC=DomainDnsZones,' -or ($_ -match '(?i)^DC=ForestDnsZones,' -and $Domain -ieq $ForestRootDomain)})){
+                $items=@(Invoke-AdQuery 'Get-ADObject' @{LDAPFilter='(name=*..InProgress*)';SearchBase=[string]$partition;Server=$Server;ResultPageSize=$Options.PageSize;ResultSetSize=($Options.MaxDirectoryObjects+1)})
+                if($items.Count -gt $Options.MaxDirectoryObjects){Add-AdExtensionError $Report 'DnsZoneIndicators' $partition 'DNS indicator query truncated.' 'Truncated'}
+                foreach($a in @($items|Select-Object -First $Options.MaxDirectoryObjects)){[pscustomobject]@{Partition=$partition;Name=$a.Name;DistinguishedName=$a.DistinguishedName;ObjectClass=$a.ObjectClass;QueryServer=$Server;Observation='NameIndicatorReviewRequired'}}
+            }
+        }
+    }else{Invoke-AdCollection $Report 'DnsZoneIndicators' $Domain {} -Skip}
+    Invoke-AdCollection $Report 'AccountSecurityFlags' $Domain {
+        $filter=if($Options.SkipUserInventory){'(&(objectClass=computer)(sAMAccountName=*))'}else{'(|(servicePrincipalName=*)(&(objectClass=user)(sAMAccountName=*)))'}
+        $args=@{LDAPFilter=$filter;SearchBase=$Base;Server=$Server;ResultPageSize=$Options.PageSize;ResultSetSize=($Options.MaxDirectoryObjects+1);Properties=@('sAMAccountName','objectSid','userAccountControl','userPrincipalName','servicePrincipalName','msDS-SupportedEncryptionTypes')}
+        $accounts=@(Invoke-AdQuery 'Get-ADObject' $args);$truncated=$accounts.Count -gt $Options.MaxDirectoryObjects;$values=0;$spnTruncated=$false
+        foreach($a in @($accounts|Select-Object -First $Options.MaxDirectoryObjects)){
+            Convert-AdSecurityAccount $a $Domain $Server
+            foreach($spn in @((Get-AdField $a 'servicePrincipalName')|Where-Object{$_})){
+                if($values -ge $Options.MaxSpnValues){$spnTruncated=$true;break};$values++
+                Add-AdRows $Report 'SPNInventory' @([pscustomobject]@{Domain=$Domain;SPN=[string]$spn;NormalizedSPN=([string]$spn).ToLowerInvariant();OwnerName=$a.Name;OwnerClass=$a.ObjectClass;OwnerGuid=[string]$a.ObjectGUID;OwnerDN=$a.DistinguishedName})
+            }
+        }
+        Add-AdRows $Report 'DirectoryCoverage' @([pscustomobject]@{Domain=$Domain;QueryServer=$Server;Objects=[math]::Min($accounts.Count,$Options.MaxDirectoryObjects);SPNValues=$values;Truncated=($truncated -or $spnTruncated);ObjectLimit=$Options.MaxDirectoryObjects;SPNLimit=$Options.MaxSpnValues;Observation=if($truncated -or $spnTruncated){'Truncated'}elseif($Options.SkipUserInventory){'ComputersOnlyByRequest'}else{'ObservedWithinSelectedScope'}})
+        if($truncated -or $spnTruncated){Add-AdExtensionError $Report 'AccountSecurityFlags' $Domain 'Directory/SPN limit reached; absence of duplicates is inconclusive outside exported coverage.' 'Truncated'}
+    } -Skip:(-not $Options.IncludeDirectorySecurity)
+    Invoke-AdCollection $Report 'GPOLinks' $Domain {
+        foreach($s in (Invoke-AdQuery 'Get-ADObject' @{LDAPFilter='(gPLink=*)';SearchBase=$Base;Server=$Server;Properties=@('gPLink','gPOptions');ResultPageSize=$Options.PageSize})){Convert-AdGpoLinks $s $Domain}
+    } -Skip:(-not $Options.IncludeGpoInventory)
+    Invoke-AdCollection $Report 'GroupPolicies' $Domain {Get-AdGpoInventory $Report $Options $Domain $Server $Folder} -Skip:(-not $Options.IncludeGpoInventory)
+    if($Options.IncludeDirectorySecurity -and -not $Options.SkipPrivilegedMembers){
+        # Complements the original selected groups; DC groups are inventory, not user-count violations.
+        $sidPrefix=@($Report.Datasets.Groups|Where-Object{$_.Domain -eq $Domain -and $_.SID -match '^S-1-5-21-\d+-\d+-\d+-512$'}|ForEach-Object{$_.SID -replace '-512$',''})
+        if($sidPrefix.Count -eq 1){
+            $additional=@(($sidPrefix[0]+'-516'),($sidPrefix[0]+'-521'),($sidPrefix[0]+'-520'),'S-1-5-32-550','S-1-5-32-562','S-1-5-32-569')
+            foreach($sid in $additional){
+                $groups=@($Report.Datasets.Groups|Where-Object{$_.Domain -eq $Domain -and $_.SID -eq $sid})
+                if($groups.Count -ne 1){continue}
+                Invoke-AdCollection $Report 'PrivilegedMembers' ($Domain+' / '+$sid) {
+                    foreach($m in (Invoke-AdQuery 'Get-ADGroupMember' @{Identity=$groups[0].DistinguishedName;Server=$Server})){
+                        [pscustomobject]@{Domain=$Domain;GroupName=$groups[0].Name;GroupSID=$sid;MemberName=$m.Name;MemberSID=Convert-AdSid (Get-AdField $m 'SID');MemberClass=$m.objectClass;MemberDN=$m.DistinguishedName;MembershipType='DirectOnly'}
+                    }
+                }
+            }
+        }
+    }
+}
+function Get-AdLifecycleHint {
+    param([string]$OperatingSystem,[datetime]$AsOf=[datetime]::UtcNow)
+    $rules=@(
+        @('Windows Server 2012 R2','(?i)Windows Server 2012 R2','2023-10-10','windows-server-2012-r2'),
+        @('Windows Server 2012','(?i)Windows Server 2012(?! R2)','2023-10-10','windows-server-2012'),
+        @('Windows Server 2008 R2','(?i)Windows Server 2008 R2','2020-01-14','windows-server-2008-r2'),
+        @('Windows 7','(?i)^Windows 7(?:\s|$)','2020-01-14','windows-7')
+    )
+    foreach($r in $rules){if($OperatingSystem -match $r[1]){
+        $end=[datetime]::ParseExact($r[2],'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+        if($AsOf.Date -gt $end.Date){return [pscustomobject]@{Product=$r[0];RegularSupportEnd=$r[2];Reference=('https://learn.microsoft.com/en-us/lifecycle/products/'+$r[3]);Observation='Regular lifecycle review only; edition/channel/ESU/custom support and whether the AD OS attribute is current are not verified.'}}
+        return
+    }}
+    if($OperatingSystem -match '(?i)^Windows 10(?:\s|$)' -and $OperatingSystem -notmatch '(?i)LTSC|LTSB'){
+        return [pscustomobject]@{Product='Windows 10 edition/build review';RegularSupportEnd='Varies by edition/channel/ESU';Reference='https://learn.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro';Observation='Windows 10 ordinary releases require edition/build/ESU review; this does not classify all Windows 10/LTSC systems as unsupported.'}
+    }
+    if($OperatingSystem -match '(?i)^Windows (?:NT|2000|XP|Vista|8(?:\.1)?)(?:\s|$)' -or $OperatingSystem -match '(?i)^Windows Server (?:2000|2003|2008)(?:\s|$)'){
+        [pscustomobject]@{Product='Legacy Windows product hint';RegularSupportEnd='Look up exact product/edition';Reference='https://learn.microsoft.com/en-us/lifecycle/';Observation='Legacy family name in AD; verify actual host OS, service pack, edition and contractual support. No universal version/name verdict.'}
+    }
+}
+function Get-AdGpoInventory {
+    param($Report,$Options,[string]$Domain,[string]$Server,[string]$Folder)
+    $gpos=@(Invoke-AdModuleRead GroupPolicy Get-GPO @{All=$true;Domain=$Domain;Server=$Server} -TimeoutSeconds $Options.TimeoutSeconds)
+    $truncated=$gpos.Count -gt $Options.MaxGpos;$settingsCount=0;$settingsTruncated=$false;$done=0
+    foreach($g in @($gpos|Select-Object -First $Options.MaxGpos)){
+        $guid=[string]$g.Id;$name=[string]$g.DisplayName;$source='';$status='Observed';$computerCount=$null;$userCount=$null
+        try{
+            $xml=[string](Invoke-AdModuleRead GroupPolicy Get-GPOReport @{Guid=$g.Id;Domain=$Domain;Server=$Server;ReportType='Xml'} -TimeoutSeconds $Options.TimeoutSeconds)
+            $doc=Convert-AdSafeXml $xml $Options.MaxXmlCharacters;$xmlGuid=Get-AdXmlText $doc "/*[local-name()='GPO']/*[local-name()='Identifier']/*[local-name()='Identifier']"
+            if(-not $xmlGuid){$xmlGuid=Get-AdXmlText $doc "/*[local-name()='GPO']/*[local-name()='Identifier']"}
+            if($xmlGuid -and $xmlGuid.Trim('{}') -ine $guid.Trim('{}')){throw 'GPO XML identity does not match the requested GUID.'}
+            $xmlDomain=Get-AdXmlText $doc "/*[local-name()='GPO']/*[local-name()='Identifier']/*[local-name()='Domain']"
+            if($xmlDomain -and $xmlDomain -ine $Domain){throw 'GPO XML domain does not match selected domain.'}
+            $source=Save-AdEvidence $Folder 'GPO' $xml 'xml'
+            $computerCount=@($doc.SelectNodes("/*[local-name()='GPO']/*[local-name()='Computer']/*[local-name()='ExtensionData']/*")).Count
+            $userCount=@($doc.SelectNodes("/*[local-name()='GPO']/*[local-name()='User']/*[local-name()='ExtensionData']/*")).Count
+            $remaining=[math]::Max(0,$Options.MaxPolicySettings-$settingsCount);$flat=Get-AdXmlLeaves $doc.DocumentElement $remaining
+            $settingsTruncated=$settingsTruncated -or $flat.Truncated
+            foreach($leaf in $flat.Rows){$settingsCount++;Add-AdRows $Report 'GPOSettings' @([pscustomobject]@{Domain=$Domain;GpoGuid=$guid;GpoName=$name;Area=if($leaf.SettingPath -match '/Computer\['){'Computer'}elseif($leaf.SettingPath -match '/User\['){'User'}else{'Metadata'};SettingPath=$leaf.SettingPath;Value=$leaf.Value;Attributes=$leaf.Attributes;SourceFile=$source})}
+        }catch{$status='Partial';Add-AdExtensionError $Report 'GPOSettings' ($Domain+' / '+$guid) $_.Exception.Message 'QueryOrParseError'}
+        try{
+            foreach($p in (Invoke-AdModuleRead GroupPolicy Get-GPPermission @{Guid=$g.Id;All=$true;Domain=$Domain;Server=$Server} -TimeoutSeconds $Options.TimeoutSeconds)){
+                $trustee=Get-AdField $p 'Trustee';Add-AdRows $Report 'GPOPermissions' @([pscustomobject]@{Domain=$Domain;GpoGuid=$guid;GpoName=$name;TrusteeName=Get-AdField $trustee 'Name';TrusteeSID=Convert-AdSid (Get-AdField $trustee 'Sid');TrusteeType=[string](Get-AdField $trustee 'SidType');Permission=[string](Get-AdField $p 'Permission');Inherited=Get-AdField $p 'Inherited';SourceFile=$source})
+            }
+        }catch{Add-AdExtensionError $Report 'GPOPermissions' ($Domain+' / '+$guid) $_.Exception.Message 'QueryError';$status='Partial'}
+        $computer=Get-AdField $g 'Computer';$user=Get-AdField $g 'User';$done++
+        [pscustomobject]@{Domain=$Domain;QueryServer=$Server;Guid=$guid;Name=$name;Status=[string](Get-AdField $g 'GpoStatus');CreatedUtc=Convert-AdDate (Get-AdField $g 'CreationTime');ModifiedUtc=Convert-AdDate (Get-AdField $g 'ModificationTime');Owner=Get-AdField $g 'Owner';WmiFilter=[string](Get-AdField $g 'WmiFilter');ComputerVersionAD=Get-AdField $computer 'DSVersion';ComputerVersionSysvol=Get-AdField $computer 'SysvolVersion';UserVersionAD=Get-AdField $user 'DSVersion';UserVersionSysvol=Get-AdField $user 'SysvolVersion';ComputerSettings=$computerCount;UserSettings=$userCount;LinkCount=@($Report.Datasets.GPOLinks|Where-Object{$_.GpoGuid -ieq $guid.Trim('{}')}).Count;Observation=$status;SourceFile=$source}
+    }
+    Add-AdRows $Report 'GPOCoverage' @([pscustomobject]@{Domain=$Domain;QueryServer=$Server;Discovered=$gpos.Count;Exported=$done;Truncated=$truncated;Limit=$Options.MaxGpos;SettingsExported=$settingsCount;SettingsTruncated=$settingsTruncated;SettingsLimit=$Options.MaxPolicySettings;Observation=if($truncated -or $settingsTruncated){'Truncated'}else{'Observed'}})
+    if($truncated -or $settingsTruncated){Add-AdExtensionError $Report 'GroupPolicies' $Domain 'GPO/normalized setting limit reached; raw XML may contain additional settings for exported GPOs.' 'Truncated'}
+}
+function Get-AdDnsConfiguration {
+    param($Report,$Options,[string]$Domain,[string]$DC,[string]$Folder)
+    $role=@($Report.Datasets.Services|Where-Object{$_.DC -eq $DC -and $_.Name -eq 'DNS' -and $_.Observation -eq 'NotObserved'})
+    if($role.Count -eq 1){[pscustomobject]@{Domain=$Domain;DC=$DC;Component='DNSRole';Property='Service';Value='NotObserved';Observation='NotApplicableNoDnsServiceObserved'};return}
+    $config=Invoke-AdModuleRead DnsServer Get-DnsServer @{ComputerName=$DC} -TimeoutSeconds $Options.TimeoutSeconds
+    $json=$config|ConvertTo-Json -Depth 16
+    $null=Save-AdEvidence $Folder 'DNSConfiguration' $json 'json'
+    foreach($name in @('ServerSetting','ServerForwarder','ServerRecursion','ServerScavenging','ServerCache','ServerDsSetting')){
+        $component=Get-AdField $config $name
+        if($null -eq $component){[pscustomobject]@{Domain=$Domain;DC=$DC;Component=$name;Property='';Value='';Observation='NotExposed'};continue}
+        foreach($p in $component.PSObject.Properties|Where-Object{$_.Name -notmatch '^(Cim|PS|Runspace)'}){
+            [pscustomobject]@{Domain=$Domain;DC=$DC;Component=$name;Property=$p.Name;Value=if($p.Value -is [array]){(@($p.Value|ForEach-Object{[string]$_}) -join '; ')}else{[string]$p.Value};Observation='Observed'}
+        }
+    }
+    $hints=Get-AdField $config 'ServerRootHint'
+    foreach($category in @('NameServer','IPAddress')){
+        foreach($h in @(Get-AdField $hints $category)){
+            if($null -eq $h){continue};$data=Get-AdField $h 'RecordData'
+            Add-AdRows $Report 'DnsRootHints' @([pscustomobject]@{Domain=$Domain;DC=$DC;RecordType=Get-AdField $h 'RecordType';HostName=Get-AdField $h 'HostName';NameServer=Get-AdField $data 'NameServer';Address=(@((Get-AdField $data 'IPv4Address'),(Get-AdField $data 'IPv6Address'))|Where-Object{$_}) -join '; ';Observation='Observed'})
+        }
+    }
+    foreach($z in @(Invoke-AdModuleRead DnsServer Get-DnsServerZone @{ComputerName=$DC} -TimeoutSeconds $Options.TimeoutSeconds)){
+        $aging=$null;$obs='Observed'
+        if([string](Get-AdField $z 'ZoneType') -eq 'Primary'){
+            try{$aging=Invoke-AdModuleRead DnsServer Get-DnsServerZoneAging @{ComputerName=$DC;Name=$z.ZoneName} -TimeoutSeconds $Options.TimeoutSeconds}catch{$obs='AgingQueryError';Add-AdExtensionError $Report 'DnsZones' ($DC+' / '+$z.ZoneName) $_.Exception.Message 'QueryError'}
+        }else{$obs='AgingNotApplicable'}
+        Add-AdRows $Report 'DnsZones' @([pscustomobject]@{Domain=$Domain;DC=$DC;ZoneName=$z.ZoneName;ZoneType=[string](Get-AdField $z 'ZoneType');IsDsIntegrated=Get-AdField $z 'IsDsIntegrated';IsReverseLookupZone=Get-AdField $z 'IsReverseLookupZone';DynamicUpdate=[string](Get-AdField $z 'DynamicUpdate');ReplicationScope=[string](Get-AdField $z 'ReplicationScope');AgingEnabled=Get-AdField $aging 'AgingEnabled';NoRefreshInterval=[string](Get-AdField $aging 'NoRefreshInterval');RefreshInterval=[string](Get-AdField $aging 'RefreshInterval');Observation=$obs})
+    }
+}
+function Get-AdSysvolInventory {
+    param($Report,$Options,[string]$Domain,[string]$DC,[string]$RootOverride='')
+    if($DC -notmatch '^[a-zA-Z0-9][a-zA-Z0-9.-]*$' -or $Domain -notmatch '^[a-zA-Z0-9][a-zA-Z0-9.-]*$'){throw 'Invalid SYSVOL host/domain.'}
+    $root=if($RootOverride){$RootOverride}else{'\\'+$DC+'\SYSVOL\'+$Domain};$watch=[Diagnostics.Stopwatch]::StartNew();$stack=New-Object 'Collections.Generic.Stack[string]';$stack.Push($root)
+    $files=0;$dirs=0;$bytes=0L;$truncated=$false;$errors=0;$byExtension=@{}
+    while($stack.Count -gt 0){
+        if($watch.Elapsed.TotalSeconds -ge $Options.SysvolTimeoutSeconds){$truncated=$true;break}
+        $dir=$stack.Pop();$dirs++
+        try{
+            # Enumerate lazily; never recurse into a reparse point or execute a file.
+            foreach($path in [IO.Directory]::EnumerateFileSystemEntries($dir)){
+                if($watch.Elapsed.TotalSeconds -ge $Options.SysvolTimeoutSeconds){$truncated=$true;break}
+                try{
+                    $attr=[IO.File]::GetAttributes($path)
+                    if(($attr -band [IO.FileAttributes]::ReparsePoint) -ne 0){$errors++;Add-AdExtensionError $Report 'SysvolFiles' $DC 'A reparse point was excluded from SYSVOL inventory.' 'ExcludedReparsePoint';continue}
+                    if(($attr -band [IO.FileAttributes]::Directory) -ne 0){$stack.Push($path);continue}
+                    if($files -ge $Options.MaxSysvolFiles){$truncated=$true;break}
+                    $f=New-Object IO.FileInfo($path);$files++;$bytes+=$f.Length;$ext=$f.Extension.ToLowerInvariant();if(-not $ext){$ext='[no extension]'}
+                    if(-not $byExtension.ContainsKey($ext)){$byExtension[$ext]=@{Files=0;Bytes=0L}};$byExtension[$ext].Files++;$byExtension[$ext].Bytes+=$f.Length
+                    [pscustomobject]@{Domain=$Domain;DC=$DC;RelativePath=$f.FullName.Substring($root.Length).TrimStart('\');Extension=$ext;Bytes=$f.Length;ModifiedUtc=$f.LastWriteTimeUtc.ToString('o');Observation='ObservedMetadataOnly'}
+                }catch{$errors++;Add-AdExtensionError $Report 'SysvolFiles' $DC $_.Exception.Message 'FileReadError'}
+            }
+        }catch{$errors++;Add-AdExtensionError $Report 'SysvolFiles' $DC $_.Exception.Message 'DirectoryReadError'}
+        if($truncated){break}
+    }
+    foreach($ext in @($byExtension.Keys|Sort-Object)){
+        Add-AdRows $Report 'SysvolSummary' @([pscustomobject]@{Domain=$Domain;DC=$DC;Root=$root;Files=$files;Directories=$dirs;Bytes=$bytes;Extension=$ext;ExtensionFiles=$byExtension[$ext].Files;ExtensionBytes=$byExtension[$ext].Bytes;Truncated=$truncated;Limit=$Options.MaxSysvolFiles;DurationSeconds=$watch.Elapsed.TotalSeconds;Observation=if($errors){'Partial'}elseif($truncated){'Truncated'}else{'ObservedMetadataOnly'}})
+    }
+    if($byExtension.Count -eq 0){Add-AdRows $Report 'SysvolSummary' @([pscustomobject]@{Domain=$Domain;DC=$DC;Root=$root;Files=0;Directories=$dirs;Bytes=0;Extension='';ExtensionFiles=0;ExtensionBytes=0;Truncated=$truncated;Limit=$Options.MaxSysvolFiles;DurationSeconds=$watch.Elapsed.TotalSeconds;Observation=if($errors){'Partial'}elseif($truncated){'Truncated'}else{'ObservedEmpty'}})}
+    if($truncated){Add-AdExtensionError $Report 'SysvolFiles' $DC 'SYSVOL file/time limit reached. A blocking filesystem call may exceed the traversal budget.' 'Truncated'}
+}
+function Get-AdRegistryCatalog {
+    $s='https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/'
+    @(
+        @{Id='LDAP-SIGNING';Title='LDAP server signing';Path='SYSTEM\CurrentControlSet\Services\NTDS\Parameters';Name='LDAPServerIntegrity';Expected=@(2);Reference='https://learn.microsoft.com/en-us/windows-server/identity/manage-ldap-signing-group-policy'},
+        @{Id='LDAP-CBT';Title='LDAP channel binding';Path='SYSTEM\CurrentControlSet\Services\NTDS\Parameters';Name='LdapEnforceChannelBinding';Expected=@(2);Reference='https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/ldap-channel-binding'},
+        @{Id='NO-LM-HASH';Title='Do not store LM password hash';Path='SYSTEM\CurrentControlSet\Control\Lsa';Name='NoLMHash';Expected=@(1);Reference=($s+'network-security-do-not-store-lan-manager-hash-value-on-next-password-change')},
+        @{Id='NTLM-LEVEL';Title='LAN Manager authentication level';Path='SYSTEM\CurrentControlSet\Control\Lsa';Name='LmCompatibilityLevel';Expected=@(5);Reference=($s+'network-security-lan-manager-authentication-level')},
+        @{Id='NO-BLANK-REMOTE';Title='Limit blank password use';Path='SYSTEM\CurrentControlSet\Control\Lsa';Name='LimitBlankPasswordUse';Expected=@(1);Reference=($s+'accounts-limit-local-account-use-of-blank-passwords-to-console-logon-only')},
+        @{Id='RESTRICT-SAM';DcApplicable=$false;Title='Restrict anonymous SAM enumeration';Path='SYSTEM\CurrentControlSet\Control\Lsa';Name='RestrictAnonymousSAM';Expected=@(1);Reference=($s+'network-access-do-not-allow-anonymous-enumeration-of-sam-accounts')},
+        @{Id='NULL-SESSIONS';Title='Restrict anonymous named pipes/shares';Path='SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters';Name='RestrictNullSessAccess';Expected=@(1);Reference=($s+'network-access-restrict-anonymous-access-to-named-pipes-and-shares')},
+        @{Id='UAC';Title='Admin Approval Mode';Path='SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System';Name='EnableLUA';Expected=@(1);Reference=($s+'user-account-control-run-all-administrators-in-admin-approval-mode')},
+        @{Id='AUDIT-SUBCATEGORY';Title='Force audit subcategory settings';Path='SYSTEM\CurrentControlSet\Control\Lsa';Name='SCENoApplyLegacyAuditPolicy';Expected=@(1);Reference=($s+'audit-force-audit-policy-subcategory-settings-to-override')},
+        @{Id='PS-LOGGING';Title='PowerShell script block logging';Path='SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging';Name='EnableScriptBlockLogging';Expected=@(1);Reference='https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-5.1'},
+        @{Id='NTLM-MIN-CLIENT';Title='NTLM client minimum session security';Path='SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0';Name='NTLMMinClientSec';Expected=@(537395200);Comparison='ContainsBits';Reference=($s+'network-security-minimum-session-security-for-ntlm-ssp-based-including-secure-rpc-clients')},
+        @{Id='NTLM-MIN-SERVER';Title='NTLM server minimum session security';Path='SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0';Name='NTLMMinServerSec';Expected=@(537395200);Comparison='ContainsBits';Reference=($s+'network-security-minimum-session-security-for-ntlm-ssp-based-including-secure-rpc-servers')}
+    )
+}
+function Invoke-AdRemoteSnapshot {
+    param([string]$DC,$Options)
+    if($DC -notmatch '^[a-zA-Z0-9][a-zA-Z0-9.-]*$'){throw 'Invalid remote computer name.'}
+    $catalog=ConvertTo-Json -InputObject @(Get-AdRegistryCatalog) -Depth 6 -Compress
+    $read={
+        param([string]$CatalogJson,[bool]$Hardware,[bool]$Security,[int]$MaxSoftware)
+        $ErrorActionPreference='Stop'
+        $result=[ordered]@{Hardware=@();Software=@();Hotfixes=@();Security=@();Registry=@();Logs=@();Errors=@();AuditText='';AuditExit=$null;SoftwareTruncated=$false}
+        function SnapshotError([string]$Dataset,$ErrorObject){$result.Errors+=,[pscustomobject]@{Dataset=$Dataset;Message=[string]$ErrorObject}}
+        function Read-SnapshotCatalog([string]$Json){$parsed=ConvertFrom-Json -InputObject $Json;foreach($item in $parsed){$item}}
+        if($Hardware){
+            try{
+                $cs=Get-CimInstance Win32_ComputerSystem -ErrorAction Stop;$os=Get-CimInstance Win32_OperatingSystem -ErrorAction Stop;$bios=Get-CimInstance Win32_BIOS -ErrorAction Stop;$cpu=@(Get-CimInstance Win32_Processor -ErrorAction Stop)
+                $ubr=$null;try{$ubr=(Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name UBR -ErrorAction Stop).UBR}catch{}
+                $result.Hardware=@([pscustomobject]@{Manufacturer=$cs.Manufacturer;Model=$cs.Model;LogicalProcessors=$cs.NumberOfLogicalProcessors;PhysicalCores=($cpu|Measure-Object NumberOfCores -Sum).Sum;Sockets=$cpu.Count;PhysicalMemoryBytes=$cs.TotalPhysicalMemory;OSBuild=$os.BuildNumber;UBR=$ubr;InstallDateUtc=if($os.InstallDate){([datetime]$os.InstallDate).ToUniversalTime().ToString('o')}else{''};BIOSVersion=(@($bios.SMBIOSBIOSVersion) -join '; ');BIOSReleaseUtc=if($bios.ReleaseDate){([datetime]$bios.ReleaseDate).ToUniversalTime().ToString('o')}else{''};Observation='Observed'})
+            }catch{SnapshotError 'HostHardware' $_.Exception.Message}
+            foreach($view in @('Registry64','Registry32')){
+                $base=$null;$key=$null
+                try{
+                    $base=[Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine,[Microsoft.Win32.RegistryView]::$view)
+                    $key=$base.OpenSubKey('SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',$false)
+                    if($null -eq $key){continue}
+                    foreach($name in $key.GetSubKeyNames()){
+                        $sub=$null
+                        try{
+                            $sub=$key.OpenSubKey($name,$false);if($null -eq $sub){continue};$display=$sub.GetValue('DisplayName',$null)
+                            if(-not $display){continue};if($result.Software.Count -ge $MaxSoftware){$result.SoftwareTruncated=$true;break}
+                            $result.Software+=,[pscustomobject]@{RegistryView=$view;ProductKey=$name;DisplayName=[string]$display;DisplayVersion=[string]$sub.GetValue('DisplayVersion','');Publisher=[string]$sub.GetValue('Publisher','');InstallDateRaw=[string]$sub.GetValue('InstallDate','');InstallLocation=[string]$sub.GetValue('InstallLocation','');Observation='UninstallRegistryEntry'}
+                        }catch{SnapshotError 'InstalledSoftware' $_.Exception.Message}finally{if($null -ne $sub){$sub.Dispose()}}
+                    }
+                }catch{SnapshotError 'InstalledSoftware' $_.Exception.Message}finally{if($null -ne $key){$key.Dispose()};if($null -ne $base){$base.Dispose()}}
+            }
+            try{
+                foreach($fix in @(Get-CimInstance Win32_QuickFixEngineering -ErrorAction Stop)){
+                    $raw=[string]$fix.InstalledOn;$parsed=$null
+                    # Dates remain raw unless provider returned an actual typed date.
+                    if($fix.InstalledOn -is [datetime]){$parsed=$fix.InstalledOn.ToUniversalTime().ToString('o')}
+                    $result.Hotfixes+=,[pscustomobject]@{HotfixId=$fix.HotFixID;Description=$fix.Description;InstalledOnRaw=$raw;InstalledUtc=$parsed;InstalledBy=$fix.InstalledBy;Observation='QFEOnlyNotPatchCompliance'}
+                }
+            }catch{SnapshotError 'Hotfixes' $_.Exception.Message}
+        }
+        if($Security){
+            # Preserve machine/policy W32Time configuration without parsing localized console labels.
+            foreach($entry in @(
+                @('Machine','SYSTEM\CurrentControlSet\Services\W32Time\Parameters','Type'),
+                @('Machine','SYSTEM\CurrentControlSet\Services\W32Time\Parameters','NtpServer'),
+                @('Machine','SYSTEM\CurrentControlSet\Services\W32Time\Config','AnnounceFlags'),
+                @('Machine','SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient','Enabled'),
+                @('Machine','SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpServer','Enabled'),
+                @('Policy','SOFTWARE\Policies\Microsoft\W32Time\Parameters','Type'),
+                @('Policy','SOFTWARE\Policies\Microsoft\W32Time\Parameters','NtpServer'))){
+                $key=$null;$value=$null;$status='NotExplicitlyConfigured'
+                try{$key=[Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($entry[1],$false);if($null -ne $key -and @($key.GetValueNames()) -contains $entry[2]){$value=$key.GetValue($entry[2],$null,[Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames);$status='Observed'}}catch{$status='QueryError';SnapshotError 'HostSecurity' $_.Exception.Message}finally{if($null -ne $key){$key.Dispose()}}
+                $result.Security+=,[pscustomobject]@{Component=('W32Time-'+$entry[0]);Setting=($entry[1]+'\'+$entry[2]);Value=$value;Observation=$status;Source='ReadOnlyRegistryConfigurationNotSynchronizationProof'}
+            }
+            foreach($kind in @('Server','Client')){
+                try{
+                    $smb=if($kind -eq 'Server'){Get-SmbServerConfiguration -ErrorAction Stop}else{Get-SmbClientConfiguration -ErrorAction Stop}
+                    foreach($setting in @('EnableSMB1Protocol','EnableSMB2Protocol','RequireSecuritySignature','EnableSecuritySignature','EncryptData','EnableInsecureGuestLogons','RejectUnencryptedAccess')){
+                        $p=$smb.PSObject.Properties[$setting];if($null -ne $p){$result.Security+=,[pscustomobject]@{Component=('SMB'+$kind);Setting=$setting;Value=$p.Value;Observation='Observed';Source='SmbShare'}}
+                    }
+                }catch{SnapshotError 'HostSecurity' $_.Exception.Message}
+            }
+            try{
+                $sp=@(Get-CimInstance Win32_Service -Filter "Name='Spooler'" -ErrorAction Stop)
+                if($sp.Count -eq 0){$result.Security+=,[pscustomobject]@{Component='Spooler';Setting='Service';Value='';Observation='NotInstalled';Source='Win32_Service'}}
+                else{foreach($name in @('State','StartMode')){$result.Security+=,[pscustomobject]@{Component='Spooler';Setting=$name;Value=$sp[0].$name;Observation='Observed';Source='Win32_Service'}}}
+            }catch{SnapshotError 'HostSecurity' $_.Exception.Message}
+            try{foreach($fw in @(Get-NetFirewallProfile -PolicyStore ActiveStore -ErrorAction Stop)){$result.Security+=,[pscustomobject]@{Component='Firewall';Setting=[string]$fw.Name;Value=[string]$fw.Enabled;Observation='Observed';Source='ActiveStore'}}}catch{SnapshotError 'HostSecurity' $_.Exception.Message}
+            foreach($rule in (Read-SnapshotCatalog $CatalogJson)){
+                $key=$null;$value=$null;$kind='';$observation='NotConfigured';$errorText=''
+                try{
+                    $key=[Microsoft.Win32.Registry]::LocalMachine.OpenSubKey([string]$rule.Path,$false)
+                    if($null -ne $key -and @($key.GetValueNames()) -contains [string]$rule.Name){$value=$key.GetValue($rule.Name,$null,[Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames);$kind=[string]$key.GetValueKind($rule.Name);$observation='Observed'}
+                }catch{$observation='QueryError';$errorText=$_.Exception.Message;SnapshotError 'RegistryEvidence' $errorText}finally{if($null -ne $key){$key.Dispose()}}
+                $result.Registry+=,[pscustomobject]@{RuleId=$rule.Id;RegistryPath=$rule.Path;ValueName=$rule.Name;ValueKind=$kind;Value=$value;Observation=$observation;Error=$errorText}
+            }
+            foreach($log in @('System','Security','Directory Service','DFS Replication','DNS Server')){
+                try{$cfg=Get-WinEvent -ListLog $log -ErrorAction Stop;$result.Logs+=,[pscustomobject]@{LogName=$log;Enabled=$cfg.IsEnabled;MaximumBytes=$cfg.MaximumSizeInBytes;LogMode=[string]$cfg.LogMode;RecordCount=$cfg.RecordCount;OldestRecordNumber=$cfg.OldestRecordNumber;LastWriteUtc=if($cfg.LastWriteTime){$cfg.LastWriteTime.ToUniversalTime().ToString('o')}else{''};Observation='Observed'}}catch{if($log -ne 'DNS Server'){SnapshotError 'LogConfiguration' $_.Exception.Message}else{$result.Logs+=,[pscustomobject]@{LogName=$log;Enabled=$null;MaximumBytes=$null;LogMode='';RecordCount=$null;OldestRecordNumber=$null;LastWriteUtc='';Observation='NotPresentOrUnavailable'}}}
+            }
+            try{$result.AuditText=(& "$env:SystemRoot\System32\auditpol.exe" /get /category:* /r 2>&1|Out-String);$result.AuditExit=$LASTEXITCODE;if($LASTEXITCODE -ne 0){SnapshotError 'AuditPolicy' ('auditpol exit '+$LASTEXITCODE)}}catch{SnapshotError 'AuditPolicy' $_.Exception.Message}
+        }
+        [pscustomobject]$result
+    }
+    $session=New-PSSessionOption -OpenTimeout ([math]::Min(30000,$Options.TimeoutSeconds*1000)) -OperationTimeout ($Options.TimeoutSeconds*1000) -IdleTimeout ([math]::Max(60000,$Options.TimeoutSeconds*2000))
+    $job=$null
+    try{
+        $job=Invoke-Command -ComputerName $DC -ScriptBlock $read -ArgumentList @($catalog,[bool]$Options.IncludeHostInventory,[bool]$Options.IncludeSecurityConfiguration,[int]$Options.MaxSoftwareEntries) -SessionOption $session -AsJob -ErrorAction Stop
+        $done=Wait-Job -Job $job -Timeout $Options.TimeoutSeconds
+        if($null -eq $done){throw 'Remote snapshot timeout.'}
+        Receive-Job -Job $job -ErrorAction Stop
+    }finally{if($null -ne $job){if($job.State -in @('Running','NotStarted','Blocked')){Stop-Job -Job $job -ErrorAction SilentlyContinue};Remove-Job -Job $job -Force -ErrorAction SilentlyContinue}}
+}
+function Get-AdSecurityProfile {
+    param([string]$Path)
+    $rules=@(Get-AdRegistryCatalog|ForEach-Object{[pscustomobject]$_})
+    if(-not $Path){return [pscustomobject]@{Name='FMODEL selected Microsoft guidance review';Builds=@();Rules=$rules;SourceHash='';Reference='https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/security-compliance-toolkit-10'}}
+    $p=Get-AdLocalInputFile $Path 1048576
+    if($p.PSIsContainer -or $p.Length -gt 1MB -or ($p.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw 'Baseline must be a local JSON file up to 1 MiB without a reparse point.'}
+    $profile=[IO.File]::ReadAllText($p.FullName)|ConvertFrom-Json
+    if($profile.SchemaVersion -ne 1 -or $profile.Role -ne 'DomainController' -or -not $profile.Name -or @($profile.ApplicableBuilds).Count -eq 0 -or @($profile.Rules).Count -eq 0 -or @($profile.Rules).Count -gt 100){throw 'Invalid baseline schema, role, build list or rules.'}
+    $selected=New-Object 'Collections.Generic.List[object]';$ids=@{}
+    foreach($r in $profile.Rules){
+        $matches=@($rules|Where-Object{$_.Id -eq $r.RuleId});if($matches.Count -ne 1 -or $ids.ContainsKey([string]$r.RuleId)){throw 'Baseline RuleId must be unique and match the built-in read-only registry catalog.'}
+        if($r.Comparison -notin @('EqualsAny','ContainsBits') -or @($r.Expected).Count -eq 0 -or @($r.Expected).Count -gt 16){throw 'Unsupported baseline comparison or expected values.'}
+        foreach($value in $r.Expected){$n=0L;if(-not [long]::TryParse([string]$value,[ref]$n) -or $n -lt 0 -or $n -gt [uint32]::MaxValue){throw 'Baseline values must be DWORD integers.'}}
+        $copy=[ordered]@{};foreach($prop in $matches[0].PSObject.Properties){$copy[$prop.Name]=$prop.Value};$copy.Expected=@($r.Expected);$copy.Comparison=$r.Comparison;$selected.Add([pscustomobject]$copy);$ids[[string]$r.RuleId]=$true
+    }
+    [pscustomobject]@{Name=[string]$profile.Name;Builds=@($profile.ApplicableBuilds|ForEach-Object{[int]$_});Rules=$selected.ToArray();SourceHash=(Get-FileHash -LiteralPath $p.FullName -Algorithm SHA256).Hash;Reference='CallerProvidedProfileNotMicrosoftCertification'}
+}
+function Add-AdSecurityReview {
+    param($Report,[string]$Domain,[string]$DC,[string]$Build,$Profile)
+    foreach($rule in $Profile.Rules){
+        $obs=@($Report.Datasets.RegistryEvidence|Where-Object{$_.DC -eq $DC -and $_.RuleId -eq $rule.Id});$value=$null;$status='Unknown';$note='Selected registry value; defaults and effective policy require review.'
+        $comparison=Get-AdField $rule 'Comparison';if(-not $comparison){$comparison='EqualsAny'}
+        if($obs.Count -eq 1){
+            $value=$obs[0].Value
+            if($obs[0].Observation -eq 'NotConfigured'){$status='NotExplicitlyConfigured'}
+            elseif($obs[0].Observation -eq 'Observed'){
+                $parsed=0L
+                if($obs[0].ValueKind -eq 'DWord' -and [long]::TryParse([string]$value,[ref]$parsed)){
+                    if($parsed -lt 0){$parsed=[long]$parsed+4294967296L}
+                    $match=$false;foreach($expected in $rule.Expected){if(($comparison -eq 'EqualsAny' -and $parsed -eq [long]$expected) -or ($comparison -eq 'ContainsBits' -and ($parsed -band [long]$expected) -eq [long]$expected)){$match=$true}}
+                    $status=if($match){'MatchesSelectedValue'}else{'ReviewValueDifference'}
+                }else{$status='UnknownTypeOrValue'}
+            }
+        }
+        if((Get-AdField $rule 'DcApplicable') -eq $false){$status='NotApplicableToDomainControllers';$note='The linked policy has no effect on domain controllers; retained as configuration evidence.'}
+        if($Profile.Builds.Count -gt 0){if(-not $Build){$status='UnknownOSBuild'}elseif([int]$Build -notin $Profile.Builds){$status='NotApplicableOSBuild'}}
+        Add-AdRows $Report 'SecurityReview' @([pscustomobject]@{Domain=$Domain;DC=$DC;RuleId=$rule.Id;Title=$rule.Title;Profile=$Profile.Name;Expected=(@($rule.Expected) -join '; ');Observed=$value;Comparison=$comparison;Status=$status;OSBuild=$Build;Reference=$rule.Reference;Observation=($note+' ProfileSHA256='+$Profile.SourceHash)})
+    }
+    $checks=@(
+        @('SMBServer','EnableSMB1Protocol','False','SMB1-SERVER','SMB1 server protocol','https://learn.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3'),
+        @('SMBServer','RequireSecuritySignature','True','SMB-SERVER-SIGNING','SMB server signing','https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing'),
+        @('SMBClient','RequireSecuritySignature','True','SMB-CLIENT-SIGNING','SMB client signing','https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing'),
+        @('Spooler','State','Stopped','SPOOLER-STATE','Print Spooler state','https://learn.microsoft.com/en-us/defender-for-identity/security-posture-assessments/identity-infrastructure'),
+        @('Spooler','StartMode','Disabled','SPOOLER-START','Print Spooler start mode','https://learn.microsoft.com/en-us/defender-for-identity/security-posture-assessments/identity-infrastructure'),
+        @('Firewall','Domain','True','FIREWALL-DOMAIN','Domain firewall profile','https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/'),
+        @('Firewall','Private','True','FIREWALL-PRIVATE','Private firewall profile','https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/'),
+        @('Firewall','Public','True','FIREWALL-PUBLIC','Public firewall profile','https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/')
+    )
+    foreach($check in $checks){
+        $obs=@($Report.Datasets.HostSecurity|Where-Object{$_.DC -eq $DC -and $_.Component -eq $check[0] -and $_.Setting -eq $check[1]});$value=$null;$status='Unknown'
+        if($obs.Count -eq 1 -and $obs[0].Observation -eq 'Observed'){$value=[string]$obs[0].Value;$status=if($value -ieq $check[2]){'MatchesSelectedValue'}else{'ReviewValueDifference'}}
+        Add-AdRows $Report 'SecurityReview' @([pscustomobject]@{Domain=$Domain;DC=$DC;RuleId=$check[3];Title=$check[4];Profile='FMODEL operational guidance review';Expected=$check[2];Observed=$value;Comparison='Equals';Status=$status;OSBuild=$Build;Reference=$check[5];Observation='Configuration observation; compatibility, role and approved exceptions require review.'})
+    }
+}
+function Get-AdBackupEvidence {
+    param($Report,$Options,[string]$Domain,[string]$DC,[string]$Folder)
+    if($DC -notmatch '^[a-zA-Z0-9][a-zA-Z0-9.-]*$'){throw 'Invalid backup target.'}
+    $n=Invoke-AdReadProcess (Get-AdBackupNativePath) ('/showbackup '+$DC) $Options.TimeoutSeconds
+    $source=Save-AdEvidence $Folder 'ADBackup' $n.Text
+    if($n.TimedOut -or $n.ExitCode -ne 0){Add-AdExtensionError $Report 'BackupEvidence' $DC ('repadmin failed/timed out; '+$source) 'NativeError'}
+    [pscustomobject]@{Domain=$Domain;DC=$DC;Source='RepadminShowBackup';Status=if($n.TimedOut){'Timeout'}elseif($n.ExitCode -ne 0){'CommandError'}else{'EvidenceReviewRequired'};ExitCode=$n.ExitCode;TimedOut=$n.TimedOut;Partition='See raw naming-context evidence';LastBackupUtc='';AgeDays=$null;Observation='Native timestamps/partitions are preserved, not guessed from language-dependent output. This is not restoration or backup completeness proof.';RawText=$n.Text;SourceFile=$source}
+    # Event ID 4 is a supporting Windows Backup observation, not proof of AD System State coverage.
+    try{
+        $events=@(Invoke-AdBackupEventQuery $DC ([datetime]::UtcNow.AddDays(-[math]::Max(30,$Options.BackupWarningDays*2))) 17)
+        if($events.Count -gt 16){Add-AdExtensionError $Report 'BackupEvidence' $DC 'Windows Backup event evidence capped at 16 recent entries.' 'Truncated'}
+        foreach($e in @($events|Select-Object -First 16)){
+            $message='';try{$message=[string]$e.Message}catch{}
+            [pscustomobject]@{Domain=$Domain;DC=$DC;Source='WindowsBackupOperationalEvent4';Status='SupportingEvidence';ExitCode=$null;TimedOut=$false;Partition='NotEstablishedByEvent';LastBackupUtc=Convert-AdDate $e.TimeCreated;AgeDays=if($e.TimeCreated){([datetime]::UtcNow-([datetime]$e.TimeCreated).ToUniversalTime()).TotalDays}else{$null};Observation='Backup completion event; verify included components, result and restore test with the backup solution.';RawText=$message;SourceFile=''}
+        }
+    }catch{
+        if($_.FullyQualifiedErrorId -notlike 'NoMatchingEventsFound*' -and $_.FullyQualifiedErrorId -notlike 'NoMatchingLogsFound*' -and $_.FullyQualifiedErrorId -notlike 'NoMatchingProvidersFound*'){Add-AdExtensionError $Report 'BackupEvidence' $DC $_.Exception.Message 'EventQueryError'}
+        [pscustomobject]@{Domain=$Domain;DC=$DC;Source='WindowsBackupOperationalEvent4';Status=if($_.FullyQualifiedErrorId -like 'NoMatchingEventsFound*'){'NoEventsInWindow'}elseif($_.FullyQualifiedErrorId -like 'NoMatchingLogsFound*' -or $_.FullyQualifiedErrorId -like 'NoMatchingProvidersFound*'){'NotPresent'}else{'QueryError'};ExitCode=$null;TimedOut=$false;Partition='';LastBackupUtc='';AgeDays=$null;Observation='No complete backup conclusion can be drawn from this event query.';RawText=$_.Exception.Message;SourceFile=''}
+    }
+}
+function Get-AdBackupNativePath { Join-Path ([Environment]::SystemDirectory) 'repadmin.exe' }
+function Invoke-AdBackupEventQuery {
+    param([string]$DC,[datetime]$Start,[int]$Maximum)
+    $provider=Get-WinEvent -ListProvider 'Microsoft-Windows-Backup' -ComputerName $DC -ErrorAction Stop
+    $logs=@($provider.LogLinks|ForEach-Object{$_.LogName}|Where-Object{$_}|Sort-Object -Unique)
+    if($logs.Count -eq 0){throw 'Windows Backup provider did not expose a log channel.'}
+    Get-WinEvent -ComputerName $DC -FilterHashtable @{LogName=$logs;ProviderName='Microsoft-Windows-Backup';Id=4;StartTime=$Start} -MaxEvents $Maximum -ErrorAction Stop
+}
+function Invoke-AdSecurityEventQuery {
+    param([string]$DC,[datetime]$Start,[datetime]$End,[int]$Maximum)
+    $from=$Start.ToUniversalTime().ToString('o');$to=$End.ToUniversalTime().ToString('o')
+    $ids='EventID=1102 or EventID=4618 or EventID=4649 or EventID=4719 or EventID=4765 or EventID=4766 or EventID=4794 or EventID=4897 or EventID=4964 or EventID=5124'
+    $xml="<QueryList><Query Id='0' Path='Security'><Select Path='Security'>*[System[($ids) and TimeCreated[@SystemTime&gt;='$from' and @SystemTime&lt;='$to']]]</Select><Select Path='Security'>*[System[EventID=4624 and TimeCreated[@SystemTime&gt;='$from' and @SystemTime&lt;='$to']]] and *[EventData[Data[@Name='LogonType']='4' or Data[@Name='LogonType']='8']]</Select></Query></QueryList>"
+    Get-WinEvent -ComputerName $DC -FilterXml $xml -MaxEvents $Maximum -ErrorAction Stop
+}
+function Get-AdSecurityEvents {
+    param($Report,$Options,[string]$Domain,[string]$DC)
+    $end=[datetime]::UtcNow;$start=$end.AddHours(-$Options.EventHours);$events=@();$status='Collected';$errorText=''
+    try{$events=@(Invoke-AdSecurityEventQuery $DC $start $end ($Options.MaxEventsPerLog+1))}catch{if($_.FullyQualifiedErrorId -notlike 'NoMatchingEventsFound*'){$status='QueryError';$errorText=$_.Exception.Message;Add-AdExtensionError $Report 'SecurityEvents' $DC $errorText 'QueryError'}}
+    $truncated=$events.Count -gt $Options.MaxEventsPerLog
+    foreach($e in @($events|Select-Object -First $Options.MaxEventsPerLog)){
+        $message='';$messageStatus='Formatted';try{$message=[string]$e.Message}catch{$messageStatus='Unavailable'}
+        $eventData=[ordered]@{};$interpretation='Selected event for review; not a confirmed incident.'
+        try{
+            $doc=Convert-AdSafeXml $e.ToXml() $Options.MaxXmlCharacters
+            $index=0;foreach($d in $doc.SelectNodes("/*[local-name()='Event']/*[local-name()='EventData']/*[local-name()='Data']")){$index++;$name=$d.GetAttribute('Name');if(-not $name){$name='Data'+$index};if($eventData.Contains($name)){$name+='_'+$index};$eventData[$name]=$d.InnerText}
+            if($e.Id -eq 4624){$interpretation=if($eventData['LogonType'] -eq '8'){'NetworkCleartext logon type; does not itself prove cleartext credentials traversed the network.'}elseif($eventData['LogonType'] -eq '4'){'Batch logon; may be expected for scheduled work.'}else{'Other logon type; review event XML.'}}
+        }catch{$messageStatus+=';EventXmlUnavailable';Add-AdExtensionError $Report 'SecurityEvents' $DC $_.Exception.Message 'EventXmlError'}
+        [pscustomobject]@{Domain=$Domain;DC=$DC;LogName='Security';TimeCreatedUtc=Convert-AdDate $e.TimeCreated;EventId=$e.Id;Level=$e.Level;Provider=$e.ProviderName;RecordId=$e.RecordId;Message=$message;MessageStatus=$messageStatus;EventDataJson=ConvertTo-Json -InputObject $eventData -Depth 5 -Compress;Interpretation=$interpretation}
+    }
+    Add-AdRows $Report 'EventLogCoverage' @([pscustomobject]@{Domain=$Domain;DC=$DC;LogName='Security';StartUtc=$start.ToString('o');EndUtc=$end.ToString('o');Status=$status;Exported=[math]::Min($events.Count,$Options.MaxEventsPerLog);Truncated=$truncated;Limit=$Options.MaxEventsPerLog;Error=$errorText})
+}
+function Get-AdRsopInventory {
+    param($Report,$Options,[string]$Domain,[string]$DC,[string]$Folder)
+    $dir=Join-Path $Folder 'native';$null=New-Item -ItemType Directory -Path $dir -Force
+    $name='RSoP-'+[guid]::NewGuid().ToString('N')+'.xml';$file=Join-Path $dir $name
+    $null=Invoke-AdModuleRead GroupPolicy Get-GPResultantSetOfPolicy @{Computer=$DC;ReportType='Xml';Path=$file} -TimeoutSeconds $Options.TimeoutSeconds
+    if(-not (Test-Path -LiteralPath $file)){throw 'RSoP command did not create its requested evidence file.'}
+    $info=Get-Item -LiteralPath $file;if($info.Length -gt $Options.MaxXmlCharacters*4){throw 'RSoP file exceeds configured XML limit.'}
+    $doc=Convert-AdSafeXml ([IO.File]::ReadAllText($file)) $Options.MaxXmlCharacters
+    $flat=Get-AdXmlLeaves $doc.DocumentElement $Options.MaxPolicySettings
+    foreach($p in $flat.Rows){[pscustomobject]@{Domain=$Domain;DC=$DC;Area=if($p.SettingPath -match '/ComputerResults\['){'Computer'}elseif($p.SettingPath -match '/UserResults\['){'User'}else{'Metadata'};SettingPath=$p.SettingPath;Value=$p.Value;Attributes=$p.Attributes;SourceFile=('native/'+$name)}}
+    if($flat.Truncated){Add-AdExtensionError $Report 'RSoPSettings' $DC 'Normalized RSoP limit reached; raw XML retained.' 'Truncated'}
+    foreach($r in $doc.SelectNodes("//*[local-name()='UserRightsAssignment']")){
+        $right=Get-AdXmlText $r "./*[local-name()='Name']";$source=Get-AdXmlText $r "./*[local-name()='GPO']/*[local-name()='Name']"
+        $members=@($r.SelectNodes("./*[local-name()='Member']"))
+        if($members.Count -eq 0){Add-AdRows $Report 'UserRightsAssignments' @([pscustomobject]@{Domain=$Domain;DC=$DC;Right=$right;PrincipalSID='';PrincipalName='';SourceGpo=$source;Observation='NoMembersExposed';SourceFile=('native/'+$name)})}
+        foreach($m in $members){Add-AdRows $Report 'UserRightsAssignments' @([pscustomobject]@{Domain=$Domain;DC=$DC;Right=$right;PrincipalSID=Get-AdXmlText $m "./*[local-name()='SID']";PrincipalName=Get-AdXmlText $m "./*[local-name()='Name']";SourceGpo=$source;Observation='RsopEvidenceNotEffectivePrivilegeAnalysis';SourceFile=('native/'+$name)})}
+    }
+}
+function Add-AdSnapshotRows {
+    param($Report,[string]$Dataset,[object[]]$Rows,[string]$Domain,[string]$DC)
+    $fields=@((Get-AdSchemas)[$Dataset] -split ','|Where-Object{$_ -notin @('Domain','DC')})
+    foreach($row in $Rows){if($null -eq $row){continue};$copy=[ordered]@{Domain=$Domain;DC=$DC};foreach($name in $fields){$copy[$name]=Get-AdField $row $name};Add-AdRows $Report $Dataset @([pscustomobject]$copy)}
+}
+function Invoke-AdExtendedDc {
+    param($Report,$Options,[string]$Domain,[string]$DC,[string]$Folder)
+    Invoke-AdCollection $Report 'SysvolFiles' $DC {Get-AdSysvolInventory $Report $Options $Domain $DC} -Skip:(-not $Options.IncludeSysvolInventory)
+    Invoke-AdCollection $Report 'DnsServerConfiguration' $DC {Get-AdDnsConfiguration $Report $Options $Domain $DC $Folder} -Skip:(-not $Options.IncludeDnsConfiguration)
+    Invoke-AdCollection $Report 'BackupEvidence' $DC {Get-AdBackupEvidence $Report $Options $Domain $DC $Folder} -Skip:(-not $Options.IncludeBackupEvidence)
+    Invoke-AdCollection $Report 'RSoPSettings' $DC {Get-AdRsopInventory $Report $Options $Domain $DC $Folder} -Skip:(-not $Options.IncludeRsop)
+    Invoke-AdCollection $Report 'SecurityEvents' $DC {Get-AdSecurityEvents $Report $Options $Domain $DC} -Skip:(-not $Options.IncludeSecurityEvents)
+    if($Options.IncludeHostInventory -or $Options.IncludeSecurityConfiguration){
+        $snapshot=$null;$timer=[Diagnostics.Stopwatch]::StartNew()
+        try{$snapshot=Invoke-AdRemoteSnapshot $DC $Options;if($null -eq $snapshot){throw 'Remote snapshot returned no result.'}}
+        catch{foreach($key in @('HostHardware','InstalledSoftware','Hotfixes','HostSecurity','RegistryEvidence','LogConfiguration','AuditPolicy')){if(($Options.IncludeHostInventory -and $key -in @('HostHardware','InstalledSoftware','Hotfixes')) -or ($Options.IncludeSecurityConfiguration -and $key -notin @('HostHardware','InstalledSoftware','Hotfixes'))){Add-AdExtensionError $Report $key $DC $_.Exception.Message 'RemoteSnapshotError'}}}
+        Add-AdRows $Report 'Timings' @([pscustomobject]@{Dataset='RemoteSnapshot';Scope=$DC;Status=if($null -eq $snapshot){'Failed'}else{'Returned'};Rows=1;DurationSeconds=$timer.Elapsed.TotalSeconds})
+        foreach($spec in @(@('HostHardware','Hardware'),@('InstalledSoftware','Software'),@('Hotfixes','Hotfixes'),@('HostSecurity','Security'),@('RegistryEvidence','Registry'),@('LogConfiguration','Logs'))){
+            $key=$spec[0];$property=$spec[1];$requested=if($key -in @('HostHardware','InstalledSoftware','Hotfixes')){$Options.IncludeHostInventory}else{$Options.IncludeSecurityConfiguration}
+            Invoke-AdCollection $Report $key $DC {
+                if($null -eq $snapshot){throw 'Remote snapshot unavailable; see errors.'}
+                Add-AdSnapshotRows $Report $key @(Get-AdField $snapshot $property) $Domain $DC
+                foreach($e in @((Get-AdField $snapshot 'Errors')|Where-Object{$_.Dataset -eq $key})){Add-AdExtensionError $Report $key $DC $e.Message 'RemoteQueryError'}
+            } -Skip:(-not $requested)
+        }
+        if($null -ne $snapshot -and (Get-AdField $snapshot 'SoftwareTruncated')){Add-AdExtensionError $Report 'InstalledSoftware' $DC 'Software entry cap reached; inventory is partial.' 'Truncated'}
+        Invoke-AdCollection $Report 'AuditPolicy' $DC {
+            if($null -eq $snapshot){throw 'Remote snapshot unavailable.'}
+            $text=[string](Get-AdField $snapshot 'AuditText');$source=Save-AdEvidence $Folder 'AuditPolicy' $text
+            if((Get-AdField $snapshot 'AuditExit') -ne 0){throw 'Audit policy query failed; raw evidence retained.'}
+            $rows=@($text|ConvertFrom-Csv);$parsed=0
+            foreach($row in $rows){$guid=@($row.PSObject.Properties|Where-Object{[string]$_.Value -match '^\{[0-9a-fA-F-]{36}\}$'});if($guid.Count -eq 1){$parsed++;[pscustomobject]@{Domain=$Domain;DC=$DC;SubcategoryGuid=$guid[0].Value;Value=ConvertTo-Json -InputObject $row -Depth 4 -Compress;SourceFile=$source;Observation='LocalizedFieldsPreservedNoEnglishPassParser'}}}
+            if($parsed -eq 0){throw 'No audit subcategory GUIDs recognized; raw evidence retained, not treated as empty success.'}
+        } -Skip:(-not $Options.IncludeSecurityConfiguration)
+        if($Options.IncludeSecurityConfiguration){
+            $build='';$hw=@($Report.Datasets.HostHardware|Where-Object{$_.DC -eq $DC});if($hw.Count){$build=[string]$hw[0].OSBuild}else{$metric=@($Report.Datasets.HostMetrics|Where-Object{$_.DC -eq $DC});if($metric.Count){$build=[string]$metric[0].Build}}
+            Invoke-AdCollection $Report 'SecurityReview' $DC {Add-AdSecurityReview $Report $Domain $DC $build (Get-AdSecurityProfile $Options.BaselineFile)}
+        }
+    }else{foreach($key in @('HostHardware','InstalledSoftware','Hotfixes','HostSecurity','RegistryEvidence','SecurityReview','LogConfiguration','AuditPolicy')){Invoke-AdCollection $Report $key $DC {} -Skip}}
+}
+function Complete-AdExtensionFindings {
+    param($Report)
+    $o=$Report.Parameters
+    foreach($computer in $Report.Datasets.Computers){
+        $hint=Get-AdLifecycleHint ([string]$computer.OperatingSystem)
+        if($null -ne $hint){New-AdFinding $Report Info 'OS-LIFECYCLE-REVIEW' Computers $computer.Domain $computer.DistinguishedName ($computer.OperatingSystem+'; regular support end='+$hint.RegularSupportEnd+'; reference='+$hint.Reference+'; catalog checked=2026-11-13') $hint.Observation}
+    }
+    if($o.IncludeRsop){
+        foreach($dc in $Report.Datasets.DomainControllers){
+            $domain=@($Report.Datasets.Domains|Where-Object{$_.Domain -eq $dc.Domain});if($domain.Count -ne 1){continue};$adminSid=[string]$domain[0].DomainSid+'-500'
+            foreach($right in @('SeDenyNetworkLogonRight','SeDenyBatchLogonRight','SeDenyServiceLogonRight','SeDenyRemoteInteractiveLogonRight')){
+                $evidence=@($Report.Datasets.UserRightsAssignments|Where-Object{$_.DC -eq $dc.HostName -and $_.Right -eq $right});$sids=@($evidence|ForEach-Object{$_.PrincipalSID}|Where-Object{$_});$status=if($evidence.Count -eq 0){'NotExposedInRSoP'}else{'EvidenceOnlyNotDcRecommendation'}
+                Add-AdRows $Report 'SecurityReview' @([pscustomobject]@{Domain=$dc.Domain;DC=$dc.HostName;RuleId=('ADMIN500-'+$right);Title='Built-in Administrator deny-right evidence';Profile='Role-specific evidence, not a DC deny-right baseline';Expected='No DC deny-right recommendation inferred';Observed=($sids -join '; ');Comparison='EvidenceOnly';Status=$status;OSBuild='';Reference='https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-d--securing-built-in-administrator-accounts-in-active-directory';Observation=('The cited deny-right guidance targets member servers/workstations. Direct SID '+$adminSid+' present='+[string]($adminSid -in $sids)+'. No DC compliance or effective access verdict inferred.')})
+            }
+        }
+    }
+    $incomplete=$o.SkipUserInventory -or @($Report.Datasets.DirectoryCoverage|Where-Object{$_.Truncated}).Count -gt 0 -or @($Report.Datasets.CollectionErrors|Where-Object{$_.Dataset -in @('AccountSecurityFlags','DomainBootstrap')}).Count -gt 0
+    foreach($spec in @(@('SPNInventory','NormalizedSPN','DuplicateSPNs'),@('AccountSecurityFlags','UserPrincipalName','DuplicateUPNs'))){
+        $dataset=$spec[0];$property=$spec[1]
+        foreach($g in @($Report.Datasets[$dataset]|Where-Object{Get-AdField $_ $property}|Group-Object -Property $property)){
+            $owners=if($dataset -eq 'SPNInventory'){@($g.Group|Sort-Object OwnerDN -Unique)}else{@($g.Group|Sort-Object DistinguishedName -Unique)}
+            if($owners.Count -lt 2){continue}
+            $names=if($dataset -eq 'SPNInventory'){@($owners.OwnerName)}else{@($owners.Name)};$guids=if($dataset -eq 'SPNInventory'){@($owners.OwnerGuid)}else{@($owners.ObjectGuid)};$dns=if($dataset -eq 'SPNInventory'){@($owners.OwnerDN)}else{@($owners.DistinguishedName)}
+            $row=[ordered]@{};$row[ $(if($dataset -eq 'SPNInventory'){'SPN'}else{'UserPrincipalName'}) ]=$g.Name;$row.OwnerCount=$owners.Count;$row.Domains=(@($owners.Domain|Sort-Object -Unique) -join '; ');$row.OwnerNames=($names -join '; ');$row.OwnerGuids=($guids -join '; ');$row.OwnerDNs=($dns -join '; ');$row.AssessmentScope=$o.Scope;$row.Coverage=if($incomplete){'PartialSelectedScope'}else{'SelectedScopeOnly'}
+            Add-AdRows $Report $spec[2] @([pscustomobject]$row)
+            New-AdFinding $Report High 'DIRECTORY-DUPLICATE-IDENTIFIER' $spec[2] $row.Domains $g.Name ('Distinct owners='+$owners.Count) 'Review identity ownership and replication before changing registrations. Only exported scope was compared.'
+        }
+    }
+    foreach($r in $Report.Datasets.AccountSecurityFlags){foreach($flag in @('ReversibleEncryptionAllowed','UseDESKeyOnly')){if((Get-AdField $r $flag) -eq $true){New-AdFinding $Report High ('ACCOUNT-'+$flag.ToUpperInvariant()) AccountSecurityFlags $r.Domain $r.DistinguishedName ($flag+'=True') 'Review application requirements and authentication evidence. A configured flag does not prove actual password storage or protocol use.'}}}
+    foreach($r in $Report.Datasets.OptionalFeatures){if($r.Enabled -eq $false){New-AdFinding $Report Medium 'AD-RECYCLE-BIN-DISABLED' OptionalFeatures $r.Forest $r.Feature 'EnabledScopes is empty.' 'Review recovery strategy and feature prerequisites. No feature was enabled.'}}
+    foreach($r in $Report.Datasets.SecurityReview){if($r.Status -eq 'ReviewValueDifference'){New-AdFinding $Report Medium 'DC-SECURITY-REVIEW' SecurityReview $r.Domain $r.DC ($r.RuleId+': observed='+$r.Observed+' expected='+$r.Expected) 'Review the linked guidance, OS defaults, role, compatibility and approved exceptions. This is not full baseline compliance.'}}
+    foreach($r in $Report.Datasets.GroupPolicies){
+        if($r.Observation -ne 'Observed'){continue}
+        if($r.LinkCount -eq 0){New-AdFinding $Report Info 'GPO-NO-OBSERVED-LINK' GroupPolicies $r.Domain $r.Name 'No link was found within the queried domain and forest site scope.' 'Review intended use, permissions and cross-domain links. No GPO was deleted.'}
+        if($r.ComputerSettings -eq 0 -and $r.UserSettings -eq 0){New-AdFinding $Report Info 'GPO-NO-EXTENSION-DATA' GroupPolicies $r.Domain $r.Name 'No user/computer extension data exposed in XML.' 'Review the raw report and metadata; this is not an instruction to delete the GPO.'}
+        if(($null -ne $r.ComputerVersionAD -and $null -ne $r.ComputerVersionSysvol -and $r.ComputerVersionAD -ne $r.ComputerVersionSysvol) -or ($null -ne $r.UserVersionAD -and $null -ne $r.UserVersionSysvol -and $r.UserVersionAD -ne $r.UserVersionSysvol)){New-AdFinding $Report Medium 'GPO-VERSION-DIFFERENCE' GroupPolicies $r.Domain $r.Name 'Directory/SYSVOL version difference at queried DC.' 'Review replication and raw XML. Snapshot timing can affect this observation.'}
+    }
+    foreach($r in $Report.Datasets.BackupEvidence){if($r.Source -eq 'WindowsBackupOperationalEvent4' -and $null -ne $r.AgeDays -and $r.AgeDays -gt $o.BackupWarningDays){New-AdFinding $Report Info 'BACKUP-EVENT-AGE' BackupEvidence $r.Domain $r.DC ('Supporting event age days='+$r.AgeDays) 'Check current backup jobs, component coverage and restore testing. Event age is not proof that backups stopped.'}}
+    # Every normalized dataset gets coverage, including derived and bundle-fed sets.
+    foreach($key in (Get-AdExtensionSchemas).Keys){
+        if(@($Report.Datasets.Coverage|Where-Object{$_.Dataset -eq $key}).Count -eq 0){
+            $rows=$Report.Datasets[$key].Count
+            $requested=$o.ComprehensiveAssessment -or $rows -gt 0
+            Add-AdRows $Report 'Coverage' @([pscustomobject]@{Dataset=$key;Scope='DerivedOrBundle';Status=if($requested){'DerivedSeeParentCoverage'}else{'NotRequestedOrNoParentRows'};Rows=$rows;StartedUtc=$Report.StartedUtc;EndedUtc=[datetime]::UtcNow.ToString('o');DurationSeconds=0})
+        }
+    }
+}
+function Get-AdAssessmentSources {
+    $refs=@(
+        @('OS-LIFECYCLE','Microsoft product lifecycle','https://learn.microsoft.com/en-us/lifecycle/','Review selected legacy OS family references and ordinary lifecycle dates','AD OS strings, edition/channel, ESU and custom support require confirmation; no universal support verdict'),
+        @('W32TIME','Windows Time configuration','https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings','Preserve raw W32Time evidence and machine/policy registry values','Configuration and measured offset do not certify UTC accuracy'),
+        @('ADMIN500','Role-specific built-in Administrator guidance','https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-d--securing-built-in-administrator-accounts-in-active-directory','Inventory rights by SID without a DC deny-right verdict','The cited deny-right recommendations target workstations/member servers'),
+        @('GPO-PERMISSIONS','Group Policy permissions','https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gppermission?view=windowsserver2025-ps','Read trustee permissions per GPO','Does not establish effective privilege across nested groups'),
+        @('AD-FEATURES','AD optional features','https://learn.microsoft.com/en-us/powershell/module/activedirectory/get-adoptionalfeature?view=windowsserver2025-ps','Feature GUID and EnabledScopes','Read-only observation; no activation'),
+        @('AD-SPN','SPN and UPN uniqueness','https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/component-updates/spn-and-upn-uniqueness','Compare distinct object owners within exported scope','Not proof of forest-wide uniqueness with incomplete/domain-only collection'),
+        @('AD-UAC','Account flags','https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/useraccountcontrol-manipulate-account-properties','Decode documented UAC bits','Flags are configuration, not actual authentication/password contents'),
+        @('GPO','Group Policy XML report','https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gporeport?view=windowsserver2025-ps','Explicit Domain/Server/Guid; preserve XML','No claim of effective policy or conflict resolution'),
+        @('RSOP','Resultant Set of Policy','https://learn.microsoft.com/en-us/powershell/module/grouppolicy/get-gpresultantsetofpolicy?view=windowsserver2025-ps','Computer-specific XML evidence','Requires target permissions; not effective privileges analysis'),
+        @('DNS-CONFIG','DNS server configuration','https://learn.microsoft.com/en-us/powershell/module/dnsserver/get-dnsserver?view=windowsserver2025-ps','Inventory configuration without changing DNS','Recursion/forwarder/scavenging choices are architecture dependent'),
+        @('DNS-RECURSION','DNS recursion and forwarders','https://learn.microsoft.com/en-us/windows-server/networking/dns/quickstart-install-configure-dns-server','Interpret configuration with server role','Disabling recursion also disables forwarders'),
+        @('BACKUP','AD partition backup evidence','https://learn.microsoft.com/en-us/services-hub/microsoft-engage-center/health/remediation-steps-ad/investigate-why-active-directory-directory-partitions-are-not-backed-up-for-longer-than-half-the-tom','Read repadmin /showbackup output','No restoration test, RPO or component-coverage proof'),
+        @('HOTFIX','QFE inventory limits','https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-hotfix?view=powershell-5.1','Inventory QFE/KB evidence','Does not enumerate all update types or prove patch compliance'),
+        @('SECURITY-GUIDANCE','Microsoft Security Compliance Toolkit','https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/security-compliance-toolkit-10','Guide baseline selection and value comparison','Built-in selected guidance review is not a complete SCT baseline'),
+        @('SMB','SMB signing','https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing','Observe effective client/server signing requirement','Compatibility and approved exceptions require review'),
+        @('SPOOLER','Identity infrastructure security','https://learn.microsoft.com/en-us/defender-for-identity/security-posture-assessments/identity-infrastructure','Separate Spooler security review','Stopped/Disabled is distinct from core AD services expected Running'),
+        @('LDAP','LDAP signing','https://learn.microsoft.com/en-us/windows-server/identity/manage-ldap-signing-group-policy','Selected LDAPServerIntegrity comparison','Absent registry value does not establish effective default'),
+        @('LDAP-CBT','LDAP channel binding','https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/ldap-channel-binding','Preserve channel binding configuration','No bind test or client compatibility certification'),
+        @('AUDIT','Audit policy query','https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/auditpol-get','Read CSV by subcategory GUID','Retain localized settings; no English pass/fail parser'),
+        @('EVENT-4624','Successful logon event fields','https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624','Use EventData LogonType rather than message text','Type 8 alone does not establish cleartext transmission'),
+        @('FUNCTIONAL-LEVELS','AD DS functional levels','https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels','Separate OS/build from DFL/FFL','2019/2022 OS does not imply 2019/2022 functional levels')
+    )
+    foreach($r in $refs){[pscustomobject]@{Id=$r[0];Topic=$r[1];Reference=$r[2];AccessedDate='2026-11-13';Usage=$r[3];Limitations=$r[4]}}
+}
+function Write-AdAssessmentFiles {
+    param($Report,[string]$Folder)
+    $schemas=Get-AdSchemas
+    foreach($name in $schemas.Keys){Write-AdCsv (Join-Path $Folder ($name.ToLowerInvariant()+'.csv')) ($schemas[$name] -split ',') @($Report.Datasets[$name].ToArray())}
+    [IO.File]::WriteAllText((Join-Path $Folder 'report.json'),($Report|ConvertTo-Json -Depth 16),(New-Object Text.UTF8Encoding($false)))
+    Write-AdHtmlReport (Join-Path $Folder 'Report.html') $Report
+    $hashes=Get-ChildItem -LiteralPath $Folder -File -Recurse|Where-Object{$_.Name -ne 'run-manifest.json'}|ForEach-Object{[pscustomobject]@{Path=$_.FullName.Substring($Folder.Length+1).Replace('\','/');SHA256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();Bytes=$_.Length}}
+    [IO.File]::WriteAllText((Join-Path $Folder 'run-manifest.json'),(@($hashes)|ConvertTo-Json -Depth 4),(New-Object Text.UTF8Encoding($false)))
+}
+function Get-AdLocalInputFile {
+    param([string]$Path,[long]$MaximumBytes=104857600)
+    $full=$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+    if($full.StartsWith('\\') -or $full -match '[\x00-\x1f]'){throw 'Input must be a local regular file.'}
+    $item=Get-Item -LiteralPath $full -ErrorAction Stop
+    if($item -isnot [IO.FileInfo] -or $item.Length -gt $MaximumBytes){throw 'Input is not a file or exceeds its size limit.'}
+    $part=$item
+    while($null -ne $part){if(($part.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw 'Reparse points are not allowed for imported evidence.'};$part=if($part -is [IO.DirectoryInfo]){$part.Parent}else{$part.Directory}}
+    $item
+}
+function Invoke-AdRenderSnapshot {
+    param([string]$InputFile,[string]$OutputPath,[int]$MaxHtmlRows,$Caller)
+    $input=Get-AdLocalInputFile $InputFile
+    $loaded=[IO.File]::ReadAllText($input.FullName)|ConvertFrom-Json
+    if($loaded.SchemaVersion -ne 1 -or $null -eq $loaded.Datasets -or $null -eq $loaded.Parameters){throw 'Unsupported report schema.'}
+    $schemas=Get-AdSchemas;$sets=[ordered]@{}
+    foreach($p in $loaded.Datasets.PSObject.Properties){if($p.Name -notin @($schemas.Keys)){throw ('Unknown imported dataset: '+$p.Name)}}
+    foreach($name in $schemas.Keys){$sets[$name]=New-Object 'Collections.Generic.List[object]';foreach($row in @(Get-AdField $loaded.Datasets $name)){if($null -ne $row){$sets[$name].Add($row)}}}
+    $base=Resolve-AdOutputPath $OutputPath
+    if(-not $Caller.ShouldProcess($input.FullName,'Render existing JSON and verified local evidence to HTML/CSV without directory queries')){return [pscustomobject]@{Status='NotRendered';ExitCode=0;RunFolder=$null;Findings=0;CollectionErrors=0}}
+    $folder=Join-Path $base ('Rendered-{0}-{1}' -f [datetime]::UtcNow.ToString('yyyyMMdd-HHmmss'),[guid]::NewGuid().ToString('N'));$null=New-Item -ItemType Directory -Path $folder -Force
+    $loaded.Datasets=$sets;$loaded.Parameters|Add-Member -NotePropertyName MaxHtmlRows -NotePropertyValue $MaxHtmlRows -Force
+    $loaded|Add-Member -NotePropertyName RendererVersion -NotePropertyValue '1.2.0' -Force
+    $loaded|Add-Member -NotePropertyName RenderedUtc -NotePropertyValue ([datetime]::UtcNow.ToString('o')) -Force
+    $loaded|Add-Member -NotePropertyName ImportedReportSHA256 -NotePropertyValue ((Get-FileHash -LiteralPath $input.FullName -Algorithm SHA256).Hash) -Force
+    $copied=0;$manifest=Join-Path $input.DirectoryName 'run-manifest.json'
+    if(Test-Path -LiteralPath $manifest){
+        $m=Get-AdLocalInputFile $manifest 10485760;$entries=@(Read-AdJsonList ([IO.File]::ReadAllText($m.FullName)));$used=0L
+        foreach($entry in $entries){
+            if([string]$entry.Path -notmatch '^native/[A-Za-z0-9][A-Za-z0-9.-]*\.(txt|xml|json)$'){continue}
+            $file=Get-AdLocalInputFile (Join-Path $input.DirectoryName ([string]$entry.Path)) 104857600
+            $used+=$file.Length;if($used -gt 524288000){throw 'Imported evidence exceeds 500 MiB total limit.'}
+            if((Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash -ine [string]$entry.SHA256 -or $file.Length -ne [long]$entry.Bytes){throw 'Imported evidence hash or length mismatch.'}
+            $dest=Join-Path $folder 'native';$null=New-Item -ItemType Directory -Path $dest -Force;Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $dest $file.Name) -ErrorAction Stop;$copied++
+        }
+    }
+    $loaded|Add-Member -NotePropertyName RenderEvidenceFilesCopied -NotePropertyValue $copied -Force
+    Write-AdAssessmentFiles $loaded $folder
+    [pscustomobject]@{Status='RenderedOffline';ExitCode=0;RunFolder=$folder;Findings=$sets.Findings.Count;CollectionErrors=$sets.CollectionErrors.Count}
+}
+function New-AdReportArchive {
+    param([string]$Folder)
+    $dir=Get-Item -LiteralPath $Folder -ErrorAction Stop
+    if(-not $dir.PSIsContainer){throw 'Archive source must be a report directory.'}
+    $target=$dir.FullName+'.zip'
+    Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
+    [IO.Compression.ZipFile]::CreateFromDirectory($dir.FullName,$target,[IO.Compression.CompressionLevel]::Optimal,$true)
+    $target
+}
+
 function Write-AdHtmlReport {
     param(
         [Parameter(Mandatory)][string]$Path,
@@ -698,6 +1430,39 @@ function Write-AdHtmlReport {
         @{Key='NativeDiagnostics';Label='Diagnósticos nativos / Native diagnostics';Open=$false},
         @{Key='PrivilegedMembers';Label='Membros de grupos privilegiados / Privileged group members';Open=$false},
         @{Key='Groups';Label='Grupos / Groups';Open=$false},
+        @{Key='OptionalFeatures';Label='Recursos opcionais e Lixeira do AD / Optional features and AD Recycle Bin';Open=$false},
+        @{Key='Sites';Label='Sites da floresta / Forest sites';Open=$false},
+        @{Key='Subnets';Label='Sub-redes / Subnets';Open=$false},
+        @{Key='SiteLinks';Label='Vínculos entre sites / Site links';Open=$false},
+        @{Key='AccountSecurityFlags';Label='Segurança das contas / Account security flags';Open=$false},
+        @{Key='SPNInventory';Label='SPNs e proprietários / SPNs and owners';Open=$false},
+        @{Key='DuplicateSPNs';Label='SPNs duplicados / Duplicate SPNs';Open=$false},
+        @{Key='DuplicateUPNs';Label='UPNs duplicados / Duplicate UPNs';Open=$false},
+        @{Key='DirectoryCoverage';Label='Cobertura dos identificadores / Identifier coverage';Open=$false},
+        @{Key='GroupPolicies';Label='Inventário de GPOs / GPO inventory';Open=$false},
+        @{Key='GPOLinks';Label='Vínculos de GPOs / GPO links';Open=$false},
+        @{Key='GPOSettings';Label='Configurações e metadados de GPOs / GPO settings and metadata';Open=$false},
+        @{Key='GPOPermissions';Label='Permissões de GPOs / GPO permissions';Open=$false},
+        @{Key='GPOCoverage';Label='Cobertura das GPOs / GPO coverage';Open=$false},
+        @{Key='SysvolFiles';Label='Arquivos do SYSVOL / SYSVOL files';Open=$false},
+        @{Key='SysvolSummary';Label='Resumo do SYSVOL / SYSVOL summary';Open=$false},
+        @{Key='DnsServerConfiguration';Label='Configuração dos servidores DNS / DNS server configuration';Open=$false},
+        @{Key='DnsZones';Label='Zonas DNS / DNS zones';Open=$false},
+        @{Key='DnsRootHints';Label='Root hints DNS / DNS root hints';Open=$false},
+        @{Key='DnsZoneIndicators';Label='Indícios de objetos DNS InProgress / DNS InProgress indicators';Open=$false},
+        @{Key='BackupEvidence';Label='Evidências de backup / Backup evidence';Open=$false},
+        @{Key='HostHardware';Label='Hardware e firmware / Hardware and firmware';Open=$false},
+        @{Key='InstalledSoftware';Label='Aplicativos instalados / Installed software';Open=$false},
+        @{Key='Hotfixes';Label='KBs e atualizações QFE / KB and QFE updates';Open=$false},
+        @{Key='HostSecurity';Label='Segurança do host e W32Time / Host security and W32Time';Open=$false},
+        @{Key='RegistryEvidence';Label='Valores observados no Registro / Observed registry values';Open=$false},
+        @{Key='SecurityReview';Label='Revisão de segurança por valor / Security value review';Open=$false},
+        @{Key='RSoPSettings';Label='Políticas resultantes observadas / Resultant policy evidence';Open=$false},
+        @{Key='UserRightsAssignments';Label='Direitos de usuário por SID / User rights by SID';Open=$false},
+        @{Key='SecurityEvents';Label='Eventos de segurança selecionados / Selected security events';Open=$false},
+        @{Key='LogConfiguration';Label='Configuração dos logs / Log configuration';Open=$false},
+        @{Key='AuditPolicy';Label='Política de auditoria por GUID / Audit policy by GUID';Open=$false},
+        @{Key='AssessmentSources';Label='Fontes oficiais e limites / Official sources and limits';Open=$false},
         @{Key='Users';Label='Contas de usuários / User accounts';Open=$false},
         @{Key='Computers';Label='Contas de computadores / Computer accounts';Open=$false}
     )
@@ -832,9 +1597,11 @@ details{background:white;border:1px solid var(--line);border-radius:10px;margin:
 
 
 $options=[pscustomobject]@{Server=$Server;Scope=$Scope;OutputPath=$OutputPath;InactiveDays=$InactiveDays;IncludeServiceChecks=[bool]$IncludeServiceChecks;IncludeDcDiagnostics=[bool]$IncludeDcDiagnostics;TimeoutSeconds=$TimeoutSeconds;MaxHtmlRows=$MaxHtmlRows;PageSize=$PageSize;SkipUserInventory=[bool]$SkipUserInventory;SkipPrivilegedMembers=[bool]$SkipPrivilegedMembers;FullAssessment=[bool]$FullAssessment;IncludeOperationalChecks=[bool]$IncludeOperationalChecks;IncludeEventLogs=[bool]$IncludeEventLogs;DiagnosticProfile=$DiagnosticProfile;DnsServer=$DnsServer;TimeSamples=$TimeSamples;TimeWarningSeconds=$TimeWarningSeconds;TimeCriticalSeconds=$TimeCriticalSeconds;DiskWarningPercent=$DiskWarningPercent;DiskCriticalPercent=$DiskCriticalPercent;DiskWarningGiB=$DiskWarningGiB;DiskCriticalGiB=$DiskCriticalGiB;EventHours=$EventHours;MaxEventsPerLog=$MaxEventsPerLog}
+foreach($key in (Get-AdExtensionDefaults).Keys){if($key -ne 'HotfixReviewDays'){$options|Add-Member -NotePropertyName $key -NotePropertyValue (Get-Variable -Name $key -ValueOnly)}}
 try {
-    $result=Invoke-AdAssessment $options $PSCmdlet
-    $result|Format-List Status,RunFolder,Findings,CollectionErrors|Out-Host
+    if($FromReport){$result=Invoke-AdRenderSnapshot $FromReport $OutputPath $MaxHtmlRows $PSCmdlet}else{$result=Invoke-AdAssessment $options $PSCmdlet}
+    if($CreateArchive -and $result.RunFolder){$archive=New-AdReportArchive $result.RunFolder;$result|Add-Member -NotePropertyName Archive -NotePropertyValue $archive}
+    $result|Format-List Status,RunFolder,Archive,Findings,CollectionErrors|Out-Host
     exit $result.ExitCode
 }catch{
     Write-Error -Message $_.Exception.Message -ErrorAction Continue

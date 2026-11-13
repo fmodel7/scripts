@@ -22,7 +22,7 @@ Biblioteca de scripts e automações para compartilhar conhecimento e facilitar 
 
 ## Inventário e avaliação do Active Directory
 
-[AD Health Report 1.1.0](scripts/ad-health-report/README.md) unifica inventário AD e evidências operacionais de DNS, boot, volumes, horário, eventos e replicação em modo de leitura, com HTML interativo offline, 30 CSVs, JSON, cobertura/erros e recomendações para revisão. Inclui exemplo fictício e manuais PT-BR/EN-US. Não aplica correções no domínio nem certifica saúde ou conformidade.
+[AD Health Report 1.2.0](scripts/ad-health-report/README.md) reúne inventário e evidências operacionais de AD, GPO/RSoP, SPNs/UPNs, segurança dos DCs, DNS, SYSVOL, host/software e backup, com HTML offline, 63 CSVs/JSON e ZIP opcional. Inclui exemplo fictício, fontes Microsoft e manuais PT-BR/EN-US; dados desconhecidos e cobertura parcial são explícitos.
 
 ## Como cada script será organizado
 

@@ -1,2 +1,3 @@
 ﻿"Domain","Name","Direction","TrustType","ForestTransitive","SelectiveAuthentication","SIDFilteringQuarantined","SIDFilteringForestAware"
+"child.example.test","trusted.example.test","Bidirectional","Uplevel","True","True","False","True"
 "example.test","trusted.example.test","Bidirectional","Uplevel","True","True","False","True"

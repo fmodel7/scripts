@@ -1,0 +1,2 @@
+﻿"Forest","Name","Cost","ReplicationFrequencyMinutes","Sites","DistinguishedName"
+"example.test","SYNTHETIC-SITE","100","180","SITE-A; SITE-B","CN=Synthetic,CN=Sites,CN=Configuration,DC=example,DC=test"

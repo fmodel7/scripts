@@ -1,102 +1,75 @@
-# FMODEL AD Health Report 1.1.0
+# FMODEL AD Health Report 1.2.0
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
 F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Revisão com assistência de Akira (ChatGPT)
 
-Inventário e avaliação assistida do Active Directory, com **relatório HTML interativo offline, CSV e JSON**. O script faz consultas e grava relatórios locais; não corrige, remove, desabilita ou modifica objetos do domínio.
+Inventário e revisão assistida de Active Directory em um PS1, com **HTML interativo offline, 63 CSVs, JSON e evidências**. Coleta por consulta; nenhuma correção automática no ambiente.
 
-[English](README.en-US.md) · [Manual completo PT-BR](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf) · [Evidências de validação](docs/EVIDENCE.json)
+[English](README.en-US.md) · [Manual PT-BR](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf) · [Fontes Microsoft](docs/SOURCES.pt-BR.md) · [Dicionário de dados](docs/DATA-DICTIONARY.pt-BR.md)
 
-## Coleta unificada ampliada — 1.1
+## Baixar e abrir
 
-Para reunir inventário e verificações operacionais em um único PS1:
+**[Baixar AD-Health-Report-v1.2.0.zip](AD-Health-Report-v1.2.0.zip?raw=true)**. Se abrir a página do arquivo, clique em **Download raw file**. Depois clique com o botão direito no ZIP → **Extrair Tudo** e abra a pasta `ad-health-report` extraída.
 
-```powershell
-.\Export-ADHealthReport.ps1 -FullAssessment
-```
+Não precisa instalar Git. Alternativa no GitHub: **Code → Download ZIP → Extrair Tudo → scripts/ad-health-report**. No VSCode: **File → Open Folder**, abra essa pasta e use **Terminal → New Terminal**. Não execute dentro da visualização do ZIP.
 
-FullAssessment habilita DNS A/AAAA/SRV, ICMP informativo, boot/memória, volumes e caminhos NTDS/SYSVOL, amostras/evidências W32Time, eventos recentes, serviços e os 17 testes selecionados do perfil estendido DCDiag. A coleta padrão continua mais leve. FullAssessment amplia a profundidade; o escopo continua Domain. Para todos os domínios autorizados, acrescente -Scope Forest.
+## Testar em casa, sem domínio
 
-O HTML inclui uma tabela consolidada por DC, com métricas e estados, e todos os conjuntos têm CSV. Dados desconhecidos e acessos negados não viram sucesso. Eventos têm janela/limite explícitos; os CSVs preservam tudo que foi obtido dentro desses limites. Consulte os novos parâmetros no manual antes de habilitar a coleta completa em produção.
-
-## O que você recebe
-
-- Inventário de floresta/domínios, DCs, OUs, computadores, usuários e grupos.
-- Papéis FSMO, versão de schema, políticas de senha, trusts e membros diretos de grupos sensíveis selecionados por SID.
-- Dados estruturados de replicação, cobertura das consultas, erros e achados que precisam de revisão.
-- HTML com busca local; CSV completo por conjunto e JSON para análise técnica.
-- Coletas opcionais de serviços por CIM/WSMan e diagnósticos nativos com lista restrita de testes.
-
-**Concluir a coleta não comprova que o AD está saudável ou em conformidade.** Permissões, escopo e testes opcionais limitam a cobertura. Ausência de dado não é automaticamente uma contagem zero ou um resultado positivo.
-
-## Baixar
-
-[Baixar AD-Health-Report-v1.1.0.zip](AD-Health-Report-v1.1.0.zip?raw=true). Se abrir a página do arquivo, clique em **Download raw file**, depois **Extrair Tudo**.
-
-Alternativa: no repositório, **Code → Download ZIP → Extrair Tudo → scripts/ad-health-report**. Não precisa instalar Git. Abra a pasta completa extraída, não a visualização do ZIP.
-
-## Testar antes, sem domínio
-
-Na pasta da ferramenta, em uma sessão normal do PowerShell:
+Na pasta da ferramenta:
 
 ```powershell
 powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
 ```
 
-O teste também pode ser executado com `pwsh`. Usa dados e adaptadores sintéticos; não valida uma floresta real. Não exige RSAT, domínio ou execução como Administrador. Consulte [EVIDENCE.json](docs/EVIDENCE.json) para ambientes, resultados e limites efetivamente verificados.
+Os testes também funcionam com `pwsh`. Usam dados fictícios e arquivos locais; não exigem RSAT, credenciais de domínio ou Administrador. Para visualizar o resultado sem executar coleta, abra **examples/SYNTHETIC/Report.html**. O exemplo inteiro é fictício.
 
-## Executar a coleta real
+## Coletar em ambiente autorizado
 
-Use **Windows PowerShell 5.1 de 64 bits (`powershell.exe`)**, módulo **ActiveDirectory/RSAT** disponível e uma conta com as permissões de leitura necessárias no ambiente. Administrador elevado não é exigido por padrão; alguns diagnósticos opcionais podem precisar de acesso adicional.
+Use **Windows PowerShell 5.1 de 64 bits**, RSAT ActiveDirectory e a conta de domínio autorizada. Não é obrigatório executar dentro de um DC. A coleta ampliada requer módulos/direitos/conectividade adicionais; confira o manual e execute primeiro no laboratório.
 
-Na pasta extraída, execute:
+Inventário padrão:
 
 ```powershell
-.\Export-ADHealthReport.ps1
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1
 ```
 
-Isso coleta o **domínio selecionado**, com os padrões implementados. Para escolher explicitamente um DC:
+Coleta abrangente do domínio, incluindo as novas categorias:
 
 ```powershell
-.\Export-ADHealthReport.ps1 -Server dc01.example.com
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -ComprehensiveAssessment -CreateArchive
 ```
 
-Substitua `dc01.example.com` por um servidor real autorizado. O script fixa o contexto ao DC identificado por RootDSE; não usa o endereço de exemplo como um servidor padrão.
+Para todos os domínios autorizados, acrescente `-Scope Forest`. Para fixar um DC, acrescente `-Server 'NOME-REAL-DO-DC'`, substituindo pelo nome real. `-FullAssessment` mantém o perfil 1.1; o novo perfil abrangente é `-ComprehensiveAssessment`.
 
-## Ampliar a coleta quando necessário
+## O que foi acrescentado
 
-Coletar os domínios da floresta:
+- Lixeira do AD, topologia, flags por conta, SPNs/UPNs, grupos adicionais por SID e revisão de ciclo de vida.
+- GPOs, vínculos, metadados/configurações XML, permissões e RSoP/direitos por SID.
+- DNS administrativo, zonas, aging, root hints e indícios InProgress.
+- Inventário SYSVOL com limites, hardware/BIOS, software e QFE/KB.
+- SMB, Spooler, firewall, W32Time, registro selecionado, auditoria e configuração dos logs.
+- Eventos Security selecionados, evidências de backup, renderização offline e ZIP opcional.
+
+Os 30 conjuntos 1.1 continuam, inclusive replicação, medições de horário, discos NTDS/SYSVOL, memória, serviços e 17 testes selecionados DCDiag. Há 33 conjuntos adicionais. Um CSV vazio pode significar não solicitado, nenhum resultado ou falha: **Coverage/CollectionErrors explicam a diferença**.
+
+## Encontrar os resultados
+
+O console mostra **RunFolder**. A saída padrão é uma pasta única sob `%LOCALAPPDATA%\FMODEL\ADHealth`. Abra **Report.html**. CSVs ficam na mesma pasta; no Excel PT-BR, use **Dados → De Texto/CSV → UTF-8 → vírgula**, se necessário.
+
+`-CreateArchive` gera um ZIP ao lado da pasta e mostra **Archive**. Recriar HTML/CSV de JSON existente:
 
 ```powershell
-.\Export-ADHealthReport.ps1 -Scope Forest
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -FromReport 'C:\Caminho\Run-...\report.json' -OutputPath 'C:\ADHealth-Estudo'
 ```
 
-Acrescentar serviços e diagnósticos opcionais:
+Substitua os caminhos pelos reais. Esse modo aceita também PowerShell 7 e não faz novas consultas AD. XML/texto de evidência com manifesto são copiados apenas após verificar hashes/tamanhos; isso não autentica o autor do manifesto.
 
-```powershell
-.\Export-ADHealthReport.ps1 -IncludeServiceChecks -IncludeDcDiagnostics
-```
+## Interpretação e validação
 
-Essas opções fazem mais consultas e podem exigir permissões e conectividade diferentes. Não habilitam WinRM nem alteram firewall ou serviços. Nenhum teste é condicionado a um ping bem-sucedido; falhas de acesso/timeout precisam ser interpretadas como limitações da consulta, não prova isolada de que um DC caiu.
+Revisão de valores selecionados **não é baseline SCT completa nem certificação de conformidade**. Última KB não prova atualização completa; evidência de backup não prova restauração; flag de criptografia não prova uso real; dados desconhecidos não viram sucesso. Limites são explícitos no manual.
 
-## Abrir HTML e CSV
+[Testes e aceitação](docs/TESTING.pt-BR.md) · [Evidências](docs/EVIDENCE.json) · [Changelog](CHANGELOG.md) · [CI](https://github.com/fmodel7/scripts/actions)
 
-A saída padrão fica em uma pasta única sob `%LOCALAPPDATA%\FMODEL\ADHealth`, na conta que executou o processo. Abra **Report.html** pelo caminho exibido no console.
-
-`MaxHtmlRows` limita apenas a apresentação do HTML. Os CSV/JSON mantêm os dados coletados, inclusive quando a tabela no navegador é reduzida. Isso não recupera consultas que falharam ou foram puladas: confira `coverage.csv` e `collectionerrors.csv`.
-
-Os CSV usam vírgula e UTF-8 com BOM. No Excel em PT-BR, se necessário use **Dados → De Texto/CSV**, selecione UTF-8 e delimitador vírgula. Células potencialmente interpretadas como fórmulas recebem apóstrofo de proteção; o JSON não recebe essa neutralização de planilha.
-
-## Documentação e limites
-
-O [manual PT-BR](docs/MANUAL.pt-BR.md) e o [manual EN-US](docs/MANUAL.en-US.md) explicam todos os parâmetros, conjuntos, estados, permissões, regras de achados, limitações e aceitação em laboratório. Há versões em PDF na pasta `docs`.
-
-O relatório não lê senhas, hashes, segredos LAPS ou chaves de gMSA. Também não é auditoria completa de ACLs, privilégios efetivos, GPO, patches ou segurança do AD. Dados como nomes, SIDs, grupos e topologia são sensíveis: **não publique relatórios reais no GitHub**.
-
-Não foi validada uma floresta de produção nesta entrega. Os testes automatizados e suas evidências não substituem o aceite no ambiente autorizado.
-
-## Prévia e validação
-
-Após extrair o ZIP, abra [examples/SYNTHETIC/Report.html](examples/SYNTHETIC/Report.html) para explorar dados fictícios sem domínio. O exemplo inclui os 30 CSVs e JSON correspondentes; não é evidência de ambiente real.
-
-[CI](https://github.com/fmodel7/scripts/actions/runs/43465971682) · [Testing](docs/TESTING.pt-BR.md) · [Internal reference](docs/INTERNALS.pt-BR.md)
+A validação automatizada usa dados fictícios. Não foi avaliada uma floresta real nesta entrega. Relatórios reais podem conter identidades, topologia e políticas sensíveis: não publique esses dados no GitHub.

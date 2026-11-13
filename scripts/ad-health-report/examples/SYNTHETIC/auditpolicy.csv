@@ -1,0 +1,3 @@
+﻿"Domain","DC","SubcategoryGuid","Value","SourceFile","Observation"
+"child.example.test","dc1.child.example.test","{0CCE9210-69AE-11D9-BED3-505054503030}","{""Computer"":""SYNTHETIC"",""Subcategory"":""Auditoria"",""GUID"":""{0CCE9210-69AE-11D9-BED3-505054503030}"",""Setting"":""Success""}","native/AuditPolicy-0c7d095852744691bcef0df8b336413d.txt","LocalizedFieldsPreservedNoEnglishPassParser"
+"example.test","dc1.example.test","{0CCE9210-69AE-11D9-BED3-505054503030}","{""Computer"":""SYNTHETIC"",""Subcategory"":""Auditoria"",""GUID"":""{0CCE9210-69AE-11D9-BED3-505054503030}"",""Setting"":""Success""}","native/AuditPolicy-1190fb878deb47c1b0b48f735c3e9611.txt","LocalizedFieldsPreservedNoEnglishPassParser"

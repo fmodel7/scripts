@@ -98,7 +98,7 @@ try{
         if($scenario -eq 'whatif'){Assert ($result.Status -eq 'NotCollected' -and -not (Test-Path $options.OutputPath)) 'full WhatIf does not start collectors/create files';$script:workflows++;continue}
         $r=Get-Content -LiteralPath (Join-Path $result.RunFolder 'report.json') -Raw -Encoding UTF8|ConvertFrom-Json
         $schemas=Get-AdSchemas
-        Assert ($schemas.Count -eq 30) '30 datasets'
+        Assert ($schemas.Count -eq 63) '63 datasets'
         foreach($n in $schemas.Keys){Assert (Test-Path (Join-Path $result.RunFolder ($n.ToLowerInvariant()+'.csv'))) "CSV $n present"}
         Assert (@($r.Datasets.DCSummary).Count -eq 1) "$scenario DC summary present"
         Assert (@($r.Datasets.Timings).Count -gt 0 -and @($r.Datasets.Timings|Where-Object{$_.DurationSeconds -lt 0}).Count -eq 0) 'total timing seconds retained'

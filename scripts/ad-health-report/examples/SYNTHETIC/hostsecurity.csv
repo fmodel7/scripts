@@ -1,0 +1,7 @@
+﻿"Domain","DC","Component","Setting","Value","Observation","Source"
+"child.example.test","dc1.child.example.test","SMBServer","EnableSMB1Protocol","False","Observed","Synthetic"
+"child.example.test","dc1.child.example.test","Spooler","State","Stopped","Observed","Synthetic"
+"child.example.test","dc1.child.example.test","Spooler","StartMode","Disabled","Observed","Synthetic"
+"example.test","dc1.example.test","SMBServer","EnableSMB1Protocol","False","Observed","Synthetic"
+"example.test","dc1.example.test","Spooler","State","Stopped","Observed","Synthetic"
+"example.test","dc1.example.test","Spooler","StartMode","Disabled","Observed","Synthetic"

@@ -3,3 +3,7 @@
 "example.test","dc1.example.test","dc1.example.test","AAAA","CollectorConfiguredDNS","NotPresent","","","","","","","No matching record returned."
 "example.test","dc1.example.test","_ldap._tcp.dc._msdcs.example.test","SRV","CollectorConfiguredDNS","Observed","","dc1.example.test","389","0","100","300",""
 "example.test","dc1.example.test","_kerberos._tcp.example.test","SRV","CollectorConfiguredDNS","Observed","","dc1.example.test","389","0","100","300",""
+"child.example.test","dc1.child.example.test","dc1.child.example.test","A","CollectorConfiguredDNS","Observed","192.0.2.11","","","","","300",""
+"child.example.test","dc1.child.example.test","dc1.child.example.test","AAAA","CollectorConfiguredDNS","NotPresent","","","","","","","No matching record returned."
+"child.example.test","dc1.child.example.test","_ldap._tcp.dc._msdcs.child.example.test","SRV","CollectorConfiguredDNS","Observed","","dc1.child.example.test","389","0","100","300",""
+"child.example.test","dc1.child.example.test","_kerberos._tcp.child.example.test","SRV","CollectorConfiguredDNS","Observed","","dc1.child.example.test","389","0","100","300",""

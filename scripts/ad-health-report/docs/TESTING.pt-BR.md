@@ -1,37 +1,52 @@
-# Validação e aceite — AD Health Report 1.1.0
+# Validação — AD Health Report 1.2.0
 
-Fonte validada: c8d0f20c276ee82abce9e16f5575c9a6221db55a. [GitHub Actions](https://github.com/fmodel7/scripts/actions/runs/43465971682). Windows PowerShell 5.1 e PowerShell 7/Linux passaram com 985 verificações cada; PowerShell 7/Windows passou com 981. Todos executaram 15 fluxos sintéticos completos. Os quatro testes de processo nativo usam um executável C# inofensivo no 5.1 e shell no Linux; são omitidos no 7/Windows. Nenhum dcdiag real foi executado.
+FMODEL · F. Model · fmodel@fmodel.com.br
 
-```powershell
-powershell.exe -NoProfile -File .	ests\Test-AdHealth.ps1
-```
+O código operacional passou no [CI](https://github.com/fmodel7/scripts/actions/runs/43498148487), commit `7d037054f9917e465610c4ba845d14376323fd0d`. Os arquivos operacionais entregues correspondem a esse conteúdo. EVIDENCE.json e MANIFEST-SHA256.txt registram os hashes.
 
-Também pode usar pwsh na suíte, mas a entrada operacional exige Windows PowerShell 5.1 de 64 bits/RSAT. Os testes extraem funções por AST, substituem consultas AD/CIM/nativas e criam arquivos temporários; não executam a entrada operacional nem acessam um domínio. Não faça dot-sourcing dos testes em uma sessão administrativa de trabalho.
+| Ambiente | Regressão | Operacional | Abrangente | Cenários completos |
+|---|---|---|---|---|
+| Windows PowerShell 5.1 | 1843 | 650 | 699 | 36 |
+| PowerShell 7 Windows | 1839 | 650 | 699 | 36 |
+| PowerShell 7 Linux | 1843 | 650 | 699 | 36 |
 
-Os 15 fluxos cobrem coleta padrão e sem achados, erro de leitura de usuários, exclusões intencionais, floresta completa e domínio filho indisponível, diagnósticos opcionais, falha CIM, timeout/erro nativo, schema inacessível, grupo privilegiado ausente, achados de replicação, WhatIf e bootstrap indisponível. Verificações adicionais cobrem datas, schema, OS desconhecido, DN com vírgula escapada, CSV Unicode/fórmulas/aspas/quebras de linha, cabeçalhos vazios, cap do HTML, dados maliciosos, CSP e manifestos de hash. O verificador de JSON foi ajustado para a diferença de enumeração de arrays do PowerShell 5.1.
+As três colunas de testes são asserções. Quatro verificações auxiliares de processos nativos são omitidas em PowerShell 7 Windows. São 36 cenários por ambiente, não 36 DCs reais. Não há certificação de conformidade.
 
-O renderer foi testado em Chromium/Playwright com dados fictícios, nas larguras 1440 e 390 px: busca, navegação, expansão, limites, codificação de dados e ausência de requisições externas/erros JavaScript. Veja RENDERER-TESTS.json. O teste de volume do renderer usa referências repetidas à mesma linha sintética; não é benchmark de uma floresta real ou de coleta LDAP.
-
-## Limites e aceite
-
-Não houve consulta AD, CIM remoto ou dcdiag real. Não se comprova integração RSAT, permissões, topologia, replicação atual ou escala real de produção. Artifacts de CI guardam runtime, hash e logs com retenção de 30 dias. EVIDENCE.json preserva a identificação do código e os limites.
-
-1. Usar laboratório e conta autorizados; revisar escopo Domain antes de Forest.
-2. Comparar amostras com consoles AD e consultas Microsoft, inclusive null/zero e grupos diretos.
-3. Testar permissão negada/domínio indisponível: resultado deve mostrar Partial e erros, nunca inventário completo.
-4. Conferir CSV/JSON, codificação, hashes, cap do HTML e dados sensíveis.
-5. Aprovar direitos/carga antes de habilitar CIM/dcdiag e examinar saídas nativas no idioma local.
-6. Medir tempo/RAM em volume representativo; PageSize não limita o total de objetos ou a memória de JSON.
-7. Registrar aceite técnico. Achados exigem análise humana; não são autorização para remediar automaticamente.
-
-[Manual](MANUAL.pt-BR.md) · [Evidências](EVIDENCE.json)
-
-## Suíte operacional 1.1
+## Executar sem domínio
 
 ```powershell
-powershell.exe -NoProfile -File .	ests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
 ```
 
-353 verificações e 10 fluxos operacionais adicionais por ambiente. Com a regressão, são 25 cenários e 1338 verificações em Windows PowerShell 5.1/Linux ou 1334 em PowerShell 7/Windows. Cobrem FullAssessment, thresholds, DNS/ICMP bloqueado sem gate, boot/memória, mountpoints/registro negado, volumes ocultos, offsets negativos e parsing desconhecido, eventos vazios/truncados/negados, dashboard e duração real. Os adaptadores de rede/AD/CIM/eventos/horário são sintéticos; nenhuma chamada remota real ocorreu.
+Também pode usar pwsh. As suítes carregam funções por AST, sem executar a entrada operacional. Não exigem domínio, RSAT ou Administrador. Adaptadores fictícios substituem AD, DNS, CIM/remoting, GPO, eventos e diagnósticos. Arquivos locais e processos auxiliares inofensivos exercitam as fronteiras locais.
 
-Aceite adicional: revisar mapeamento de volumes em NTDS/SYSVOL reais, comparar amostras de horário com referência aprovada, conferir relógio do coletor, testar direitos CIM/registro/Event Log e validar limites de eventos/carga. Navegador validado com exemplo completo fictício de 30 CSVs em RENDERER-TESTS.json.
+## Cobertura
+
+- Inventário, domínios/floresta, descoberta, SIDs, skips, atributos ausentes, replicação, achados e códigos de saída.
+- ICMP sem bloquear outros coletores, DNS, volumes/mount points/NTDS, memória/boot, offsets positivos/negativos, eventos limitados e cobertura/erros.
+- Flags UAC, SPNs/UPNs e proprietários em dois domínios, GPO negada/com identidade divergente, GPO sem extensão com versões não zero, links e flags, RSoP/direitos por SID.
+- DNS administrativo, inventário do host/software/QFE, evidências de backup e comparação de valores de registro com Unknown/NotConfigured distintos de sucesso.
+- XML com namespaces/nós repetidos, DTD/XXE bloqueado, XML inválido/excessivo e limite de normalização.
+- Travessia SYSVOL usa arquivos fictícios locais, sem conectar a share; limites e truncamento são exercitados. Jobs são adaptados para conferir propriedade/limpeza, sem parar jobs alheios.
+- Arrays JSON em Windows PowerShell 5.1, renderização offline, nomes/caminhos permitidos, cópia de evidências por manifesto, hash alterado e ZIP fora da pasta original.
+- Todos os 63 CSVs, neutralização de fórmulas, UTF-8, JSON e codificação HTML de nomes/mensagens com marcação.
+
+Os módulos reais GroupPolicy/DnsServer e endpoints de remoting não foram acessados. O worker remoto foi revisado estaticamente, sem sessão real de remoting. Os testes não demonstram compatibilidade dos módulos instalados/permissões do seu ambiente.
+
+## HTML e pacote
+
+O exemplo SYNTHETIC reúne dados fictícios das 63 tabelas em dois domínios/DCs. O navegador verifica busca, expansão, links CSV, codificação, ausência de requisições externas/diálogos/erros JS e layout móvel; veja RENDERER-TESTS.json. Links locais, PDFs, manifesto recursivo e conteúdo do ZIP são conferidos no empacotamento.
+
+## Aceitação em laboratório autorizado
+
+1. Verifique Windows PowerShell 5.1 x64, módulos necessários e uma conta de leitura aprovada. Comece pelo inventário básico.
+2. Teste opções individualmente e valide direitos/protocolos ADWS/LDAP, SMB, WSMan/remoting, eventos/RPC e DNS. A ferramenta não habilita esses recursos.
+3. Compare amostras com ADUC/ADAC, GPMC, Event Viewer, DNS e solução de backup. Confira domínio/DC, origem e timestamps.
+4. Exercite vários domínios, RODC/DNS separado se disponíveis, idiomas PT-BR/EN-US, acesso negado e um coletor indisponível. Confira tratamento de resultados parciais.
+5. Revise a baseline aprovada por SO/papel e valores diferentes/ausentes/tipos inesperados. O perfil fornecido é parcial, não SCT completo.
+6. Ajuste limites e revise Coverage/GPOCoverage/DirectoryCoverage/EventLogCoverage, duração e truncamentos.
+7. Abra HTML/CSV, confira hashes, recrie offline e gere ZIP. Restrinja acesso aos dados reais e não os publique no GitHub.
+
+Não foi usado um AD real nesta entrega. Transporte, permissões e versões dos módulos contra DCs reais precisam de aceitação no laboratório.

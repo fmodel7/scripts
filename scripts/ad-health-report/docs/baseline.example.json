@@ -1,0 +1,33 @@
+{
+  "SchemaVersion": 1,
+  "Role": "DomainController",
+  "Name": "FMODEL partial example - review against approved baseline",
+  "Description": "Selected registry comparisons only. Not a complete Microsoft SCT baseline or certification.",
+  "ApplicableBuilds": [
+    20348,
+    26100
+  ],
+  "Rules": [
+    {
+      "RuleId": "LDAP-SIGNING",
+      "Comparison": "EqualsAny",
+      "Expected": [
+        2
+      ]
+    },
+    {
+      "RuleId": "NO-LM-HASH",
+      "Comparison": "EqualsAny",
+      "Expected": [
+        1
+      ]
+    },
+    {
+      "RuleId": "AUDIT-SUBCATEGORY",
+      "Comparison": "EqualsAny",
+      "Expected": [
+        1
+      ]
+    }
+  ]
+}

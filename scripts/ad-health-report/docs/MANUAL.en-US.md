@@ -1,4 +1,4 @@
-# Complete manual — FMODEL AD Health Report 1.1.0
+# Complete manual — FMODEL AD Health Report 1.2.0
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
 F. Model · fmodel@fmodel.com.br · Revision assistance: Akira (ChatGPT)  
@@ -20,7 +20,7 @@ Independent checks are not gated by successful ping. Services and DCDiag are opt
 
 ## 3. Requirements and permissions
 
-Real operation requires 64-bit Windows, Windows PowerShell 5.1 and the ActiveDirectory/RSAT module. The computer must reach the selected AD environment and authenticate with an authorized account. A management workstation with RSAT is suitable; executing inside a DC is not mandatory. PowerShell 7 is used only for offline tests in this delivery; the operational entry point rejects PowerShell 7.
+Real operation requires 64-bit Windows, Windows PowerShell 5.1 and the ActiveDirectory/RSAT module. The computer must reach the selected AD environment and authenticate with an authorized account. A management workstation with RSAT is suitable; executing inside a DC is not mandatory. Real collection rejects PowerShell 7; offline tests and FromReport also support PowerShell 7.
 
 Elevation is not required by default. Directory reads can work with delegated permissions; replication, CIM or DCDiag can require additional rights. The tool grants none and does not evade ACLs. Do not use Domain Admin merely for convenience when a basic inventory can use narrower approved rights.
 
@@ -28,7 +28,7 @@ The current token is used. No embedded password, API key or credential export is
 
 ## 4. Download, folder and VSCode
 
-Open scripts/ad-health-report on GitHub, select AD-Health-Report-v1.1.0.zip and click Download raw file, then Extract All. Alternatively use Code → Download ZIP from the repository home, extract it and open scripts/ad-health-report. Git is not required to download.
+Open scripts/ad-health-report on GitHub, select AD-Health-Report-v1.2.0.zip and click Download raw file, then Extract All. Alternatively use Code → Download ZIP from the repository home, extract it and open scripts/ad-health-report. Git is not required to download.
 
 Open the extracted folder in VSCode through File → Open Folder and select a Windows PowerShell terminal. Trust only code whose origin/content you reviewed. Do not execute within the ZIP or dot-source the entry point; invoke the file by name. Preserve UTF-8 with BOM when editing for Windows PowerShell 5.1.
 
@@ -433,7 +433,7 @@ Operational features were identified by comparison with Get-ADHealth.ps1, whose 
 
 Additional references: https://learn.microsoft.com/en-us/powershell/module/dnsclient/resolve-dnsname ; https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent ; https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings . No real DC was assessed during development; registry, WinRM/RPC, DNS and time interpretation need authorized acceptance.
 
-The previous 18 datasets remain plus 12 additions, totaling 30 CSVs. Events have explicit window/caps; all data obtained under those limits is exported to CSV/JSON and rendered up to MaxHtmlRows. New fields:
+The 30 datasets established in 1.1 remain; section 30 documents the 33 additions in 1.2, totaling 63 CSVs. Events have explicit window/caps; all data obtained under those limits is exported to CSV/JSON and rendered up to MaxHtmlRows. New fields:
 
 ### Connectivity — connectivity.csv
 
@@ -484,3 +484,173 @@ Domain, DC, Site, DnsAddresses, UptimeHours, LowestAssessedFreeGiB, LowestAssess
 Dataset, Scope, Status, Rows, DurationSeconds
 
 DCSummary: Domain, DC, Site, DnsAddresses, UptimeHours, LowestAssessedFreeGiB, LowestAssessedFreePercent, MedianAbsoluteOffsetSeconds, RecentEventRows, RecentEventsTruncated, ProcessingSeconds, Observation, CollectionErrors, Findings, Replication, Connectivity, DNS, HostMetrics, Disks, StoragePaths, TimeSummary, Services, EventLogCoverage, NativeDiagnostics
+
+## 30. Comprehensive 1.2 profile and execution
+
+Version 1.2 retains the 1.1 inventory and FullAssessment behavior and adds 33 normalized datasets: **63 CSV files per run**, HTML, JSON, raw evidence and a SHA-256 manifest. Unrequested datasets retain CSV headers; consult Coverage to establish whether collection occurred. The collectors were independently implemented from official APIs, using ADxRay as a requirements reference; no ADxRay code or HTML was incorporated.
+
+Run from the extracted directory, using 64-bit Windows PowerShell 5.1 and the required permissions:
+
+```powershell
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -ComprehensiveAssessment -CreateArchive
+```
+
+To include all authorized domains of the forest:
+
+```powershell
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -ComprehensiveAssessment -Scope Forest -CreateArchive
+```
+
+ComprehensiveAssessment enables FullAssessment and IncludeDirectorySecurity, IncludeTopology, IncludeGpoInventory, IncludeSysvolInventory, IncludeDnsConfiguration, IncludeBackupEvidence, IncludeHostInventory, IncludeSecurityConfiguration, IncludeRsop and IncludeSecurityEvents. Scope still defaults to Domain. Sites, subnets, site links, optional features and site GPO links are forest reference metadata even when the directory inventory scope is Domain.
+
+Individual options can be combined without the preset. FullAssessment keeps its 1.1 behavior: operational probes, operational events, services and Extended DCDiag. It does not silently add GPO/software inventory or Security queries. Test in a lab first. Queries can add load/audit events; the tool does not modify AD, GPOs, registry, DNS, firewall, services or clocks.
+
+## 31. New parameters, limits and cost
+
+| Parameter | Default | Behavior |
+|---|---|---|
+| ComprehensiveAssessment | false | Enables all additional categories above; Domain remains the default scope. |
+| IncludeDirectorySecurity | false | AD Recycle Bin, account flags, SPNs/UPNs and duplicates within collected coverage. |
+| IncludeTopology | false | Forest sites, subnets and site links. |
+| IncludeGpoInventory | false | GPO metadata, XML, LDAP links and permissions with explicit domain/server. |
+| IncludeSysvolInventory | false | File metadata at each DC UNC path; no execution or reading script contents. |
+| IncludeDnsConfiguration | false | DNS administrative configuration, zones, aging, root hints and InProgress indicators. |
+| IncludeBackupEvidence | false | repadmin /showbackup text and supporting Windows Backup events when available. |
+| IncludeHostInventory | false | CPU/BIOS/model, Uninstall registry and QFE entries in one remote snapshot per DC. |
+| IncludeSecurityConfiguration | false | SMB, Spooler, ActiveStore firewall, W32Time, selected registry, audit policy and log configuration. |
+| IncludeRsop | false | Computer-specific RSoP XML, normalized values and user-right assignments. |
+| IncludeSecurityEvents | false | Selected Security EventIDs and 4624 logon types 4/8 within the window/cap. |
+| MaxDirectoryObjects | 100000 | 100–10000000; additional objects per domain; requests limit+1 to detect truncation. Does not cap the existing Users/Computers inventory. |
+| MaxSpnValues | 500000 | 100–10000000; exported SPN values per domain. |
+| MaxGpos | 5000 | 1–100000; detailed GPOs per domain. Get-GPO -All still discovers inventory before this processing cap. |
+| MaxXmlCharacters | 25000000 | 1000–100000000; per GPO/RSoP/event XML; DTD/external entities prohibited. |
+| MaxPolicySettings | 100000 | 1–1000000; normalized GPO rows per domain and RSoP rows per DC. Processed raw XML is retained. |
+| MaxSysvolFiles | 20000 | 1–1000000; files per DC. |
+| SysvolTimeoutSeconds | 120 | 5–1800; traversal budget; a blocking filesystem call may exceed it. |
+| MaxSoftwareEntries | 5000 | 1–100000; combined Uninstall entries per DC, preserving Registry32/Registry64 views. |
+| BackupWarningDays | 7 | 1–365; informational supporting-event age review, not an RPO or missing-backup verdict. Lookup covers at least 30 days or twice this value. |
+| BaselineFile | empty | Local JSON up to 1 MiB using allowed catalog RuleIds. Enables IncludeSecurityConfiguration. |
+| FromReport | empty | Regenerates reports from existing JSON without initializing AD; Windows PowerShell 5.1 or PowerShell 7. |
+| CreateArchive | false | Creates a ZIP alongside the completed run directory, outside the manifested directory. |
+
+TimeoutSeconds also bounds waiting for GroupPolicy/DnsServer module jobs and the remote snapshot job. Only jobs created by the call are received, canceled and removed. Transport shutdown/cancellation can take additional time. AD discovery/queries and filesystem I/O have their own behavior; this is not a global run deadline. Domains/DCs are processed serially. Large forests with many GPOs may take substantial time; no fixed duration is promised.
+
+## 32. Accounts, identifiers and optional features
+
+Get-ADObject queries accounts with sAMAccountName and objects with servicePrincipalName, with explicit properties/paging. Includes computer and service accounts when present. UAC bits produce Enabled, ReversibleEncryptionAllowed, UseDESKeyOnly, PasswordNotRequired, PasswordNeverExpires, DoesNotRequirePreAuth, TrustedForDelegation, TrustedToAuthForDelegation, NotDelegated and SmartcardRequired. Missing UAC produces UnknownUAC/null, not false.
+
+ReversibleEncryptionAllowed is account configuration, not proof of stored password contents. UseDESKeyOnly is not proof of actual DES authentication. PasswordNotRequired does not prove an empty password. Passwords, hashes, LAPS secrets and managed passwords are not requested. SupportedEncryptionTypes is configuration evidence.
+
+SPNInventory exports one value per owner. DuplicateSPNs groups case-insensitively and requires distinct owner DNs. DuplicateUPNs compares nonempty UPNs similarly. Comparisons are limited to exported data, not external forests or a uniqueness certification. Unqueried domains, replication lag, failures and limits reduce coverage. DirectoryCoverage records object/SPN counts, limits and truncation; limits produce Partial.
+
+SkipUserInventory also restricts the new account collector to computers. Coverage becomes ComputersOnlyByRequest and identifier comparison is inherently partial. This option does not redact user identities from groups, events, GPOs or other evidence.
+
+AD Recycle Bin is read using documented FeatureGUID 766ddcd8-acd0-445e-f3b9-a7f9b6744f2a, an explicit server and EnabledScopes. It is never enabled by the tool. Sites/Subnets/SiteLinks inventory configuration, cost and replication frequency; they do not simulate routes or measure all inter-site connections.
+
+## 33. GPOs, links, settings and permissions
+
+Get-GPO, Get-GPOReport and Get-GPPermission receive explicit iteration domain/server. Each GUID report is stored as native/GPO-*.xml. GUID/domain exposed in XML are checked against the requested target. Mismatches and invalid XML become collection errors while independent collectors continue.
+
+GroupPolicies includes identity, status, owner, provider-exposed WMI filter, dates, AD/SYSVOL versions, User/Computer extension-node counts and observed links. ComputerSettings/UserSettings count extension nodes, not every effective client setting. Missing extension data is a review observation even with nonzero versions. AD/SYSVOL version differences require replication/timing review, not automatic repair.
+
+GPOLinks reads gPLink/gPOptions for domains/OUs and forest configuration sites. Exports GPO DN, StoredPosition, enabled/enforced flags and returned scope inheritance blocking. StoredPosition is raw attribute position, not claimed effective client application order. There is no full LSDOU, filtering, loopback, deny or effective conflict computation. Scopes without gPLink are not a complete inventory of inheritance blocking.
+
+GPOSettings normalizes XML leaves/attributes into indexed SettingPath/Value/Attributes; raw namespaces/text remain in XML. GPOPermissions records trustees/SIDs, permissions and inherited state exposed by the cmdlet; nested group privileges are not expanded. Filtering/delegation and other metadata remain in raw XML and normalized leaves.
+
+No observed link and missing extension nodes produce informational review items. A domain link, disabled link, reserved GPO or enabled User/Computer configuration is not universally wrong and never triggers deletion. Cross-domain links, permissions and concurrent changes affect LinkCount. GPOCoverage records discovery/detail/settings counts and caps per domain.
+
+## 34. Hardware, software, QFE and security configuration
+
+A fixed remote snapshot per DC gathers requested categories using CIM ComputerSystem/OperatingSystem/BIOS/Processor/QFE, Uninstall registry reads, SmbShare, NetSecurity ActiveStore, Win32_Service and selected registry values. It does not use Win32_Product and its validation/repair behavior. It does not install modules or enable destination remoting.
+
+HostHardware separates LogicalProcessors, PhysicalCores and Sockets. Includes manufacturer/model, RAM bytes, OSBuild/UBR when exposed, installation and BIOS. BIOS age does not prove an applicable newer firmware exists. InstalledSoftware preserves Registry32/Registry64 entries; registry view is not proof of binary architecture and does not enumerate all per-user/portable/package types. Publisher is not signature validation.
+
+Hotfixes lists Win32_QuickFixEngineering entries. InstalledOnRaw is preserved; InstalledUtc is populated only for an actual provider DateTime. Ambiguous strings are not guessed. QFE does not cover all update types, catalogs or CVEs; a recent KB does not prove patch compliance or absence of vulnerabilities. Application data is not sent to external sites.
+
+HostSecurity includes observed SMB client/server values, Spooler state/start mode, ActiveStore firewall profiles and machine/policy W32Time values. W32Time preserves Type, NtpServer, AnnounceFlags and provider enablement when available, without recalculating all policy precedence or proving synchronization. Existing raw w32tm and offset measurements remain in TimeConfiguration/TimeSummary. Localized status text is not parsed into a success verdict.
+
+Spooler has separate interpretation: Stopped/Disabled are the selected identity-infrastructure review values. It is excluded from the generic core-service Running rule. Unknown SMB/registry results do not become Disabled. Firewall ActiveStore is configuration evidence, not a test of all network paths.
+
+LogConfiguration contains enabled, MaximumBytes, mode, record count, oldest record and time when exposed; no universal mandatory size is assumed. AuditPolicy preserves auditpol /get /category:* /r data by subcategory GUID, localized fields as JSON and linked raw output. It does not compare English Success/Failure strings for compliance.
+
+## 35. Security value review and caller-provided profiles
+
+RegistryEvidence stores value, kind, path, observation and errors. The default catalog has 12 selected reads for LDAP signing/CBT, NoLMHash, NTLM level/minimum session security, local-account/anonymous restrictions, UAC, audit subcategories and Script Block Logging. SOURCES.json and the PS1 contain rule references and selected values.
+
+SecurityReview compares observed DWORD values using EqualsAny/ContainsBits, plus eight SMB/Spooler/firewall observations and four RID-500 rights observations when RSoP is requested. This is a Microsoft-guidance-based selected review: **not the complete SCT package, CIS audit, compliance assessment or Microsoft certification**. LDAP/NTLM settings require compatibility/exception review before changes outside this tool.
+
+MatchesSelectedValue means only that the read value matches the selected rule. ReviewValueDifference needs review. NotExplicitlyConfigured does not establish an effective safe/unsafe default. Unknown/UnknownTypeOrValue/UnknownOSBuild are not success. RestrictAnonymousSAM is retained as NotApplicableToDomainControllers because the cited policy does not affect DCs. Local-account settings do not establish domain password policy.
+
+baseline.example.json demonstrates a **partial** profile for builds 20348/26100. Review/adapt to your approved OS/role baseline. Only built-in RuleIds are accepted; no commands, scriptblocks or arbitrary registry paths. Expected must contain DWORD integers, Comparison must be EqualsAny/ContainsBits, Role must be DomainController and ApplicableBuilds explicit. Profile hash appears in observations. Other builds produce NotApplicableOSBuild; missing build produces UnknownOSBuild.
+
+```powershell
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -ComprehensiveAssessment -BaselineFile .\docs\baseline.example.json
+```
+
+Do not transplant a Windows client baseline to DCs. Administrator RID-500 rights are inventoried by SID, including renamed accounts. The cited built-in Administrator deny-logon recommendations target workstations/member servers; the tool does not turn them into a DC deny-right rule. RSoP does not expand group membership or calculate effective rights.
+
+## 36. DNS administration and SYSVOL contents
+
+DnsServerConfiguration inventories Get-DnsServer components and preserves raw JSON in native. DnsZones includes integration, type, dynamic update, scope and aging for queryable primary zones. DnsRootHints preserves exposed NS/IPs. A DNS service not observed during a successful service query is NotApplicableNoDnsServiceObserved; permission/transport errors are not converted to a missing-role conclusion.
+
+Recursion enabled, fewer than three forwarders, custom root hints or scavenging disabled are not automatically errors. Interpretation depends on architecture; disabling Windows DNS recursion also disables forwarders. DnsZoneIndicators reads InProgress names in DNS namingContexts exposed by each domain reference DC; it is an indicator, not proof that every occurrence is a duplicate zone or that every custom partition was inspected.
+
+SYSVOL uses \\DC\SYSVOL\DOMAIN, keeping the DC target explicit. Collects file metadata, bytes, UTC timestamps and extension aggregates. Does not execute scripts, read their contents, scan malware or compare replica bytes. Reparse points are excluded and recorded as limitations. File access failures and file/time caps produce Partial. File extension/size or EXE presence does not prove malicious content.
+
+## 37. Backup evidence and selected Security events
+
+BackupEvidence preserves native/ADBackup-*.txt from repadmin /showbackup and process results. It does not select an arbitrary line or guess localized dates into LastBackupUtc. Naming contexts/timestamps remain in raw evidence for review. Exit 0 means EvidenceReviewRequired, not verified backup. No backup/restore is started.
+
+Supporting collection discovers Microsoft-Windows-Backup provider channels and reads up to 16 recent ID-4 events. UTC event time may populate LastBackupUtc for this source; it does not establish AD/System State component coverage or recoverability. Missing provider/log may be NotPresent, common with third-party backup solutions. Access failure is an error; no event in the window does not prove no backups. Confirm jobs, components, retention and restore testing with the responsible solution.
+
+SecurityEvents queries IDs 1102, 4618, 4649, 4719, 4765, 4766, 4794, 4897, 4964 and 5124 plus 4624 LogonType 4/8 through XML/EventData filtering. EventHours/MaxEventsPerLog apply, with cap+1 truncation detection. Selected events are not full incident detection or a SIEM analysis.
+
+EventDataJson preserves XML fields. Type 4 is batch and can be expected; type 8, NetworkCleartext, does not itself prove cleartext credential transmission over the network. Localized message strings do not determine these types. Security access denial creates errors/Partial without blocking independent collectors. Real logs can contain sensitive identities/additional data.
+
+## 38. RSoP normalization and inference limits
+
+Get-GPResultantSetOfPolicy uses explicit Computer=DC and a unique local XML file. RSoPSettings normalizes exposed leaves/attributes, including security options, policy, audit, registry and profiles. UserRightsAssignments records internal right name, principal SID/name and source when exposed. Raw XML permits review beyond the normalized row cap.
+
+An absent XML right is NotExposedInRSoP, not proof of no effective configuration. Presence of a policy/key name does not establish its value. Localized names are preserved, not compared with a rigid English name list. Node counts do not establish full policy coverage, conflict absence or effective privilege.
+
+## 39. Offline rendering and ZIP packaging
+
+```powershell
+powershell.exe -NoProfile -File .\Export-ADHealthReport.ps1 -FromReport 'C:\Path\Run-...\report.json' -OutputPath 'C:\ADHealth-Study' -CreateArchive
+```
+
+Replace paths with actual local paths. FromReport also works with pwsh; it does not initialize RSAT/AD or perform new queries. Accepts JSON SchemaVersion=1 and known dataset names, regenerating all CSVs/HTML in a Rendered-* directory. Missing new data in a 1.0/1.1 JSON stays missing. The original assessment version is preserved, with RendererVersion=1.2.0 and the imported JSON hash.
+
+When run-manifest.json is beside JSON, allowed native/*.txt/xml/json evidence is copied after SHA-256/length verification. Reparse points, UNC, arbitrary paths, files above 100 MiB or evidence above 500 MiB total are rejected. Manifest limit is 10 MiB. Without a manifest, JSON is rendered without copying external evidence. Hashes detect differences against the supplied manifest; they do not authenticate the author or make the manifest trustworthy.
+
+CreateArchive uses .NET ZIP and preserves the run directory. ZIP is created alongside it and displayed in the console. It does not upload or email anything. Real reports may be sensitive; publish only fictional examples. The comprehensive preset does not silently enable archive creation.
+
+## 40. Permissions, troubleshooting and acceptance
+
+Directory collection uses ActiveDirectory ADWS/LDAP. GPO/RSoP uses GroupPolicy, SYSVOL SMB/DFS, host inventory WinRM/PowerShell Remoting/CIM, DNS administration DnsServer, and events remote log access. Each needs its own connectivity/permissions. AD RSAT does not necessarily install GroupPolicy/DnsServer or grant remote rights.
+
+Entry does not require elevation by default; comprehensive assessment may need elevation/delegated rights for repadmin, RSoP, registry, remoting and Security. Do not use Domain Admin indiscriminately to make a test pass. Inspect Coverage/CollectionErrors, the specific source/cmdlet and approved scope. The tool grants no permissions and changes no execution policy.
+
+In VSCode open the whole extracted folder and use its terminal. powershell.exe chooses Windows PowerShell 5.1 even if the current terminal is PowerShell 7. For home tests without a domain, run the three suites or open examples/SYNTHETIC/Report.html. No AD installation, simulated credentials or company server connection is required.
+
+```powershell
+powershell.exe -NoProfile -File .\tests\Test-AdHealth.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdOperations.ps1
+powershell.exe -NoProfile -File .\tests\Test-AdExtensions.ps1
+```
+
+Automated coverage uses synthetic data/adapters, local files and harmless native helpers. Tests regression, XML/XXE, flags, GPO identity, caps, owned jobs, unknown values, export, render and hashes. It does not query real AD/remoting/DCDiag/repadmin infrastructure. See TESTING.en-US.md and EVIDENCE.json for actual successful runs. Perform acceptance in an authorized lab with real permissions/languages, RODC/separate DNS and multiple domains before operational use.
+
+## 41. Sources and data dictionary
+
+CSV-SCHEMAS.json lists all 63 files and every column extracted from the code. DATA-DICTIONARY.en-US.md maps datasets and semantics. SOURCES.en-US.md/SOURCES.json contain official references and selected catalog values. AssessmentSources travels with HTML/CSV/JSON outputs. References are reading links; the collector does not automatically access those websites.
+
+## 42. Lifecycle review and additional role groups by SID
+
+Findings includes OS-LIFECYCLE-REVIEW for selected legacy families and ordinary Windows 10 requiring edition/build/ESU confirmation. These are Info review hints, not universal unsupported-system verdicts. Direct Microsoft Lifecycle references and dated catalog evidence, checked 2026-11-13, accompany findings. Windows 10 LTSC/LTSB does not automatically receive Home/Pro dates; modern/unknown families are not classified by exclusion.
+
+Product references include [Server 2012 R2](https://learn.microsoft.com/en-us/lifecycle/products/windows-server-2012-r2), [Server 2012](https://learn.microsoft.com/en-us/lifecycle/products/windows-server-2012), [Server 2008 R2](https://learn.microsoft.com/en-us/lifecycle/products/windows-server-2008-r2), [Windows 7](https://learn.microsoft.com/en-us/lifecycle/products/windows-7) and [Windows 10 Home/Pro](https://learn.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro). Ordinary support dates do not establish ESU/custom entitlement or current host OS; AD attributes may be stale. No automatic internet lookup refreshes this catalog; review it during maintenance.
+
+IncludeDirectorySecurity complements PrivilegedMembers with Domain Controllers (516), Read-only Domain Controllers (521), Group Policy Creator Owners (520), Print Operators (S-1-5-32-550), Distributed COM Users (S-1-5-32-562) and Cryptographic Operators (S-1-5-32-569), when present. With base groups this covers the 13 reference groups at the root; Schema/Enterprise Admins remain root-specific. SkipPrivilegedMembers also suppresses additional reads.
+
+MembershipType remains DirectOnly, without nested groups, SIDHistory or effective-rights expansion. DC groups legitimately contain DC accounts; these members do not trigger an unsafe-count rule. Group discovery uses SIDs rather than localized/renamed names.

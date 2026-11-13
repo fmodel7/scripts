@@ -1,0 +1,2 @@
+﻿"Forest","Feature","FeatureGuid","Enabled","EnabledScopes","QueryServer","Observation"
+"example.test","Active Directory Recycle Bin","766ddcd8-acd0-445e-f3b9-a7f9b6744f2a","True","CN=Partitions,CN=Configuration,DC=example,DC=test","dc1.example.test","Observed"

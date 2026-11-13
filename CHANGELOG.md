@@ -1,3 +1,11 @@
+# Changelog
+
+## 2026-11-13 — AD Health Report 1.2.0
+
+- Perfil ComprehensiveAssessment: 33 conjuntos novos, 63 CSVs totais, GPO/RSoP, SPNs/UPNs, Lixeira/topologia, DNS administrativo, SYSVOL, host/software/QFE, segurança/eventos/auditoria e evidências de backup.
+- Recriação offline, ZIP opcional, jobs próprios limitados, parsing XML seguro, correção de arrays JSON no Windows PowerShell 5.1, fontes oficiais e manuais PT-BR/EN-US atualizados.
+- Validação sintética separada da aceitação em infraestrutura real; sem alterações automáticas no ambiente.
+
 # Histórico
 
 ## 2026-11-13 — AD Health Report 1.1.0

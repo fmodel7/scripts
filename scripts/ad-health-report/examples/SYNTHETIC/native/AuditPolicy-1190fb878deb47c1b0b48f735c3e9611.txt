@@ -1,0 +1,2 @@
+Computer,Subcategory,GUID,Setting
+SYNTHETIC,Auditoria,{0CCE9210-69AE-11D9-BED3-505054503030},Success
