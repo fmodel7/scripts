@@ -5,7 +5,7 @@ F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Review assist
 
 One-PS1 Active Directory inventory and assisted review, with **offline interactive HTML, 63 CSVs, JSON and evidence**. Queries data; no automatic environment remediation.
 
-[Português](README.md) · [English manual](docs/MANUAL.en-US.md) · [PDF](docs/MANUAL.en-US.pdf) · [Microsoft references](docs/SOURCES.en-US.md) · [Data dictionary](docs/DATA-DICTIONARY.en-US.md)
+[Português](README.md) · [English manual](docs/MANUAL.en-US.md) · [Microsoft sources](docs/MANUAL.en-US.md#45-microsoft-sources-and-criteria) · [CSV fields](docs/MANUAL.en-US.md#43-additional-csv-fields)
 
 ## Download and open
 
@@ -70,6 +70,8 @@ Replace paths. Offline rendering also supports PowerShell 7 and does not query A
 
 Selected value review **is not complete SCT baseline compliance or certification**. A recent KB does not prove full patch coverage; backup evidence does not prove recoverability; an encryption flag does not prove actual use. Unknown values are not success. Read the manual for explicit scope/caps.
 
-[Testing and acceptance](docs/TESTING.en-US.md) · [Evidence](docs/EVIDENCE.json) · [Changelog](CHANGELOG.md) · [CI](https://github.com/fmodel7/scripts/actions)
+[Testing and acceptance](docs/MANUAL.en-US.md#44-validation-and-lab-acceptance) · [Technical evidence](tests/evidence/EVIDENCE.json) · [Changelog](CHANGELOG.md) · [CI](https://github.com/fmodel7/scripts/actions)
 
 Automated validation uses synthetic data. No real forest was assessed for this release. Real reports may contain sensitive identities/topology/policies; do not publish them on GitHub.
+
+Documentation is consolidated into **one manual per language**. The only additional file in `docs` is `baseline.example.json`, used by the script.
