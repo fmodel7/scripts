@@ -1,20 +1,16 @@
-name: Configure NTP PDC - offline validation
+name: Windows Time - offline validation
 on:
   push:
-    branches: [main, codex/configure-ntp-pdc]
-    paths:
-      - 'scripts/configure-ntp-pdc/**'
-      - '.github/workflows/configure-ntp-pdc-validation.yml'
+    branches: [main, codex/windows-time-standalone-v2]
+    paths: ['scripts/configure-ntp-pdc/**', '.github/workflows/configure-ntp-pdc-validation.yml']
   pull_request:
     branches: [main]
-    paths:
-      - 'scripts/configure-ntp-pdc/**'
-      - '.github/workflows/configure-ntp-pdc-validation.yml'
+    paths: ['scripts/configure-ntp-pdc/**', '.github/workflows/configure-ntp-pdc-validation.yml']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: ntp-pdc-${{ github.workflow }}-${{ github.ref }}
+  group: windows-time-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   offline-validation:
@@ -40,22 +36,20 @@ jobs:
         working-directory: scripts/configure-ntp-pdc
     steps:
       - uses: actions/checkout@v4
-      - name: Parse, run synthetic workflows and test actual CLI with fake adapters
+      - name: Parse both standalone scripts and test isolated workflows and native runner
         run: |
           $ErrorActionPreference='Stop'
-          $destination=Join-Path $env:RUNNER_TEMP 'ntp-pdc-evidence'
+          $destination=Join-Path $env:RUNNER_TEMP 'windows-time-evidence'
           $null=New-Item -ItemType Directory -Path $destination -Force
           $PSVersionTable | Out-String | Out-File (Join-Path $destination 'runtime.txt')
-          Get-FileHash ./Configure-NTP-PDC.ps1,./src/NtpPdc.Core.ps1 -Algorithm SHA256 | Format-List | Out-File (Join-Path $destination 'sha256.txt')
+          Get-FileHash ./Configure-NTP-PDC.ps1,./Configure-Time-DOMHIER.ps1 -Algorithm SHA256 | Format-List | Out-File (Join-Path $destination 'sha256.txt')
           $childHost=(Get-Process -Id $PID).Path
-          foreach($test in @('Test-Core.ps1','Test-Workflow.ps1','Test-EntryPoint.ps1')){
-            & $childHost -NoProfile -File "./tests/$test" 2>&1 | Tee-Object -FilePath (Join-Path $destination ($test+'.log'))
-            if($LASTEXITCODE -ne 0){throw "$test failed with exit code $LASTEXITCODE"}
-          }
+          & $childHost -NoProfile -File ./tests/Test-WindowsTime.ps1 2>&1 | Tee-Object -FilePath (Join-Path $destination 'tests.log')
+          if($LASTEXITCODE -ne 0){throw "Offline tests failed: $LASTEXITCODE"}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ntp-pdc-validation-${{ matrix.os }}-${{ matrix.shell }}
-          path: ${{ runner.temp }}/ntp-pdc-evidence/*
+          name: windows-time-${{ matrix.os }}-${{ matrix.shell }}
+          path: ${{ runner.temp }}/windows-time-evidence/*
           retention-days: 30
           if-no-files-found: warn
