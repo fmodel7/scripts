@@ -1,0 +1,2 @@
+﻿"Domain","HostName","Site","OperatingSystem","OperatingSystemVersion","IsGlobalCatalog","IsReadOnly","OperationMasterRoles"
+"example.test","dc1.example.test","SYNTHETIC-SITE","Windows Server 2022","10.0","True","False","PDCEmulator; RIDMaster; InfrastructureMaster"

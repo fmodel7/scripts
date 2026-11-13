@@ -20,6 +20,10 @@ Biblioteca de scripts e automações para compartilhar conhecimento e facilitar 
 
 [DHCP Transfer 1.0.0](scripts/dhcp-transfer/README.md) reúne **Export-DHCP.ps1** e **Import-DHCP.ps1**, com confirmação, backups, relatório HTML e guias individuais PT-BR/EN-US. A operação real usa Windows PowerShell 5.1; testes offline também rodam em PowerShell 7. Consulte o plano de migração e os limites antes de importar.
 
+## Inventário e avaliação do Active Directory
+
+[AD Health Report 1.0.0](scripts/ad-health-report/README.md) coleta inventário e evidências de replicação em modo de leitura, com HTML interativo offline, 18 CSVs, JSON, cobertura/erros e recomendações para revisão. Inclui exemplo fictício e manuais PT-BR/EN-US. Não aplica correções no domínio nem certifica saúde ou conformidade.
+
 ## Como cada script será organizado
 
 ```text
@@ -56,6 +60,7 @@ A visibilidade pública, por si só, não define uma licença de reutilização.
 [Como contribuir](CONTRIBUTING.md) · [Dados e credenciais](SECURITY.md) · [Histórico](CHANGELOG.md)
 
 Só publicar conteúdo que você tenha direito de compartilhar. Os scripts privados do Infratech e dados de clientes não são transferidos automaticamente para esta biblioteca.
+
 
 
 

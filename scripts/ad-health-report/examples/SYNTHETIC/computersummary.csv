@@ -1,0 +1,6 @@
+﻿"Domain","Category","OperatingSystem","Count"
+"example.test","DomainController","","1"
+"example.test","Other","Linux","1"
+"example.test","ServerHint","Windows Server 2022","1"
+"example.test","Unknown","","1"
+"example.test","WindowsClientHint","Windows 11 Pro","1"

@@ -1,0 +1,2 @@
+﻿"Name","RootDomain","ForestMode","SchemaVersion","SchemaLabel","SchemaMaster","DomainNamingMaster","Domains","Sites"
+"example.test","example.test","Windows2016Forest","88","Windows Server 2019 / 2022","dc1.example.test","dc1.example.test","example.test; child.example.test","SYNTHETIC-SITE"
