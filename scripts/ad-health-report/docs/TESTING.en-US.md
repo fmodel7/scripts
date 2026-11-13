@@ -1,6 +1,6 @@
-# Validation and acceptance — AD Health Report 1.0.0
+# Validation and acceptance — AD Health Report 1.1.0
 
-Validated source: 89a87e1da3d3d4af7ea0acefbb5a66e6fe9a22d9. [GitHub Actions](https://github.com/fmodel7/scripts/actions/runs/43456162109). Windows PowerShell 5.1 and PowerShell 7/Linux each passed 673 assertions; PowerShell 7/Windows passed 669. All ran 15 full synthetic workflows. Four native-runner checks use a harmless C# executable on 5.1 and shell on Linux; these are skipped on 7/Windows. No actual dcdiag was executed.
+Validated source: c8d0f20c276ee82abce9e16f5575c9a6221db55a. [GitHub Actions](https://github.com/fmodel7/scripts/actions/runs/43465971682). Windows PowerShell 5.1 and PowerShell 7/Linux each passed 985 assertions; PowerShell 7/Windows passed 981. All ran 15 full synthetic workflows. Four native-runner checks use a harmless C# executable on 5.1 and shell on Linux; these are skipped on 7/Windows. No actual dcdiag was executed.
 
 ```powershell
 powershell.exe -NoProfile -File .	ests\Test-AdHealth.ps1
@@ -25,3 +25,13 @@ No real AD query, remote CIM or dcdiag ran. RSAT integration, permissions, topol
 7. Record technical acceptance. Findings need human review and authorize no automatic remediation.
 
 [Manual](MANUAL.en-US.md) · [Evidence](EVIDENCE.json)
+
+## Operational suite 1.1
+
+```powershell
+powershell.exe -NoProfile -File .	ests\Test-AdOperations.ps1
+```
+
+353 assertions and 10 additional operational workflows per environment. Combined with regression: 25 scenarios, 1338 assertions on Windows PowerShell 5.1/Linux or 1334 on PowerShell 7/Windows. Covers FullAssessment, thresholds, blocked ICMP without gating, boot/memory, mounts/denied registry, hidden volumes, negative offsets/unknown parsing, empty/capped/denied events, dashboard and real durations. Network/AD/CIM/event/time adapters are synthetic; no live remote call occurred.
+
+Additional acceptance: review actual NTDS/SYSVOL volume mapping, compare time samples with an approved reference, verify collector clock, test CIM/registry/Event Log rights and event caps/load. Browser checks used a full fictional 30-CSV example, recorded in RENDERER-TESTS.json.

@@ -1,22 +1,36 @@
 {
   "SchemaVersion": 1,
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "RunId": "SYNTHETIC-EXAMPLE-NOT-A-LIVE-ASSESSMENT",
-  "StartedUtc": "2026-11-13T15:47:44.480475Z",
-  "EndedUtc": "2026-11-13T15:47:44.8924499Z",
+  "StartedUtc": "2026-11-13T16:46:35.6283757Z",
+  "EndedUtc": "2026-11-13T16:46:36.5521996Z",
   "Status": "SyntheticExample",
   "Parameters": {
     "Server": "dc1.example.test",
     "Scope": "Domain",
     "OutputPath": "examples/SYNTHETIC",
     "InactiveDays": 90,
+    "IncludeServiceChecks": true,
+    "IncludeDcDiagnostics": true,
+    "TimeoutSeconds": 60,
+    "MaxHtmlRows": 10,
     "PageSize": 500,
     "SkipUserInventory": false,
     "SkipPrivilegedMembers": false,
-    "IncludeServiceChecks": false,
-    "IncludeDcDiagnostics": false,
-    "TimeoutSeconds": 5,
-    "MaxHtmlRows": 10
+    "FullAssessment": true,
+    "IncludeOperationalChecks": true,
+    "IncludeEventLogs": true,
+    "DiagnosticProfile": "Extended",
+    "DnsServer": "",
+    "TimeSamples": 3,
+    "TimeWarningSeconds": 1.0,
+    "TimeCriticalSeconds": 5.0,
+    "DiskWarningPercent": 15.0,
+    "DiskCriticalPercent": 5.0,
+    "DiskWarningGiB": 10.0,
+    "DiskCriticalGiB": 5.0,
+    "EventHours": 24,
+    "MaxEventsPerLog": 2
   },
   "Datasets": {
     "Forest": [
@@ -66,8 +80,8 @@
         "DistinguishedName": "OU=SYNTHETIC-OU,DC=example,DC=test",
         "ParentDN": "DC=example,DC=test",
         "ProtectedFromAccidentalDeletion": true,
-        "CreatedUtc": "2025-11-13T15:47:44.6790854Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6803048Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9630646Z",
+        "ChangedUtc": "2026-11-13T16:46:35.9643453Z"
       }
     ],
     "ComputerSummary": [
@@ -115,10 +129,10 @@
         "OperatingSystem": "Windows Server 2022",
         "OperatingSystemVersion": "10.0",
         "Enabled": true,
-        "LastLogonUtc": "2026-04-27T15:47:44.5341975Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5380617Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5392243Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5400227Z",
+        "LastLogonUtc": "2026-11-12T16:46:35.7594998Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.7638403Z",
+        "CreatedUtc": "2025-11-13T16:46:35.7655622Z",
+        "ChangedUtc": "2026-11-12T16:46:35.7677594Z",
         "TrustedForDelegation": false,
         "TrustedToAuthForDelegation": false,
         "SupportedEncryptionTypes": 24
@@ -135,10 +149,10 @@
         "OperatingSystem": "Windows 11 Pro",
         "OperatingSystemVersion": "10.0",
         "Enabled": true,
-        "LastLogonUtc": "2026-11-12T15:47:44.5420094Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5432653Z",
-        "CreatedUtc": "2025-11-13T15:47:44.543267Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5432685Z",
+        "LastLogonUtc": "2026-11-12T16:46:35.7732992Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.7733885Z",
+        "CreatedUtc": "2025-11-13T16:46:35.7733901Z",
+        "ChangedUtc": "2026-11-12T16:46:35.7733922Z",
         "TrustedForDelegation": false,
         "TrustedToAuthForDelegation": false,
         "SupportedEncryptionTypes": 24
@@ -156,9 +170,9 @@
         "OperatingSystemVersion": "10.0",
         "Enabled": true,
         "LastLogonUtc": "",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5436138Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5436161Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5436173Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.7737401Z",
+        "CreatedUtc": "2025-11-13T16:46:35.773742Z",
+        "ChangedUtc": "2026-11-12T16:46:35.7737431Z",
         "TrustedForDelegation": false,
         "TrustedToAuthForDelegation": false,
         "SupportedEncryptionTypes": 24
@@ -175,10 +189,10 @@
         "OperatingSystem": null,
         "OperatingSystemVersion": "10.0",
         "Enabled": true,
-        "LastLogonUtc": "2026-11-12T15:47:44.5444729Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5445325Z",
-        "CreatedUtc": "2025-11-13T15:47:44.544534Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5445351Z",
+        "LastLogonUtc": "2026-11-12T16:46:35.7750466Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.7751977Z",
+        "CreatedUtc": "2025-11-13T16:46:35.7751997Z",
+        "ChangedUtc": "2026-11-12T16:46:35.7752012Z",
         "TrustedForDelegation": true,
         "TrustedToAuthForDelegation": false,
         "SupportedEncryptionTypes": 24
@@ -195,10 +209,10 @@
         "OperatingSystem": "Linux",
         "OperatingSystemVersion": "10.0",
         "Enabled": true,
-        "LastLogonUtc": "2026-11-12T15:47:44.5463212Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5463787Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5463799Z",
-        "ChangedUtc": "2026-11-12T15:47:44.546381Z",
+        "LastLogonUtc": "2026-11-12T16:46:35.7775179Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.7775757Z",
+        "CreatedUtc": "2025-11-13T16:46:35.7775769Z",
+        "ChangedUtc": "2026-11-12T16:46:35.7775782Z",
         "TrustedForDelegation": false,
         "TrustedToAuthForDelegation": false,
         "SupportedEncryptionTypes": 24
@@ -215,10 +229,10 @@
         "ObjectGuid": "11111111-1111-1111-1111-111111111111",
         "Enabled": true,
         "LockedOut": false,
-        "LastLogonUtc": "2026-04-27T15:47:44.5979848Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5980583Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5980606Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5980638Z",
+        "LastLogonUtc": "2026-11-12T16:46:35.8578143Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.8578877Z",
+        "CreatedUtc": "2025-11-13T16:46:35.8578895Z",
+        "ChangedUtc": "2026-11-12T16:46:35.8578925Z",
         "AccountExpirationUtc": "",
         "PasswordNeverExpires": false,
         "PasswordNotRequired": false,
@@ -239,9 +253,9 @@
         "Enabled": true,
         "LockedOut": false,
         "LastLogonUtc": "",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5983597Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5983618Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5983627Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.8582368Z",
+        "CreatedUtc": "2025-11-13T16:46:35.8582396Z",
+        "ChangedUtc": "2026-11-12T16:46:35.8582409Z",
         "AccountExpirationUtc": "",
         "PasswordNeverExpires": false,
         "PasswordNotRequired": false,
@@ -261,10 +275,10 @@
         "ObjectGuid": "11111111-1111-1111-1111-111111111111",
         "Enabled": false,
         "LockedOut": false,
-        "LastLogonUtc": "2026-04-27T15:47:44.5985943Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5986489Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5986501Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5986513Z",
+        "LastLogonUtc": "2026-04-27T16:46:35.8598777Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.8616162Z",
+        "CreatedUtc": "2025-11-13T16:46:35.8616183Z",
+        "ChangedUtc": "2026-11-12T16:46:35.8616197Z",
         "AccountExpirationUtc": "",
         "PasswordNeverExpires": false,
         "PasswordNotRequired": false,
@@ -284,17 +298,17 @@
         "ObjectGuid": "11111111-1111-1111-1111-111111111111",
         "Enabled": true,
         "LockedOut": false,
-        "LastLogonUtc": "2026-11-12T15:47:44.5989889Z",
-        "PasswordLastSetUtc": "2026-10-14T15:47:44.5990547Z",
-        "CreatedUtc": "2025-11-13T15:47:44.5990558Z",
-        "ChangedUtc": "2026-11-12T15:47:44.5990569Z",
+        "LastLogonUtc": "2026-11-12T16:46:35.8619189Z",
+        "PasswordLastSetUtc": "2026-10-14T16:46:35.8620412Z",
+        "CreatedUtc": "2025-11-13T16:46:35.8620432Z",
+        "ChangedUtc": "2026-11-12T16:46:35.8620443Z",
         "AccountExpirationUtc": "",
-        "PasswordNeverExpires": true,
-        "PasswordNotRequired": true,
-        "DoesNotRequirePreAuth": true,
-        "TrustedForDelegation": true,
+        "PasswordNeverExpires": false,
+        "PasswordNotRequired": false,
+        "DoesNotRequirePreAuth": false,
+        "TrustedForDelegation": false,
         "AdminCount": 0,
-        "SPNCount": 1,
+        "SPNCount": 0,
         "SupportedEncryptionTypes": 24
       }
     ],
@@ -308,8 +322,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6382149Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6391377Z"
+        "CreatedUtc": "2025-11-13T16:46:35.911247Z",
+        "ChangedUtc": "2026-11-13T16:46:35.912541Z"
       },
       {
         "Domain": "example.test",
@@ -320,8 +334,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6392384Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6392395Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9126587Z",
+        "ChangedUtc": "2026-11-13T16:46:35.9126605Z"
       },
       {
         "Domain": "example.test",
@@ -332,8 +346,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6392847Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6392856Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9127208Z",
+        "ChangedUtc": "2026-11-13T16:46:35.9127219Z"
       },
       {
         "Domain": "example.test",
@@ -344,8 +358,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6393279Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6393287Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9127766Z",
+        "ChangedUtc": "2026-11-13T16:46:35.9127777Z"
       },
       {
         "Domain": "example.test",
@@ -356,8 +370,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6393702Z",
-        "ChangedUtc": "2026-11-13T15:47:44.639371Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9128316Z",
+        "ChangedUtc": "2026-11-13T16:46:35.9128325Z"
       },
       {
         "Domain": "example.test",
@@ -368,8 +382,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6395055Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6395067Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9128841Z",
+        "ChangedUtc": "2026-11-13T16:46:35.912885Z"
       },
       {
         "Domain": "example.test",
@@ -380,8 +394,8 @@
         "GroupCategory": "Security",
         "GroupScope": "Global",
         "AdminCount": 1,
-        "CreatedUtc": "2025-11-13T15:47:44.6399697Z",
-        "ChangedUtc": "2026-11-13T15:47:44.6399711Z"
+        "CreatedUtc": "2025-11-13T16:46:35.9129356Z",
+        "ChangedUtc": "2026-11-13T16:46:35.9129365Z"
       }
     ],
     "PrivilegedMembers": [
@@ -479,7 +493,7 @@
         "Precedence": 1,
         "MinPasswordLength": 14,
         "ComplexityEnabled": true,
-        "ReversibleEncryptionEnabled": true,
+        "ReversibleEncryptionEnabled": false,
         "PasswordHistoryCount": 24,
         "LockoutThreshold": 10,
         "MaxPasswordAgeDays": 42.0,
@@ -506,78 +520,905 @@
         "DC": "dc1.example.test",
         "Partition": "DC=example,DC=test",
         "Partner": "CN=SYNTHETIC-PARTNER",
-        "LastReplicationAttemptUtc": "2026-11-13T15:47:44.7685136Z",
-        "LastReplicationSuccessUtc": "2026-11-13T15:42:44.7685149Z",
+        "LastReplicationAttemptUtc": "2026-11-13T16:46:36.077937Z",
+        "LastReplicationSuccessUtc": "2026-11-13T16:41:36.077938Z",
         "LastReplicationResult": 0,
         "ConsecutiveReplicationFailures": 0
       }
     ],
     "ReplicationFailures": [],
-    "Services": [],
-    "NativeDiagnostics": [],
+    "Services": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Name": "NTDS",
+        "State": "Running",
+        "StartMode": "Auto",
+        "Observation": "Observed"
+      }
+    ],
+    "NativeDiagnostics": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "NetLogons",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/NetLogons-a5d436d48f77402fb2c4abfeca85409a.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "Replications",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/Replications-5a3f6192c18d49838ac7a6f5ae58eb73.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "Services",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/Services-7e200b0190ed458ea98fda13cfbe19bd.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "Advertising",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/Advertising-753c0e6a35fb45c3830c0577a7f43501.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "KnowsOfRoleHolders",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/KnowsOfRoleHolders-a6aac171d92640da8af90c4f872ab914.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "DFSREvent",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/DFSREvent-06c2ce0b414e459b91a2a7e025cf604d.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "SysVolCheck",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/SysVolCheck-a008b28f53cb482a8c3c5f5e8b06179b.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "KccEvent",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/KccEvent-e60fef1e153f48eab8e08ad121e172b3.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "MachineAccount",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/MachineAccount-823521a1ffe9442db060ae014f350cd7.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "NCSecDesc",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/NCSecDesc-f9e646c73dd24bd0b25f4cdb219ac82f.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "ObjectsReplicated",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/ObjectsReplicated-088cb37030514f7b9b9fc32804771d15.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "RidManager",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/RidManager-c1f766ce9e054f05b3fdf7d1f5a83f78.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "SystemLog",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/SystemLog-853e95b18773432fa5f0b3309273e9a0.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "VerifyReferences",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/VerifyReferences-d34e2b0f4eef4a79865da8df2ca8b275.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "CheckSDRefDom",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/CheckSDRefDom-b077671e04704c1daa4226cd5a523a1e.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "CrossRefValidation",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/CrossRefValidation-4150276ec3d14aba845a57700c403d26.txt"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Test": "LocatorCheck",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "OutputFile": "native/LocatorCheck-9f424de05bd440028f45d08699667bec.txt"
+      }
+    ],
     "Findings": [
       {
-        "Severity": "Medium",
-        "RuleId": "ACCOUNT-STALE-HINT",
-        "Category": "Users",
+        "Severity": "High",
+        "RuleId": "DC-DISK-SPACE",
+        "Category": "Disks",
         "Domain": "example.test",
-        "Target": "stale-user",
-        "Evidence": "Replicated LastLogonDate before 2026-08-15T15:47:44.4804750Z.",
-        "Recommendation": "Review with owner and other activity evidence; do not disable/delete automatically."
+        "Target": "dc1.example.test",
+        "Evidence": "C:\\ADData\\: 2 GiB / 1% free; roles=NTDSDatabase; NTDSLogs",
+        "Recommendation": "Review capacity and configured thresholds. No files were deleted."
       },
       {
-        "Severity": "High",
-        "RuleId": "UNCONSTRAINED-DELEGATION",
-        "Category": "Users",
+        "Severity": "Info",
+        "RuleId": "DC-RECENT-BOOT",
+        "Category": "HostMetrics",
         "Domain": "example.test",
-        "Target": "risky-user",
-        "Evidence": "TrustedForDelegation flag is set.",
-        "Recommendation": "Review necessity and approved constrained delegation alternatives."
-      },
-      {
-        "Severity": "High",
-        "RuleId": "KERBEROS-PREAUTH",
-        "Category": "Users",
-        "Domain": "example.test",
-        "Target": "risky-user",
-        "Evidence": "DoesNotRequirePreAuth flag is set.",
-        "Recommendation": "Review account purpose, policy and compensating controls. A flag alone does not prove compromise or a blank password."
-      },
-      {
-        "Severity": "High",
-        "RuleId": "PASSWORD-NOT-REQUIRED",
-        "Category": "Users",
-        "Domain": "example.test",
-        "Target": "risky-user",
-        "Evidence": "PasswordNotRequired flag is set.",
-        "Recommendation": "Review account purpose, policy and compensating controls. A flag alone does not prove compromise or a blank password."
+        "Target": "dc1.example.test",
+        "Evidence": "UptimeHours=2.00000008888889",
+        "Recommendation": "Correlate with planned maintenance; a recent boot alone is not a failure."
       },
       {
         "Severity": "Medium",
-        "RuleId": "PASSWORD-NEVER-EXPIRES",
-        "Category": "Users",
+        "RuleId": "DC-TIME-OFFSET",
+        "Category": "TimeSummary",
         "Domain": "example.test",
-        "Target": "risky-user",
-        "Evidence": "PasswordNeverExpires flag is set.",
-        "Recommendation": "Review account purpose, policy and compensating controls. A flag alone does not prove compromise or a blank password."
+        "Target": "dc1.example.test",
+        "Evidence": "Median absolute offset=3.5s relative to collector clock.",
+        "Recommendation": "Verify the collector reference, network delay and DC time source; no clock was changed."
       },
       {
         "Severity": "Medium",
-        "RuleId": "ACCOUNT-STALE-HINT",
-        "Category": "Computers",
+        "RuleId": "DC-EVENTS-REVIEW",
+        "Category": "Events",
         "Domain": "example.test",
-        "Target": "stale-server",
-        "Evidence": "Replicated LastLogonDate before 2026-08-15T15:47:44.4804750Z.",
-        "Recommendation": "Review with owner and other activity evidence; do not disable/delete automatically."
+        "Target": "dc1.example.test",
+        "Evidence": "System: 2 warning/error/critical events; truncated=True; since=2026-11-12T16:46:36.2288075Z",
+        "Recommendation": "Review event IDs and timestamps; historical events do not prove a current outage."
+      }
+    ],
+    "Connectivity": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Probe": "ICMP",
+        "Status": "NoReply",
+        "RoundtripMs": null,
+        "Address": "",
+        "Error": "SYNTHETIC ICMP BLOCKED"
+      }
+    ],
+    "DNS": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "QueryName": "dc1.example.test",
+        "QueryType": "A",
+        "Resolver": "CollectorConfiguredDNS",
+        "Status": "Observed",
+        "Address": "192.0.2.10",
+        "Target": null,
+        "Port": null,
+        "Priority": null,
+        "Weight": null,
+        "TTL": 300,
+        "Error": ""
       },
       {
-        "Severity": "High",
-        "RuleId": "REVERSIBLE-PASSWORD-POLICY",
-        "Category": "PasswordPolicies",
         "Domain": "example.test",
-        "Target": "SYNTHETIC-FGPP",
-        "Evidence": "ReversibleEncryptionEnabled=True",
-        "Recommendation": "Review application dependency and policy scope; this does not inspect stored passwords."
+        "DC": "dc1.example.test",
+        "QueryName": "dc1.example.test",
+        "QueryType": "AAAA",
+        "Resolver": "CollectorConfiguredDNS",
+        "Status": "NotPresent",
+        "Address": "",
+        "Target": "",
+        "Port": null,
+        "Priority": null,
+        "Weight": null,
+        "TTL": null,
+        "Error": "No matching record returned."
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "QueryName": "_ldap._tcp.dc._msdcs.example.test",
+        "QueryType": "SRV",
+        "Resolver": "CollectorConfiguredDNS",
+        "Status": "Observed",
+        "Address": null,
+        "Target": "dc1.example.test",
+        "Port": 389,
+        "Priority": 0,
+        "Weight": 100,
+        "TTL": 300,
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "QueryName": "_kerberos._tcp.example.test",
+        "QueryType": "SRV",
+        "Resolver": "CollectorConfiguredDNS",
+        "Status": "Observed",
+        "Address": null,
+        "Target": "dc1.example.test",
+        "Port": 389,
+        "Priority": 0,
+        "Weight": 100,
+        "TTL": 300,
+        "Error": ""
+      }
+    ],
+    "HostMetrics": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "CollectedUtc": "2026-11-13T16:46:36.1681967Z",
+        "OSName": "SYNTHETIC Windows Server",
+        "OSVersion": "10.0",
+        "Build": "20348",
+        "SystemDrive": "C:",
+        "LastBootUtc": "2026-11-13T14:46:36.1677814Z",
+        "UptimeHours": 2.0000000888888887,
+        "MemoryTotalBytes": 8589934592,
+        "MemoryFreeBytes": 4294967296,
+        "MemoryFreePercent": 50.0,
+        "Observation": "Observed"
+      }
+    ],
+    "Disks": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Volume": "C:\\",
+        "DriveLetter": "C:",
+        "Label": "OS",
+        "Roles": "OS; SYSVOL",
+        "CapacityBytes": 107374182400,
+        "FreeBytes": 53687091200,
+        "FreeGiB": 50.0,
+        "FreePercent": 50.0,
+        "AssessmentScope": "VisibleOrRoleMapped",
+        "Observation": "Observed"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Volume": "C:\\ADData\\",
+        "DriveLetter": null,
+        "Label": "AD",
+        "Roles": "NTDSDatabase; NTDSLogs",
+        "CapacityBytes": 214748364800,
+        "FreeBytes": 2147483648,
+        "FreeGiB": 2.0,
+        "FreePercent": 1.0,
+        "AssessmentScope": "VisibleOrRoleMapped",
+        "Observation": "Observed"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Volume": "\\\\?\\Volume{SYNTHETIC}\\",
+        "DriveLetter": null,
+        "Label": "Hidden",
+        "Roles": "",
+        "CapacityBytes": 104857600,
+        "FreeBytes": 52428800,
+        "FreeGiB": 0.049,
+        "FreePercent": 50.0,
+        "AssessmentScope": "UnmappedSystemVolume",
+        "Observation": "Observed"
+      }
+    ],
+    "StoragePaths": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Component": "OS",
+        "Path": "C:\\",
+        "Status": "Observed",
+        "Volume": "C:\\",
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Component": "NTDSDatabase",
+        "Path": "C:\\ADData\\NTDS\\ntds.dit",
+        "Status": "Observed",
+        "Volume": "C:\\ADData\\",
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Component": "NTDSLogs",
+        "Path": "C:\\ADData\\Logs",
+        "Status": "Observed",
+        "Volume": "C:\\ADData\\",
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Component": "SYSVOL",
+        "Path": "C:\\Windows\\SYSVOL\\sysvol",
+        "Status": "Observed",
+        "Volume": "C:\\",
+        "Error": ""
+      }
+    ],
+    "TimeSamples": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Sample": 1,
+        "CollectedUtc": "2026-11-13T16:46:36.216818Z",
+        "Reference": "CollectorLocalClock",
+        "OffsetSeconds": -2.5,
+        "AbsoluteOffsetSeconds": 2.5,
+        "RawLine": "12:00:00, -02.5000000s"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Sample": 2,
+        "CollectedUtc": "2026-11-13T16:46:36.2169462Z",
+        "Reference": "CollectorLocalClock",
+        "OffsetSeconds": -3.5,
+        "AbsoluteOffsetSeconds": 3.5,
+        "RawLine": "12:00:01, -03.5000000s"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Sample": 3,
+        "CollectedUtc": "2026-11-13T16:46:36.2170953Z",
+        "Reference": "CollectorLocalClock",
+        "OffsetSeconds": -4.5,
+        "AbsoluteOffsetSeconds": 4.5,
+        "RawLine": "12:00:02, -04.5000000s"
+      }
+    ],
+    "TimeSummary": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Reference": "CollectorLocalClock",
+        "RequestedSamples": 3,
+        "ParsedSamples": 3,
+        "Status": "Measured",
+        "MedianOffsetSeconds": -3.5,
+        "MedianAbsoluteOffsetSeconds": 3.5,
+        "MaximumAbsoluteOffsetSeconds": 4.5,
+        "ExitCode": 0,
+        "TimedOut": false,
+        "RawText": "12:00:00, -02.5000000s\n12:00:01, -03.5000000s\n12:00:02, -04.5000000s"
+      }
+    ],
+    "TimeConfiguration": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Query": "Source",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "RawText": "SYNTHETIC localized evidence"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Query": "Status",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "RawText": "SYNTHETIC localized evidence"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Query": "Configuration",
+        "Status": "CompletedReviewRequired",
+        "ExitCode": 0,
+        "TimedOut": false,
+        "RawText": "SYNTHETIC localized evidence"
+      }
+    ],
+    "Events": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "LogName": "System",
+        "TimeCreatedUtc": "2026-11-13T16:46:36.2289746Z",
+        "EventId": 1001,
+        "Level": 2,
+        "Provider": "SYNTHETIC",
+        "RecordId": 1,
+        "Message": "=SYNTHETIC <script>alert(1)</script>",
+        "MessageStatus": "Formatted"
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "LogName": "System",
+        "TimeCreatedUtc": "2026-11-13T16:46:36.2290728Z",
+        "EventId": 1002,
+        "Level": 2,
+        "Provider": "SYNTHETIC",
+        "RecordId": 2,
+        "Message": "=SYNTHETIC <script>alert(1)</script>",
+        "MessageStatus": "Formatted"
+      }
+    ],
+    "EventLogCoverage": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "LogName": "System",
+        "StartUtc": "2026-11-12T16:46:36.2288075Z",
+        "EndUtc": "2026-11-13T16:46:36.2288075Z",
+        "Status": "Collected",
+        "Exported": 2,
+        "Truncated": true,
+        "Limit": 2,
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "LogName": "Directory Service",
+        "StartUtc": "2026-11-12T16:46:36.2318012Z",
+        "EndUtc": "2026-11-13T16:46:36.2318012Z",
+        "Status": "Collected",
+        "Exported": 0,
+        "Truncated": false,
+        "Limit": 2,
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "LogName": "DFS Replication",
+        "StartUtc": "2026-11-12T16:46:36.2329014Z",
+        "EndUtc": "2026-11-13T16:46:36.2329014Z",
+        "Status": "Collected",
+        "Exported": 0,
+        "Truncated": false,
+        "Limit": 2,
+        "Error": ""
+      },
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "LogName": "DNS Server",
+        "StartUtc": "2026-11-12T16:46:36.2339294Z",
+        "EndUtc": "2026-11-13T16:46:36.2339294Z",
+        "Status": "Collected",
+        "Exported": 0,
+        "Truncated": false,
+        "Limit": 2,
+        "Error": ""
+      }
+    ],
+    "DCSummary": [
+      {
+        "Domain": "example.test",
+        "DC": "dc1.example.test",
+        "Site": "SYNTHETIC-SITE",
+        "DnsAddresses": "192.0.2.10",
+        "UptimeHours": 2.0000000888888887,
+        "LowestAssessedFreeGiB": 2.0,
+        "LowestAssessedFreePercent": 1.0,
+        "MedianAbsoluteOffsetSeconds": 3.5,
+        "RecentEventRows": 2.0,
+        "RecentEventsTruncated": true,
+        "ProcessingSeconds": 0.1808927,
+        "Observation": "ReviewRequired",
+        "CollectionErrors": 0,
+        "Findings": 4,
+        "Replication": "Collected",
+        "Connectivity": "Collected",
+        "DNS": "Collected",
+        "HostMetrics": "Collected",
+        "Disks": "Collected",
+        "StoragePaths": "Collected",
+        "TimeSummary": "Collected",
+        "Services": "Collected",
+        "EventLogCoverage": "Collected",
+        "NativeDiagnostics": "Collected"
+      }
+    ],
+    "Timings": [
+      {
+        "Dataset": "Forest",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0373355
+      },
+      {
+        "Dataset": "Computers",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 5,
+        "DurationSeconds": 0.111882
+      },
+      {
+        "Dataset": "Users",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 4,
+        "DurationSeconds": 0.0490177
+      },
+      {
+        "Dataset": "Groups",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 7,
+        "DurationSeconds": 0.0195489
+      },
+      {
+        "Dataset": "OrganizationalUnits",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0411456
+      },
+      {
+        "Dataset": "PasswordPolicies",
+        "Scope": "example.test / Default",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0317459
+      },
+      {
+        "Dataset": "PasswordPolicies",
+        "Scope": "example.test / FGPP",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0100454
+      },
+      {
+        "Dataset": "Trusts",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0145015
+      },
+      {
+        "Dataset": "DomainControllers",
+        "Scope": "example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.01273
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-21-100-200-300-512",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0133817
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-32-544",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0019675
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-32-548",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0024985
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-32-549",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0017981
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-32-551",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.002656
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-21-100-200-300-518",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0022838
+      },
+      {
+        "Dataset": "PrivilegedMembers",
+        "Scope": "example.test / S-1-5-21-100-200-300-519",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0016123
+      },
+      {
+        "Dataset": "Replication",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0074774
+      },
+      {
+        "Dataset": "ReplicationFailures",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 0,
+        "DurationSeconds": 0.0015111
+      },
+      {
+        "Dataset": "Services",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0019946
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / NetLogons",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0091322
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / Replications",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0013732
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / Services",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.001116
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / Advertising",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0030894
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / KnowsOfRoleHolders",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0018103
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / DFSREvent",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.001191
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / SysVolCheck",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0011455
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / KccEvent",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0011594
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / MachineAccount",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0016121
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / NCSecDesc",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0015198
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / ObjectsReplicated",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0013279
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / RidManager",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0013023
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / SystemLog",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0012159
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / VerifyReferences",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0012864
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / CheckSDRefDom",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0012393
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / CrossRefValidation",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0013224
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / LocatorCheck",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0013732
+      },
+      {
+        "Dataset": "Connectivity",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0015171
+      },
+      {
+        "Dataset": "DNS",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 4,
+        "DurationSeconds": 0.0111453
+      },
+      {
+        "Dataset": "HostBundle",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 8,
+        "DurationSeconds": 0.0088209
+      },
+      {
+        "Dataset": "HostMetrics",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.002469
+      },
+      {
+        "Dataset": "Disks",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 3,
+        "DurationSeconds": 0.0024877
+      },
+      {
+        "Dataset": "StoragePaths",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 4,
+        "DurationSeconds": 0.0023748
+      },
+      {
+        "Dataset": "TimeSummary",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0092586
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / System",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0038604
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / Directory Service",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0009374
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / DFS Replication",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0007199
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / DNS Server",
+        "Status": "Collected",
+        "Rows": 1,
+        "DurationSeconds": 0.0010477
+      },
+      {
+        "Dataset": "DCProcessing",
+        "Scope": "dc1.example.test",
+        "Status": "Completed",
+        "Rows": 1,
+        "DurationSeconds": 0.1808927
       }
     ],
     "Coverage": [
@@ -586,160 +1427,414 @@
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.4991179Z",
-        "EndedUtc": "2026-11-13T15:47:44.5163607Z"
+        "StartedUtc": "2026-11-13T16:46:35.6691104Z",
+        "EndedUtc": "2026-11-13T16:46:35.7136235Z",
+        "DurationSeconds": 0.045552
       },
       {
         "Dataset": "Computers",
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 5,
-        "StartedUtc": "2026-11-13T15:47:44.526064Z",
-        "EndedUtc": "2026-11-13T15:47:44.5946719Z"
+        "StartedUtc": "2026-11-13T16:46:35.7414162Z",
+        "EndedUtc": "2026-11-13T16:46:35.853454Z",
+        "DurationSeconds": 0.1120476
       },
       {
         "Dataset": "Users",
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 4,
-        "StartedUtc": "2026-11-13T15:47:44.5961468Z",
-        "EndedUtc": "2026-11-13T15:47:44.634051Z"
+        "StartedUtc": "2026-11-13T16:46:35.8552669Z",
+        "EndedUtc": "2026-11-13T16:46:35.9051354Z",
+        "DurationSeconds": 0.0498802
       },
       {
         "Dataset": "Groups",
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 7,
-        "StartedUtc": "2026-11-13T15:47:44.6347266Z",
-        "EndedUtc": "2026-11-13T15:47:44.6761236Z"
+        "StartedUtc": "2026-11-13T16:46:35.9055678Z",
+        "EndedUtc": "2026-11-13T16:46:35.9252692Z",
+        "DurationSeconds": 0.0197096
       },
       {
         "Dataset": "OrganizationalUnits",
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.6766655Z",
-        "EndedUtc": "2026-11-13T15:47:44.6824862Z"
+        "StartedUtc": "2026-11-13T16:46:35.9256014Z",
+        "EndedUtc": "2026-11-13T16:46:35.9671731Z",
+        "DurationSeconds": 0.0415827
       },
       {
         "Dataset": "PasswordPolicies",
         "Scope": "example.test / Default",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.6831481Z",
-        "EndedUtc": "2026-11-13T15:47:44.7067029Z"
+        "StartedUtc": "2026-11-13T16:46:35.9675639Z",
+        "EndedUtc": "2026-11-13T16:46:35.999526Z",
+        "DurationSeconds": 0.0319754
       },
       {
         "Dataset": "PasswordPolicies",
         "Scope": "example.test / FGPP",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7072705Z",
-        "EndedUtc": "2026-11-13T15:47:44.7144752Z"
+        "StartedUtc": "2026-11-13T16:46:35.9999303Z",
+        "EndedUtc": "2026-11-13T16:46:36.0102728Z",
+        "DurationSeconds": 0.0103556
       },
       {
         "Dataset": "Trusts",
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7148393Z",
-        "EndedUtc": "2026-11-13T15:47:44.7241776Z"
+        "StartedUtc": "2026-11-13T16:46:36.0107246Z",
+        "EndedUtc": "2026-11-13T16:46:36.0259106Z",
+        "DurationSeconds": 0.0152
       },
       {
         "Dataset": "DomainControllers",
         "Scope": "example.test",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7245693Z",
-        "EndedUtc": "2026-11-13T15:47:44.737328Z"
+        "StartedUtc": "2026-11-13T16:46:36.0266551Z",
+        "EndedUtc": "2026-11-13T16:46:36.0396257Z",
+        "DurationSeconds": 0.0129833
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-21-100-200-300-512",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7403815Z",
-        "EndedUtc": "2026-11-13T15:47:44.7489371Z"
+        "StartedUtc": "2026-11-13T16:46:36.0439329Z",
+        "EndedUtc": "2026-11-13T16:46:36.0575539Z",
+        "DurationSeconds": 0.0136352
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-32-544",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7493398Z",
-        "EndedUtc": "2026-11-13T15:47:44.7514881Z"
+        "StartedUtc": "2026-11-13T16:46:36.0579243Z",
+        "EndedUtc": "2026-11-13T16:46:36.0601163Z",
+        "DurationSeconds": 0.0022033
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-32-548",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7519139Z",
-        "EndedUtc": "2026-11-13T15:47:44.7539692Z"
+        "StartedUtc": "2026-11-13T16:46:36.0605639Z",
+        "EndedUtc": "2026-11-13T16:46:36.063248Z",
+        "DurationSeconds": 0.0026926
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-32-549",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7543796Z",
-        "EndedUtc": "2026-11-13T15:47:44.7564976Z"
+        "StartedUtc": "2026-11-13T16:46:36.0635734Z",
+        "EndedUtc": "2026-11-13T16:46:36.0655684Z",
+        "DurationSeconds": 0.0020044
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-32-551",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7569242Z",
-        "EndedUtc": "2026-11-13T15:47:44.7590719Z"
+        "StartedUtc": "2026-11-13T16:46:36.0661297Z",
+        "EndedUtc": "2026-11-13T16:46:36.0690325Z",
+        "DurationSeconds": 0.0029158
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-21-100-200-300-518",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7594457Z",
-        "EndedUtc": "2026-11-13T15:47:44.7614423Z"
+        "StartedUtc": "2026-11-13T16:46:36.0694607Z",
+        "EndedUtc": "2026-11-13T16:46:36.0719391Z",
+        "DurationSeconds": 0.0024864
       },
       {
         "Dataset": "PrivilegedMembers",
         "Scope": "example.test / S-1-5-21-100-200-300-519",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7618266Z",
-        "EndedUtc": "2026-11-13T15:47:44.7639473Z"
+        "StartedUtc": "2026-11-13T16:46:36.0723438Z",
+        "EndedUtc": "2026-11-13T16:46:36.0741641Z",
+        "DurationSeconds": 0.0018276
       },
       {
         "Dataset": "Replication",
         "Scope": "dc1.example.test",
         "Status": "Collected",
         "Rows": 1,
-        "StartedUtc": "2026-11-13T15:47:44.7667857Z",
-        "EndedUtc": "2026-11-13T15:47:44.7751878Z"
+        "StartedUtc": "2026-11-13T16:46:36.0766394Z",
+        "EndedUtc": "2026-11-13T16:46:36.0842999Z",
+        "DurationSeconds": 0.0076692
       },
       {
         "Dataset": "ReplicationFailures",
         "Scope": "dc1.example.test",
         "Status": "Collected",
         "Rows": 0,
-        "StartedUtc": "2026-11-13T15:47:44.7756478Z",
-        "EndedUtc": "2026-11-13T15:47:44.777484Z"
+        "StartedUtc": "2026-11-13T16:46:36.0846197Z",
+        "EndedUtc": "2026-11-13T16:46:36.0862962Z",
+        "DurationSeconds": 0.0016842
       },
       {
         "Dataset": "Services",
         "Scope": "dc1.example.test",
-        "Status": "NotRequested",
-        "Rows": 0,
-        "StartedUtc": "2026-11-13T15:47:44.7797656Z",
-        "EndedUtc": "2026-11-13T15:47:44.7797921Z"
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.0866103Z",
+        "EndedUtc": "2026-11-13T16:46:36.0887826Z",
+        "DurationSeconds": 0.0021796
       },
       {
         "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / NetLogons",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.0904615Z",
+        "EndedUtc": "2026-11-13T16:46:36.0997368Z",
+        "DurationSeconds": 0.0092839
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / Replications",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.0999844Z",
+        "EndedUtc": "2026-11-13T16:46:36.1014928Z",
+        "DurationSeconds": 0.0015148
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / Services",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1017198Z",
+        "EndedUtc": "2026-11-13T16:46:36.1030758Z",
+        "DurationSeconds": 0.0013646
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / Advertising",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1033209Z",
+        "EndedUtc": "2026-11-13T16:46:36.1071249Z",
+        "DurationSeconds": 0.0038128
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / KnowsOfRoleHolders",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1076467Z",
+        "EndedUtc": "2026-11-13T16:46:36.1096713Z",
+        "DurationSeconds": 0.0020327
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / DFSREvent",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1099752Z",
+        "EndedUtc": "2026-11-13T16:46:36.1113178Z",
+        "DurationSeconds": 0.0013497
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / SysVolCheck",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.111638Z",
+        "EndedUtc": "2026-11-13T16:46:36.1129317Z",
+        "DurationSeconds": 0.0013006
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / KccEvent",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.113291Z",
+        "EndedUtc": "2026-11-13T16:46:36.1146005Z",
+        "DurationSeconds": 0.0013168
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / MachineAccount",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1159407Z",
+        "EndedUtc": "2026-11-13T16:46:36.1177299Z",
+        "DurationSeconds": 0.0017972
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / NCSecDesc",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1180947Z",
+        "EndedUtc": "2026-11-13T16:46:36.1198357Z",
+        "DurationSeconds": 0.001749
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / ObjectsReplicated",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1202543Z",
+        "EndedUtc": "2026-11-13T16:46:36.1218109Z",
+        "DurationSeconds": 0.0015646
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / RidManager",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1223271Z",
+        "EndedUtc": "2026-11-13T16:46:36.1238379Z",
+        "DurationSeconds": 0.001519
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / SystemLog",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1242776Z",
+        "EndedUtc": "2026-11-13T16:46:36.1257146Z",
+        "DurationSeconds": 0.0014456
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / VerifyReferences",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1262195Z",
+        "EndedUtc": "2026-11-13T16:46:36.127717Z",
+        "DurationSeconds": 0.0015058
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / CheckSDRefDom",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1281479Z",
+        "EndedUtc": "2026-11-13T16:46:36.1295907Z",
+        "DurationSeconds": 0.0014508
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / CrossRefValidation",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1299694Z",
+        "EndedUtc": "2026-11-13T16:46:36.1314973Z",
+        "DurationSeconds": 0.0015351
+      },
+      {
+        "Dataset": "NativeDiagnostics",
+        "Scope": "dc1.example.test / LocatorCheck",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.131875Z",
+        "EndedUtc": "2026-11-13T16:46:36.1339312Z",
+        "DurationSeconds": 0.0020639
+      },
+      {
+        "Dataset": "Connectivity",
         "Scope": "dc1.example.test",
-        "Status": "NotRequested",
-        "Rows": 0,
-        "StartedUtc": "2026-11-13T15:47:44.781944Z",
-        "EndedUtc": "2026-11-13T15:47:44.7819714Z"
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1465292Z",
+        "EndedUtc": "2026-11-13T16:46:36.1482393Z",
+        "DurationSeconds": 0.0017211
+      },
+      {
+        "Dataset": "DNS",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 4,
+        "StartedUtc": "2026-11-13T16:46:36.1485358Z",
+        "EndedUtc": "2026-11-13T16:46:36.1598302Z",
+        "DurationSeconds": 0.0113043
+      },
+      {
+        "Dataset": "HostMetrics",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.1756433Z",
+        "EndedUtc": "2026-11-13T16:46:36.1783343Z",
+        "DurationSeconds": 0.0027066
+      },
+      {
+        "Dataset": "Disks",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 3,
+        "StartedUtc": "2026-11-13T16:46:36.1788607Z",
+        "EndedUtc": "2026-11-13T16:46:36.1815449Z",
+        "DurationSeconds": 0.0026907
+      },
+      {
+        "Dataset": "StoragePaths",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 4,
+        "StartedUtc": "2026-11-13T16:46:36.1819385Z",
+        "EndedUtc": "2026-11-13T16:46:36.1845094Z",
+        "DurationSeconds": 0.0025774
+      },
+      {
+        "Dataset": "TimeSummary",
+        "Scope": "dc1.example.test",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.212856Z",
+        "EndedUtc": "2026-11-13T16:46:36.2222806Z",
+        "DurationSeconds": 0.0094313
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / System",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.2269876Z",
+        "EndedUtc": "2026-11-13T16:46:36.2311111Z",
+        "DurationSeconds": 0.0041287
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / Directory Service",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.2314934Z",
+        "EndedUtc": "2026-11-13T16:46:36.2325444Z",
+        "DurationSeconds": 0.0010551
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / DFS Replication",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.232752Z",
+        "EndedUtc": "2026-11-13T16:46:36.2335828Z",
+        "DurationSeconds": 0.0008349
+      },
+      {
+        "Dataset": "EventLogCoverage",
+        "Scope": "dc1.example.test / DNS Server",
+        "Status": "Collected",
+        "Rows": 1,
+        "StartedUtc": "2026-11-13T16:46:36.2337856Z",
+        "EndedUtc": "2026-11-13T16:46:36.2506865Z",
+        "DurationSeconds": 0.0169945
       }
     ],
     "CollectionErrors": []

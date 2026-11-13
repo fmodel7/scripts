@@ -1,0 +1,5 @@
+﻿"Domain","DC","QueryName","QueryType","Resolver","Status","Address","Target","Port","Priority","Weight","TTL","Error"
+"example.test","dc1.example.test","dc1.example.test","A","CollectorConfiguredDNS","Observed","192.0.2.10","","","","","300",""
+"example.test","dc1.example.test","dc1.example.test","AAAA","CollectorConfiguredDNS","NotPresent","","","","","","","No matching record returned."
+"example.test","dc1.example.test","_ldap._tcp.dc._msdcs.example.test","SRV","CollectorConfiguredDNS","Observed","","dc1.example.test","389","0","100","300",""
+"example.test","dc1.example.test","_kerberos._tcp.example.test","SRV","CollectorConfiguredDNS","Observed","","dc1.example.test","389","0","100","300",""

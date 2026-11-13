@@ -1,5 +1,12 @@
 # Histórico
 
+## 2026-11-13 — AD Health Report 1.1.0
+
+- Integra em um PS1 os coletores AD e operacionais: DNS/ICMP, boot/memória, discos/NTDS/SYSVOL, amostras/evidências de horário, eventos e duração real.
+- FullAssessment habilita o conjunto ampliado com 17 testes DCDiag selecionados; preserva leitura e escopo explícito.
+- 30 CSVs, HTML/JSON, resumo numérico por DC, documentação PT-BR/EN-US e exemplo fictício atualizados. Sem SMTP obsoleto ou operações de reparo.
+- CI: 25 cenários por ambiente; 1338 verificações em Windows PowerShell 5.1/Linux e 1334 em PowerShell 7 Windows; infraestrutura real permanece sem validação.
+
 ## 2026-11-13 — AD Health Report 1.0.0
 
 - Adiciona scripts/ad-health-report com PS1 independente, coleta de leitura por domínio/floresta, FSMO/schema, inventário, políticas/trusts e replicação.
@@ -36,6 +43,7 @@
 - Modelos PowerShell PT-BR/EN-US/de-DE e orientações para iniciantes.
 - Nenhum script privado, credencial ou dado real importado.
 - Nenhum script executável publicado nesta etapa.
+
 
 
 

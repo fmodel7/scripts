@@ -1,0 +1,443 @@
+{
+  "Forest": {
+    "file": "forest.csv",
+    "fields": [
+      "Name",
+      "RootDomain",
+      "ForestMode",
+      "SchemaVersion",
+      "SchemaLabel",
+      "SchemaMaster",
+      "DomainNamingMaster",
+      "Domains",
+      "Sites"
+    ]
+  },
+  "Domains": {
+    "file": "domains.csv",
+    "fields": [
+      "Domain",
+      "QueryServer",
+      "DistinguishedName",
+      "DomainMode",
+      "DomainSid",
+      "PDCEmulator",
+      "RIDMaster",
+      "InfrastructureMaster",
+      "Computers",
+      "Users",
+      "Groups"
+    ]
+  },
+  "DomainControllers": {
+    "file": "domaincontrollers.csv",
+    "fields": [
+      "Domain",
+      "HostName",
+      "Site",
+      "OperatingSystem",
+      "OperatingSystemVersion",
+      "IsGlobalCatalog",
+      "IsReadOnly",
+      "OperationMasterRoles"
+    ]
+  },
+  "OrganizationalUnits": {
+    "file": "organizationalunits.csv",
+    "fields": [
+      "Domain",
+      "Name",
+      "DistinguishedName",
+      "ParentDN",
+      "ProtectedFromAccidentalDeletion",
+      "CreatedUtc",
+      "ChangedUtc"
+    ]
+  },
+  "ComputerSummary": {
+    "file": "computersummary.csv",
+    "fields": [
+      "Domain",
+      "Category",
+      "OperatingSystem",
+      "Count"
+    ]
+  },
+  "Computers": {
+    "file": "computers.csv",
+    "fields": [
+      "Domain",
+      "Name",
+      "DNSHostName",
+      "DistinguishedName",
+      "ParentDN",
+      "SID",
+      "ObjectGuid",
+      "Category",
+      "OperatingSystem",
+      "OperatingSystemVersion",
+      "Enabled",
+      "LastLogonUtc",
+      "PasswordLastSetUtc",
+      "CreatedUtc",
+      "ChangedUtc",
+      "TrustedForDelegation",
+      "TrustedToAuthForDelegation",
+      "SupportedEncryptionTypes"
+    ]
+  },
+  "Users": {
+    "file": "users.csv",
+    "fields": [
+      "Domain",
+      "SamAccountName",
+      "UserPrincipalName",
+      "DistinguishedName",
+      "ParentDN",
+      "SID",
+      "ObjectGuid",
+      "Enabled",
+      "LockedOut",
+      "LastLogonUtc",
+      "PasswordLastSetUtc",
+      "AccountExpirationUtc",
+      "CreatedUtc",
+      "ChangedUtc",
+      "PasswordNeverExpires",
+      "PasswordNotRequired",
+      "DoesNotRequirePreAuth",
+      "TrustedForDelegation",
+      "AdminCount",
+      "SPNCount",
+      "SupportedEncryptionTypes"
+    ]
+  },
+  "Groups": {
+    "file": "groups.csv",
+    "fields": [
+      "Domain",
+      "Name",
+      "SamAccountName",
+      "SID",
+      "DistinguishedName",
+      "GroupCategory",
+      "GroupScope",
+      "AdminCount",
+      "CreatedUtc",
+      "ChangedUtc"
+    ]
+  },
+  "PrivilegedMembers": {
+    "file": "privilegedmembers.csv",
+    "fields": [
+      "Domain",
+      "GroupName",
+      "GroupSID",
+      "MemberName",
+      "MemberSID",
+      "MemberClass",
+      "MemberDN",
+      "MembershipType"
+    ]
+  },
+  "PasswordPolicies": {
+    "file": "passwordpolicies.csv",
+    "fields": [
+      "Domain",
+      "PolicyType",
+      "Name",
+      "Precedence",
+      "MinPasswordLength",
+      "ComplexityEnabled",
+      "ReversibleEncryptionEnabled",
+      "PasswordHistoryCount",
+      "MaxPasswordAgeDays",
+      "MinPasswordAgeDays",
+      "LockoutThreshold",
+      "LockoutDurationMinutes",
+      "AppliesTo"
+    ]
+  },
+  "Trusts": {
+    "file": "trusts.csv",
+    "fields": [
+      "Domain",
+      "Name",
+      "Direction",
+      "TrustType",
+      "ForestTransitive",
+      "SelectiveAuthentication",
+      "SIDFilteringQuarantined",
+      "SIDFilteringForestAware"
+    ]
+  },
+  "Replication": {
+    "file": "replication.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Partition",
+      "Partner",
+      "LastReplicationAttemptUtc",
+      "LastReplicationSuccessUtc",
+      "LastReplicationResult",
+      "ConsecutiveReplicationFailures"
+    ]
+  },
+  "ReplicationFailures": {
+    "file": "replicationfailures.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Partner",
+      "FailureType",
+      "FailureCount",
+      "FirstFailureUtc",
+      "LastError"
+    ]
+  },
+  "Services": {
+    "file": "services.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Name",
+      "State",
+      "StartMode",
+      "Observation"
+    ]
+  },
+  "NativeDiagnostics": {
+    "file": "nativediagnostics.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Test",
+      "Status",
+      "ExitCode",
+      "TimedOut",
+      "OutputFile"
+    ]
+  },
+  "Findings": {
+    "file": "findings.csv",
+    "fields": [
+      "Severity",
+      "RuleId",
+      "Category",
+      "Domain",
+      "Target",
+      "Evidence",
+      "Recommendation"
+    ]
+  },
+  "Connectivity": {
+    "file": "connectivity.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Probe",
+      "Status",
+      "RoundtripMs",
+      "Address",
+      "Error"
+    ]
+  },
+  "DNS": {
+    "file": "dns.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "QueryName",
+      "QueryType",
+      "Resolver",
+      "Status",
+      "Address",
+      "Target",
+      "Port",
+      "Priority",
+      "Weight",
+      "TTL",
+      "Error"
+    ]
+  },
+  "HostMetrics": {
+    "file": "hostmetrics.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "CollectedUtc",
+      "OSName",
+      "OSVersion",
+      "Build",
+      "SystemDrive",
+      "LastBootUtc",
+      "UptimeHours",
+      "MemoryTotalBytes",
+      "MemoryFreeBytes",
+      "MemoryFreePercent",
+      "Observation"
+    ]
+  },
+  "Disks": {
+    "file": "disks.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Volume",
+      "DriveLetter",
+      "Label",
+      "Roles",
+      "CapacityBytes",
+      "FreeBytes",
+      "FreeGiB",
+      "FreePercent",
+      "AssessmentScope",
+      "Observation"
+    ]
+  },
+  "StoragePaths": {
+    "file": "storagepaths.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Component",
+      "Path",
+      "Status",
+      "Volume",
+      "Error"
+    ]
+  },
+  "TimeSamples": {
+    "file": "timesamples.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Sample",
+      "CollectedUtc",
+      "Reference",
+      "OffsetSeconds",
+      "AbsoluteOffsetSeconds",
+      "RawLine"
+    ]
+  },
+  "TimeSummary": {
+    "file": "timesummary.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Reference",
+      "RequestedSamples",
+      "ParsedSamples",
+      "Status",
+      "MedianOffsetSeconds",
+      "MedianAbsoluteOffsetSeconds",
+      "MaximumAbsoluteOffsetSeconds",
+      "ExitCode",
+      "TimedOut",
+      "RawText"
+    ]
+  },
+  "TimeConfiguration": {
+    "file": "timeconfiguration.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Query",
+      "Status",
+      "ExitCode",
+      "TimedOut",
+      "RawText"
+    ]
+  },
+  "Events": {
+    "file": "events.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "LogName",
+      "TimeCreatedUtc",
+      "EventId",
+      "Level",
+      "Provider",
+      "RecordId",
+      "Message",
+      "MessageStatus"
+    ]
+  },
+  "EventLogCoverage": {
+    "file": "eventlogcoverage.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "LogName",
+      "StartUtc",
+      "EndUtc",
+      "Status",
+      "Exported",
+      "Truncated",
+      "Limit",
+      "Error"
+    ]
+  },
+  "DCSummary": {
+    "file": "dcsummary.csv",
+    "fields": [
+      "Domain",
+      "DC",
+      "Site",
+      "DnsAddresses",
+      "UptimeHours",
+      "LowestAssessedFreeGiB",
+      "LowestAssessedFreePercent",
+      "MedianAbsoluteOffsetSeconds",
+      "RecentEventRows",
+      "RecentEventsTruncated",
+      "ProcessingSeconds",
+      "Observation",
+      "CollectionErrors",
+      "Findings",
+      "Replication",
+      "Connectivity",
+      "DNS",
+      "HostMetrics",
+      "Disks",
+      "StoragePaths",
+      "TimeSummary",
+      "Services",
+      "EventLogCoverage",
+      "NativeDiagnostics"
+    ]
+  },
+  "Timings": {
+    "file": "timings.csv",
+    "fields": [
+      "Dataset",
+      "Scope",
+      "Status",
+      "Rows",
+      "DurationSeconds"
+    ]
+  },
+  "Coverage": {
+    "file": "coverage.csv",
+    "fields": [
+      "Dataset",
+      "Scope",
+      "Status",
+      "Rows",
+      "StartedUtc",
+      "EndedUtc",
+      "DurationSeconds"
+    ]
+  },
+  "CollectionErrors": {
+    "file": "collectionerrors.csv",
+    "fields": [
+      "Dataset",
+      "Scope",
+      "ErrorType",
+      "Message"
+    ]
+  }
+}

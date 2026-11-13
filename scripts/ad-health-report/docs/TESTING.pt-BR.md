@@ -1,6 +1,6 @@
-# Validação e aceite — AD Health Report 1.0.0
+# Validação e aceite — AD Health Report 1.1.0
 
-Fonte validada: 89a87e1da3d3d4af7ea0acefbb5a66e6fe9a22d9. [GitHub Actions](https://github.com/fmodel7/scripts/actions/runs/43456162109). Windows PowerShell 5.1 e PowerShell 7/Linux passaram com 673 verificações cada; PowerShell 7/Windows passou com 669. Todos executaram 15 fluxos sintéticos completos. Os quatro testes de processo nativo usam um executável C# inofensivo no 5.1 e shell no Linux; são omitidos no 7/Windows. Nenhum dcdiag real foi executado.
+Fonte validada: c8d0f20c276ee82abce9e16f5575c9a6221db55a. [GitHub Actions](https://github.com/fmodel7/scripts/actions/runs/43465971682). Windows PowerShell 5.1 e PowerShell 7/Linux passaram com 985 verificações cada; PowerShell 7/Windows passou com 981. Todos executaram 15 fluxos sintéticos completos. Os quatro testes de processo nativo usam um executável C# inofensivo no 5.1 e shell no Linux; são omitidos no 7/Windows. Nenhum dcdiag real foi executado.
 
 ```powershell
 powershell.exe -NoProfile -File .	ests\Test-AdHealth.ps1
@@ -25,3 +25,13 @@ Não houve consulta AD, CIM remoto ou dcdiag real. Não se comprova integração
 7. Registrar aceite técnico. Achados exigem análise humana; não são autorização para remediar automaticamente.
 
 [Manual](MANUAL.pt-BR.md) · [Evidências](EVIDENCE.json)
+
+## Suíte operacional 1.1
+
+```powershell
+powershell.exe -NoProfile -File .	ests\Test-AdOperations.ps1
+```
+
+353 verificações e 10 fluxos operacionais adicionais por ambiente. Com a regressão, são 25 cenários e 1338 verificações em Windows PowerShell 5.1/Linux ou 1334 em PowerShell 7/Windows. Cobrem FullAssessment, thresholds, DNS/ICMP bloqueado sem gate, boot/memória, mountpoints/registro negado, volumes ocultos, offsets negativos e parsing desconhecido, eventos vazios/truncados/negados, dashboard e duração real. Os adaptadores de rede/AD/CIM/eventos/horário são sintéticos; nenhuma chamada remota real ocorreu.
+
+Aceite adicional: revisar mapeamento de volumes em NTDS/SYSVOL reais, comparar amostras de horário com referência aprovada, conferir relógio do coletor, testar direitos CIM/registro/Event Log e validar limites de eventos/carga. Navegador validado com exemplo completo fictício de 30 CSVs em RENDERER-TESTS.json.

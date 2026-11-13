@@ -1,0 +1,4 @@
+﻿"Domain","DC","Query","Status","ExitCode","TimedOut","RawText"
+"example.test","dc1.example.test","Source","CompletedReviewRequired","0","False","SYNTHETIC localized evidence"
+"example.test","dc1.example.test","Status","CompletedReviewRequired","0","False","SYNTHETIC localized evidence"
+"example.test","dc1.example.test","Configuration","CompletedReviewRequired","0","False","SYNTHETIC localized evidence"

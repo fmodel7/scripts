@@ -1,0 +1,2 @@
+﻿"Domain","DC","CollectedUtc","OSName","OSVersion","Build","SystemDrive","LastBootUtc","UptimeHours","MemoryTotalBytes","MemoryFreeBytes","MemoryFreePercent","Observation"
+"example.test","dc1.example.test","2026-11-13T16:46:36.1681967Z","SYNTHETIC Windows Server","10.0","20348","C:","2026-11-13T14:46:36.1677814Z","2.00000008888889","8589934592","4294967296","50","Observed"

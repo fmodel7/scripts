@@ -1,29 +1,13 @@
 {
-  "renderer": "Write-AdHtmlReport",
-  "data": "synthetic only",
-  "engine": "Chromium via Playwright",
-  "transport": "localhost HTTP (managed browser blocks file URLs)",
-  "desktop_viewport": "1440x1100",
-  "mobile_viewport": "390x844",
-  "search_filter": true,
-  "expand_collapse": true,
-  "desktop_body_overflow": false,
+  "version": "1.1.0",
+  "result": "PASS",
+  "data": "full synthetic operational report, not a real AD",
+  "csv_links": 30,
+  "search": true,
+  "expand": true,
   "mobile_body_overflow": false,
   "external_requests": 0,
-  "document_requests": 1,
   "javascript_errors": 0,
   "dialogs": 0,
-  "html_injection_executed": false,
-  "result": "PASS",
-  "performance": {
-    "input_rows": 100000,
-    "displayed_rows": 1000,
-    "elapsed_seconds": 2.804,
-    "html_bytes": 138396,
-    "input_note": "array of references to the same synthetic row; no live AD query"
-  },
-  "limits": [
-    "Browser test used synthetic renderer fixture, not a real AD report.",
-    "PS5.1 API compatibility reviewed; actual Windows execution belongs to CI."
-  ]
+  "engine": "154.0.8037.57"
 }

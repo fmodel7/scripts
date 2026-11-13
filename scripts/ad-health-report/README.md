@@ -1,4 +1,4 @@
-# FMODEL AD Health Report 1.0.0
+# FMODEL AD Health Report 1.1.0
 
 **FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
 F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Revisão com assistência de Akira (ChatGPT)
@@ -6,6 +6,18 @@ F. Model · [fmodel@fmodel.com.br](mailto:fmodel@fmodel.com.br) · Revisão com 
 Inventário e avaliação assistida do Active Directory, com **relatório HTML interativo offline, CSV e JSON**. O script faz consultas e grava relatórios locais; não corrige, remove, desabilita ou modifica objetos do domínio.
 
 [English](README.en-US.md) · [Manual completo PT-BR](docs/MANUAL.pt-BR.md) · [PDF](docs/MANUAL.pt-BR.pdf) · [Evidências de validação](docs/EVIDENCE.json)
+
+## Coleta unificada ampliada — 1.1
+
+Para reunir inventário e verificações operacionais em um único PS1:
+
+```powershell
+.\Export-ADHealthReport.ps1 -FullAssessment
+```
+
+FullAssessment habilita DNS A/AAAA/SRV, ICMP informativo, boot/memória, volumes e caminhos NTDS/SYSVOL, amostras/evidências W32Time, eventos recentes, serviços e os 17 testes selecionados do perfil estendido DCDiag. A coleta padrão continua mais leve. FullAssessment amplia a profundidade; o escopo continua Domain. Para todos os domínios autorizados, acrescente -Scope Forest.
+
+O HTML inclui uma tabela consolidada por DC, com métricas e estados, e todos os conjuntos têm CSV. Dados desconhecidos e acessos negados não viram sucesso. Eventos têm janela/limite explícitos; os CSVs preservam tudo que foi obtido dentro desses limites. Consulte os novos parâmetros no manual antes de habilitar a coleta completa em produção.
 
 ## O que você recebe
 
@@ -19,7 +31,7 @@ Inventário e avaliação assistida do Active Directory, com **relatório HTML i
 
 ## Baixar
 
-[Baixar AD-Health-Report-v1.0.0.zip](AD-Health-Report-v1.0.0.zip?raw=true). Se abrir a página do arquivo, clique em **Download raw file**, depois **Extrair Tudo**.
+[Baixar AD-Health-Report-v1.1.0.zip](AD-Health-Report-v1.1.0.zip?raw=true). Se abrir a página do arquivo, clique em **Download raw file**, depois **Extrair Tudo**.
 
 Alternativa: no repositório, **Code → Download ZIP → Extrair Tudo → scripts/ad-health-report**. Não precisa instalar Git. Abra a pasta completa extraída, não a visualização do ZIP.
 
@@ -85,6 +97,6 @@ Não foi validada uma floresta de produção nesta entrega. Os testes automatiza
 
 ## Prévia e validação
 
-Após extrair o ZIP, abra [examples/SYNTHETIC/Report.html](examples/SYNTHETIC/Report.html) para explorar dados fictícios sem domínio. O exemplo inclui os 18 CSVs e JSON correspondentes; não é evidência de ambiente real.
+Após extrair o ZIP, abra [examples/SYNTHETIC/Report.html](examples/SYNTHETIC/Report.html) para explorar dados fictícios sem domínio. O exemplo inclui os 30 CSVs e JSON correspondentes; não é evidência de ambiente real.
 
-[CI](https://github.com/fmodel7/scripts/actions/runs/43456162109) · [Testing](docs/TESTING.pt-BR.md) · [Internal reference](docs/INTERNALS.pt-BR.md)
+[CI](https://github.com/fmodel7/scripts/actions/runs/43465971682) · [Testing](docs/TESTING.pt-BR.md) · [Internal reference](docs/INTERNALS.pt-BR.md)
