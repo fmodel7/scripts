@@ -129,7 +129,7 @@ function Get-AdSchemas {
         TimeConfiguration='Domain,DC,Query,Status,ExitCode,TimedOut,RawText'
         Events='Domain,DC,LogName,TimeCreatedUtc,EventId,Level,Provider,RecordId,Message,MessageStatus'
         EventLogCoverage='Domain,DC,LogName,StartUtc,EndUtc,Status,Exported,Truncated,Limit,Error'
-        DCSummary='Domain,DC,Site,Observation,CollectionErrors,Findings,Replication,Connectivity,DNS,HostMetrics,Disks,StoragePaths,TimeSummary,Services,EventLogCoverage,NativeDiagnostics'
+        DCSummary='Domain,DC,Site,DnsAddresses,UptimeHours,LowestAssessedFreeGiB,LowestAssessedFreePercent,MedianAbsoluteOffsetSeconds,RecentEventRows,RecentEventsTruncated,ProcessingSeconds,Observation,CollectionErrors,Findings,Replication,Connectivity,DNS,HostMetrics,Disks,StoragePaths,TimeSummary,Services,EventLogCoverage,NativeDiagnostics'
         Timings='Dataset,Scope,Status,Rows,DurationSeconds'
         Coverage='Dataset,Scope,Status,Rows,StartedUtc,EndedUtc,DurationSeconds'
         CollectionErrors='Dataset,Scope,ErrorType,Message'
@@ -345,6 +345,7 @@ function Invoke-AdAssessment {
             } -Skip:$Options.SkipPrivilegedMembers
         }
         foreach($dcRow in @($report.Datasets.DomainControllers|Where-Object{$_.Domain -eq $dnsDomain})){
+            $dcWatch=[Diagnostics.Stopwatch]::StartNew()
             $dcName=[string]$dcRow.HostName
             Invoke-AdCollection $report 'Replication' $dcName {
                 foreach($p in (Invoke-AdQuery 'Get-ADReplicationPartnerMetadata' @{Target=$dcName;Scope='Server';Partition='*';PartnerType='Inbound'})){
@@ -373,6 +374,7 @@ function Invoke-AdAssessment {
                 }
             }else{Invoke-AdCollection $report 'NativeDiagnostics' $dcName {} -Skip}
             Invoke-AdOperationalCollections $report $Options $dnsDomain $dcName
+            Add-AdRows $report 'Timings' @([pscustomobject]@{Dataset='DCProcessing';Scope=$dcName;Status='Completed';Rows=1;DurationSeconds=$dcWatch.Elapsed.TotalSeconds})
         }
         $counts=@{};foreach($kind in @('Computers','Users','Groups')){
             $coverage=@($report.Datasets.Coverage|Where-Object{$_.Dataset -eq $kind -and $_.Scope -eq $dnsDomain})
@@ -568,7 +570,9 @@ function Invoke-AdOperationalCollections {
         }
         foreach($row in @($Report.Datasets.DNS|Where-Object{$_.DC -eq $DC -and $_.Status -eq 'QueryError'})){Add-AdOperationalError $Report DNS $DC $row.Error}
         foreach($row in @($Report.Datasets.Connectivity|Where-Object{$_.DC -eq $DC -and $_.Status -eq 'Error'})){Add-AdOperationalError $Report Connectivity $DC $row.Error}
+        $hostWatch=[Diagnostics.Stopwatch]::StartNew()
         try{$bundle=Get-AdHostBundle $Domain $DC $Options.TimeoutSeconds}catch{$bundle=[pscustomobject]@{HostRows=@();DiskRows=@();Paths=@();Errors=@([pscustomobject]@{Component='HostMetrics';Message=$_.Exception.Message},[pscustomobject]@{Component='Disks';Message=$_.Exception.Message},[pscustomobject]@{Component='StoragePaths';Message=$_.Exception.Message})}}
+        Add-AdRows $Report 'Timings' @([pscustomobject]@{Dataset='HostBundle';Scope=$DC;Status=if($bundle.Errors.Count){'Incomplete'}else{'Collected'};Rows=(@($bundle.HostRows).Count+@($bundle.DiskRows).Count+@($bundle.Paths).Count);DurationSeconds=$hostWatch.Elapsed.TotalSeconds})
         foreach($pair in @(@('HostMetrics','HostRows'),@('Disks','DiskRows'),@('StoragePaths','Paths'))){
             $dataset=$pair[0];$property=$pair[1]
             Invoke-AdCollection $Report $dataset $scope { $problem=@($bundle.Errors|Where-Object{$_.Component -eq $dataset});if($problem.Count){throw $problem[0].Message};$bundle.$property }
@@ -615,7 +619,8 @@ function Complete-AdOperationalFindings {
         $coverage=@($Report.Datasets.Coverage|Where-Object{$_.Scope -eq $dc.HostName -or $_.Scope.StartsWith($dc.HostName+' / ')})
         $errors=@($Report.Datasets.CollectionErrors|Where-Object{$_.Scope -eq $dc.HostName -or $_.Scope.StartsWith($dc.HostName+' / ')})
         $findings=@($Report.Datasets.Findings|Where-Object{$_.Target -eq $dc.HostName})
-        $summary=[ordered]@{Domain=$dc.Domain;DC=$dc.HostName;Site=$dc.Site;Observation=if($errors.Count){'Incomplete'}elseif(@($findings|Where-Object{$_.Severity -in @('High','Medium')}).Count){'ReviewRequired'}else{'CollectedEvidenceOnly'};CollectionErrors=$errors.Count;Findings=$findings.Count}
+        $hostRows=@($Report.Datasets.HostMetrics|Where-Object{$_.DC -eq $dc.HostName});$diskRows=@($Report.Datasets.Disks|Where-Object{$_.DC -eq $dc.HostName -and $_.AssessmentScope -eq 'VisibleOrRoleMapped' -and $_.Observation -eq 'Observed'});$timeRows=@($Report.Datasets.TimeSummary|Where-Object{$_.DC -eq $dc.HostName});$eventRows=@($Report.Datasets.EventLogCoverage|Where-Object{$_.DC -eq $dc.HostName});$duration=@($Report.Datasets.Timings|Where-Object{$_.Dataset -eq 'DCProcessing' -and $_.Scope -eq $dc.HostName})
+        $summary=[ordered]@{Domain=$dc.Domain;DC=$dc.HostName;Site=$dc.Site;DnsAddresses=(@($dns|Where-Object{$_.Address}|ForEach-Object{$_.Address}|Sort-Object -Unique)-join '; ');UptimeHours=if($hostRows.Count){$hostRows[0].UptimeHours}else{$null};LowestAssessedFreeGiB=if($diskRows.Count){($diskRows.FreeGiB|Measure-Object -Minimum).Minimum}else{$null};LowestAssessedFreePercent=if($diskRows.Count){($diskRows.FreePercent|Measure-Object -Minimum).Minimum}else{$null};MedianAbsoluteOffsetSeconds=if($timeRows.Count -and $timeRows[0].Status -eq 'Measured'){$timeRows[0].MedianAbsoluteOffsetSeconds}else{$null};RecentEventRows=if($eventRows.Count){($eventRows.Exported|Measure-Object -Sum).Sum}else{$null};RecentEventsTruncated=if($eventRows.Count){@($eventRows|Where-Object{$_.Truncated}).Count -gt 0}else{$null};ProcessingSeconds=if($duration.Count){$duration[0].DurationSeconds}else{$null};Observation=if($errors.Count){'Incomplete'}elseif(@($findings|Where-Object{$_.Severity -in @('High','Medium')}).Count){'ReviewRequired'}else{'CollectedEvidenceOnly'};CollectionErrors=$errors.Count;Findings=$findings.Count}
         foreach($name in @('Replication','Connectivity','DNS','HostMetrics','Disks','StoragePaths','TimeSummary','Services','EventLogCoverage','NativeDiagnostics')){
             $items=@($coverage|Where-Object{$_.Dataset -eq $name});$sectionErrors=@($errors|Where-Object{$_.Dataset -eq $name -or ($name -eq 'TimeSummary' -and $_.Dataset -eq 'TimeConfiguration') -or ($name -eq 'EventLogCoverage' -and $_.Dataset -eq 'Events')});$summary[$name]=if($sectionErrors.Count){'Incomplete'}elseif(-not $items.Count){'Unknown'}elseif(@($items|Where-Object{$_.Status -eq 'Failed'}).Count){'Failed'}elseif(@($items|Where-Object{$_.Status -eq 'Collected'}).Count){'Collected'}else{'NotRequested'}
         }

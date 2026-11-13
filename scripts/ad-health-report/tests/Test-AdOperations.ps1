@@ -109,6 +109,8 @@ try{
             Assert ($r.Datasets.Connectivity[0].Status -eq 'NoReply' -and @($r.Datasets.Disks).Count -eq 3) 'ICMP failure never gates disks, time or diagnostics'
         }
         if($scenario -eq 'full'){
+            Assert ($r.Datasets.DCSummary[0].UptimeHours -gt 1 -and $r.Datasets.DCSummary[0].MedianAbsoluteOffsetSeconds -eq 3.5) 'dashboard contains actual uptime and time numbers'
+            Assert ($r.Datasets.DCSummary[0].ProcessingSeconds -gt 0 -and @($r.Datasets.Timings|Where-Object{$_.Dataset -eq 'HostBundle'}).Count -eq 1) 'real DC and host bundle durations recorded'
             Assert ($r.Status -eq 'CompletedWithFindings' -and $result.ExitCode -eq 2) 'full review status'
             Assert (@($r.Datasets.Findings|Where-Object{$_.RuleId -eq 'DC-DISK-SPACE'}).Count -eq 1) 'low mapped-volume capacity flagged; hidden volume not flagged'
             Assert (@($r.Datasets.Findings|Where-Object{$_.RuleId -eq 'DC-TIME-OFFSET'}).Count -eq 1) 'negative time offset finding'
