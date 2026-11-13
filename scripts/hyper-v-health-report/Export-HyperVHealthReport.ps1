@@ -456,7 +456,7 @@ function Invoke-HvWorker {
             param($x);$r=Convert-HvwRow $x 'Name,Id,ParentSnapshotId,ParentSnapshotName,SnapshotType' $vm;$time=Get-HvwField $x CreationTime;$r | Add-Member NoteProperty CreationTimeUtc (Convert-HvwDate $time);$r | Add-Member NoteProperty AgeDays $(if($null -ne $time){[Math]::Round(([datetime]::Now-[datetime]$time).TotalDays,2)}else{$null});$r
         } -Command Get-VMSnapshot
         $replicaSkip=$null;if([string](Get-HvwField $vm ReplicationState) -eq 'Disabled'){$replicaSkip='NotEnabled'}
-        Invoke-HvwProbe Replication $scope {Get-VMReplication -VM $vm -ErrorAction Stop} {param($x);$r=Convert-HvwRow $x 'State,Health,Mode,RelationshipType,PrimaryServer,ReplicaServer,ReplicaPort,AuthenticationType,FrequencySec,RecoveryHistory,AutoResynchronizeEnabled,ResynchronizeStartTime,ResynchronizeEndTime' $vm;$r | Add-Member NoteProperty LastReplicationTimeUtc (Convert-HvwDate (Get-HvwField $x LastReplicationTime));$r} -Command Get-VMReplication -Skip $replicaSkip
+        Invoke-HvwProbe Replication $scope {Get-VMReplication -VM $vm -ErrorAction Stop} {param($x);$r=Convert-HvwRow $x 'State,Health,Mode,RelationshipType=RelationshipType|Relationship,PrimaryServer,ReplicaServer,ReplicaPort,AuthenticationType=AuthenticationType|AuthType,FrequencySec=FrequencySec|ReplicationFrequencySec,RecoveryHistory,AutoResynchronizeEnabled,ResynchronizeStartTime,ResynchronizeEndTime' $vm;$r | Add-Member NoteProperty LastReplicationTimeUtc (Convert-HvwDate (Get-HvwField $x LastReplicationTime));$r} -Command Get-VMReplication -Skip $replicaSkip
         Invoke-HvwProbe ReplicationStats $scope {Measure-VMReplication -VM $vm -ErrorAction Stop} {param($x);Convert-HvwRow $x 'ReplicationHealth,ReplicationState,LastReplicationTime,LastApplyTime,AverageReplicationLatency,AverageReplicationSize,PendingReplicationSize,MissedReplicationCount,SuccessfulReplicationCount,MonitoringStartTime,MonitoringInterval' $vm} -Command Measure-VMReplication -Skip $replicaSkip
         $firmwareSkip=$null;if((Get-HvwField $vm Generation) -eq 1){$firmwareSkip='NotApplicable'}
         Invoke-HvwProbe VMFirmware $scope {Get-VMFirmware -VM $vm -ErrorAction Stop} {param($x);Convert-HvwRow $x 'SecureBoot,SecureBootTemplate,PreferredNetworkBootProtocol,ConsoleMode' $vm} -Command Get-VMFirmware -Skip $firmwareSkip
@@ -733,11 +733,11 @@ function Invoke-HvMain {
         }else{
             foreach($key in @('Cluster','ClusterNodes','ClusterGroups','ClusterResources','ClusterVolumes','ClusterNetworks','ClusterQuorum')){Add-HvRows $report Coverage @([pscustomobject]@{Host='Collector';Dataset=$key;Scope='Cluster discovery';Status='NotRequested';Rows=0;Detail='Use -ClusterNode to discover and assess a cluster.'})}
         }
+        $targets=@($targets | Sort-Object -Unique)
         if($targets.Count -gt $Arguments.MaxHosts){
             Add-HvPacket $report ([pscustomobject]@{Dataset='VMs';Host='Collector';Scope='Host selection';Status='Truncated';Rows=@();Detail="MaxHosts=$($Arguments.MaxHosts); additional hosts were not queried."})
             $targets=@($targets | Select-Object -First $Arguments.MaxHosts)
         }
-        $targets=@($targets | Sort-Object -Unique)
         foreach($target in $targets){Assert-HvTarget $target}
         $report.Parameters['RequestedTargets']=$targets -join '; '
         $index=0

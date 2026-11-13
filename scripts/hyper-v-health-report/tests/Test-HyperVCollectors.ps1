@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param()
 Set-StrictMode -Version 2.0
@@ -100,6 +100,7 @@ Assert-True ($report.Datasets.Checkpoints[0].AgeDays -ge 10) 'Checkpoint age'
 Assert-True ($report.Datasets.VMNetworkAdapters[0].IPAddresses -eq '192.0.2.20; 2001:db8::20') 'Multi-value normalization'
 Assert-True ($report.Datasets.AdapterOffloads.Count -eq 3) 'Offload families'
 Assert-True ($report.Datasets.VMVlans[0].AccessVlanId -eq 100) 'VLAN read'
+Assert-True ($report.Datasets.Replication[0].AuthenticationType -eq 'Kerberos') 'Replica property aliases normalized'
 Assert-True ($report.Datasets.BpaResults.Count -eq 1) 'Existing BPA results only'
 Assert-True ($report.Datasets.EventCoverage.Count -eq 6 -and $report.Datasets.Events.Count -eq 6) 'Explicit event logs'
 $cluster=Invoke-WorkerScenario Normal Discover
@@ -128,8 +129,6 @@ function Invoke-BoundScenario {
     function Start-Job {[CmdletBinding()]param($ScriptBlock,$ArgumentList);$tracking.Started++;$tracking.Options=$ArgumentList;$fake}
     function New-PSSessionOption {[CmdletBinding()]param($OpenTimeout,$OperationTimeout);[pscustomobject]@{OpenTimeout=$OpenTimeout}}
     function Invoke-Command {[CmdletBinding()]param($ComputerName,$ScriptBlock,$ArgumentList,[switch]$AsJob,$SessionOption,$Credential);if(-not $AsJob){throw 'Expected owned job'};$tracking.Started++;$tracking.Options=$ArgumentList;$fake}
-    function Wait-Job {[CmdletBinding()]param($Job,$Timeout);if($Job -ne $fake){throw 'Wrong job'};if(-not $Timeout){$fake}}
-    # Override Wait-Job again with a distinct parameter name from the enclosing flag.
     $timeoutFlag=$Timeout
     function Wait-Job {[CmdletBinding()]param($Job,$Timeout);if($Job -ne $fake){throw 'Wrong job'};if(-not $timeoutFlag){$fake}}
     function Receive-Job {[CmdletBinding()]param($Job);$tracking.Received++;[pscustomobject]@{PacketType='HvProbe';Dataset='VMs';Status='Empty';Rows=@()}}
@@ -146,4 +145,20 @@ foreach($remote in @($false,$true)){foreach($timeout in @($false,$true)){
     Assert-True ($bound.Result.Packets.Count -eq 1) 'Completed packets preserved after timeout'
     Assert-True ($bound.Tracking.Stopped -eq [int]$timeout) 'Only timed-out job stopped'
 }}
-Write-Output "PASS: $script:checks collector/transport checks; 13 host scenarios + cluster + 4 job paths, all synthetic. Runtime: $($PSVersionTable.PSVersion)"
+function Test-RealOwnedJob {
+    # Uses a real local PowerShell child process, with a fixed synthetic worker.
+    # No Hyper-V/Windows provider is queried by this process.
+    function Invoke-HvWorker {
+        param($Options,$Mode)
+        [pscustomobject]@{PacketType='HvProbe';Host='LOCAL-SYNTHETIC';Dataset='VMs';Scope='Local job test';Status='Empty';Rows=@();Detail='Synthetic child process'}
+    }
+    $unrelated=$null
+    try{
+        $unrelated=Start-Job -ScriptBlock {42}
+        $result=Invoke-HvBoundedWorker localhost @{Marker='test'} Collect 30 $null
+        Assert-True ($null -eq $result.Error -and -not $result.TimedOut -and $result.Packets.Count -eq 1) 'Real local job serializes and returns a synthetic packet'
+        Assert-True ($null -ne (Get-Job -Id $unrelated.Id -ErrorAction Stop)) 'Unrelated job remains available'
+    }finally{if($null -ne $unrelated){Stop-Job -Job $unrelated -ErrorAction SilentlyContinue;Remove-Job -Job $unrelated -Force -ErrorAction SilentlyContinue}}
+}
+Test-RealOwnedJob
+Write-Output "PASS: $script:checks collector/transport checks; 13 host scenarios + cluster + 4 mock job paths + real local synthetic job. Runtime: $($PSVersionTable.PSVersion)"

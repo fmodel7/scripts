@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param()
 Set-StrictMode -Version 2.0
@@ -95,5 +95,32 @@ try{
     $badParameters=@(& $engine -NoProfile -File $source -CreateExample -VolumeCriticalPercent 20 -VolumeWarningPercent 10 -OutputPath $work 2>&1)
     $ErrorActionPreference='Stop'
     Assert-True ($LASTEXITCODE -ne 0) 'Invalid relative thresholds fail'
+    # Review the remaining rule paths and important non-findings together.
+    $rules=New-HvReport en-US;$rules.Parameters=$r.Parameters
+    Add-HvRows $rules Hosts @([pscustomobject]@{Host='LAB';LogicalProcessors=1;MemoryFreePercent=80})
+    Add-HvRows $rules VMs @([pscustomobject]@{Host='LAB';VMId='live';VMName='LIVE';State='Running';ProcessorCount=16;MemoryAssigned=8GB;MemoryStartup=4GB;MemoryStatus='Low'},[pscustomobject]@{Host='LAB';VMId='paused';VMName='PAUSED';State='Paused'})
+    Add-HvRows $rules Volumes @([pscustomobject]@{Host='LAB';Path='C:\';SizeBytes=1TB;FreeBytes=100GB;DriveType='Fixed';HealthStatus='Warning';FreePercent=10})
+    Add-HvRows $rules VMNetworkAdapters @([pscustomobject]@{Host='LAB';VMId='live';VMName='LIVE';Name='Disconnected';MacAddress='00155D010001'},[pscustomobject]@{Host='OTHER';VMId='other';VMName='ISOLATED';MacAddress='00:15:5D:01:00:01'})
+    Add-HvRows $rules VHDChains @([pscustomobject]@{Host='LAB';VMId='live';VMName='LIVE';Path='C:\denied.vhdx';ReadStatus='Error';Error='Denied'})
+    Add-HvRows $rules Services @([pscustomobject]@{Host='LAB';Name='vmms';State='Stopped'},[pscustomobject]@{Host='LAB';Name='VSS';State='Stopped'})
+    Add-HvRows $rules RebootSignals @([pscustomobject]@{Host='LAB';Signal='CBS';Present=$true})
+    Add-HvRows $rules ClusterNodes @([pscustomobject]@{Host='LAB';Name='OTHER';State='Down'})
+    Add-HvRows $rules ClusterResources @([pscustomobject]@{Host='LAB';Name='FAILED';State='Failed'},[pscustomobject]@{Host='LAB';Name='OFFLINE';State='Offline'})
+    Add-HvRows $rules ClusterVolumes @([pscustomobject]@{Host='LAB';Path='C:\ClusterStorage\Volume1';RedirectedAccess=$true;FaultState='NoFaults'})
+    Add-HvRows $rules SmbSettings @([pscustomobject]@{Host='LAB';Component='Server';EnableSMB1Protocol=$true})
+    Add-HvPacket $rules ([pscustomobject]@{Dataset='VMs';Host='LAB';Scope='Inventory';Status='Collected';Rows=@()})
+    Invoke-HvAssessment $rules
+    foreach($rule in @('HV001','HV002','HV005','HV008','HV010','HV011','HV012','HV014','HV015','HV017','HV018','HV019','HV020','HV023')){Assert-True ($rule -in @($rules.Datasets.Findings | ForEach-Object {$_.RuleId})) "Contextual rule path $rule"}
+    Assert-True (@($rules.Datasets.Findings | Where-Object {$_.RuleId -eq 'HV014'}).Count -eq 1) 'Stopped demand-start VSS does not trigger vmms rule'
+    Assert-True (@($rules.Datasets.Findings | Where-Object {$_.Target -eq 'OFFLINE'}).Count -eq 0) 'Offline cluster resource is not automatically failed'
+    $beforeRules=$rules.Datasets.Findings.Count;Invoke-HvAssessment $rules
+    Assert-True ($rules.Datasets.Findings.Count -eq $beforeRules) 'Reassessment is idempotent'
+    $good=New-HvReport en-US;$good.Parameters=$r.Parameters
+    Add-HvRows $good VMs @([pscustomobject]@{Host='LAB';VMId='off';VMName='OFF';State='Off'})
+    Add-HvRows $good VMNetworkAdapters @([pscustomobject]@{Host='LAB';VMId='off';VMName='OFF';Name='Intentionally disconnected';MacAddress='000000000000'})
+    Add-HvRows $good Checkpoints @([pscustomobject]@{Host='LAB';VMId='off';VMName='OFF';AgeDays=7})
+    Add-HvRows $good IntegrationServices @([pscustomobject]@{Host='LAB';VMId='off';VMName='OFF';Enabled=$false;PrimaryOperationalStatus='NoContact'})
+    Invoke-HvAssessment $good
+    Assert-True ($good.Datasets.Findings.Count -eq 0) 'Off VM, threshold equality, zero MAC and unavailable heartbeat avoid false alerts'
     Write-Output "PASS: $script:checks checks; serialization, assessment, files, security and CLI. Runtime: $($PSVersionTable.PSVersion)"
 }finally{Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue}
