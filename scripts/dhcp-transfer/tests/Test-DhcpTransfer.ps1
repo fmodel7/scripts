@@ -23,7 +23,7 @@ foreach($name in @('Export-DHCP.ps1','Import-DHCP.ps1')) {
 Assert ($definitions[0] -ceq $definitions[1]) 'identical embedded worker engines'
 foreach($name in @('sample.xml','DHCP-Export-2026_01.xml')){Test-DhcpFileName $name;Assert $true 'valid XML leaf name'}
 foreach($name in @('../x.xml','C:\x.xml','x.txt','CON.xml','lpt1.xml','x y.xml',('a'*151+'.xml'),'x.xml:stream')){Assert-Throws {Test-DhcpFileName $name} "reject filename $name"}
-foreach($path in @('relative.xml','\\server\share\file.xml','C:relative','C:\x*.xml','C:\file.xml:stream')){Assert-Throws {Resolve-DhcpPath $path} "reject path $path"}
+foreach($path in @('relative.xml','\\server\share\file.xml','C:relative','C:\x*.xml','C:\dir[1]\file.xml','C:\file.xml:stream')){Assert-Throws {Resolve-DhcpPath $path} "reject path $path"}
 if([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT){
     Assert ((Resolve-DhcpPath ($env:SystemDrive+'\')) -eq ($env:SystemDrive+'\')) 'Windows local drive root accepted'
     Assert ((Resolve-DhcpPath ([IO.Path]::GetTempPath())).TrimEnd('\') -ieq ([IO.Path]::GetFullPath([IO.Path]::GetTempPath())).TrimEnd('\')) 'Windows existing temp directory accepted'

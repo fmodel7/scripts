@@ -60,7 +60,7 @@ function Invoke-DhcpWorker {
 
     function Resolve-DhcpPath {
         param([string]$Path)
-        if ($Path -notmatch '^[a-zA-Z]:\\' -or $Path -match '[\x00-\x1F*?"<>|]' -or $Path.Substring(2).Contains(':')) {
+        if ($Path -notmatch '^[a-zA-Z]:\\' -or $Path -match '[\x00-\x1F*?"<>|\[\]]' -or $Path.Substring(2).Contains(':')) {
             throw 'Use caminho absoluto local no servidor (C:\...) / Use an absolute local server path.'
         }
         $full=[IO.Path]::GetFullPath($Path)
