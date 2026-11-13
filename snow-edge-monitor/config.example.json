@@ -1,0 +1,30 @@
+{
+  "instance_url": "https://example.service-now.com",
+  "assignment_group": "00000000000000000000000000000000",
+  "eligible_states": [
+    "1",
+    "2"
+  ],
+  "poll_seconds": 5,
+  "refresh_seconds": 60,
+  "failure_seconds": 60,
+  "confirmation_reads": 2,
+  "page_limit": 1000,
+  "table_selector": "table[data-list_id=\"incident\"]",
+  "query_selector": "input[name=\"sysparm_query\"]",
+  "first_selector": "input[id=\"incident.first_row\"]",
+  "total_selector": "[id=\"incident.total_rows\"]",
+  "number_columns": [
+    "number"
+  ],
+  "state_columns": [
+    "state",
+    "incident_state"
+  ],
+  "group_columns": [
+    "assignment_group",
+    "assignment group"
+  ],
+  "siren_enabled": true,
+  "popup_enabled": true
+}

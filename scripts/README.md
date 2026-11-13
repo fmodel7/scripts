@@ -5,6 +5,7 @@ Cada ferramenta tem pasta e README próprios. Leia os requisitos, permissões e 
 | Script | O que faz | Plataforma | Versão | Documentação |
 |---|---|---|---|---|
 | Configure NTP PDC | Consulta e configura W32Time no PDC do domínio raiz, com aplicação explícita, backup e relatórios | Windows 64 bits; Apply em Server 2016+ | 1.0.0 | [PT-BR](configure-ntp-pdc/README.md) · [EN-US](configure-ntp-pdc/README.en-US.md) |
+| SNOW Edge Monitor | Monitora lista Classic do ServiceNow via Edge, com confirmação de estados, sirene e pop-up; validação Windows pendente | Windows 10/11; Python 3.11+ | 1.0.0 (fontes) | [EN-US](../snow-edge-monitor/README.md) · [PT-BR](../snow-edge-monitor/docs/GUIA_DO_PROJETO.pt-BR.md) |
 
 ## Para adicionar outra ferramenta
 
@@ -15,4 +16,5 @@ Cada ferramenta tem pasta e README próprios. Leia os requisitos, permissões e 
 5. Adicionar uma linha neste catálogo com link para o README da ferramenta.
 
 Não listar os modelos como ferramentas operacionais. [Passo a passo completo](../docs/COMO-ADICIONAR-UM-SCRIPT.md) · [Página inicial](../README.md).
+
 
