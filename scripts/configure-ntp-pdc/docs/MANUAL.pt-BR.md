@@ -90,7 +90,7 @@ Após revisar o alvo e a janela de alteração, execute apenas o script correspo
 .\Configure-Time-DOMHIER.ps1
 ```
 
-Sem parâmetros significa aplicação depois da confirmação, diferentemente da versão 1.0.0, que consultava por padrão. Não existe -Apply nem -NtpServers nesta versão. Leia a confirmação e responda Yes somente no alvo e janela corretos. Recusar ou usar WhatIf retorna NotApplied e código 0, indicando nenhuma aplicação, não saúde do horário.
+Sem parâmetros significa aplicação depois da confirmação. As opções de execução são as apresentadas neste manual. Leia a confirmação e responda Yes somente no alvo e janela corretos. Recusar ou usar WhatIf retorna NotApplied e código 0, indicando nenhuma aplicação, não saúde do horário.
 
 Para automação previamente autorizada, -Confirm:$false dispensa somente a pergunta. Não contorna validações, GPO ou backup. Não é o caminho inicial para alunos. O script é executável local e pode ajustar o relógio por meio do W32Time; não é um agendador ou tarefa recorrente.
 
@@ -197,11 +197,11 @@ Ressync sem dados ou fonte inesperada: examine DNS, caminho UDP 123, fontes apro
 
 Falha parcial: preserve pasta, backup e journal, consulte o estado atual e coordene recuperação autorizada. O backup contém toda a ramificação e pode incluir valores adicionais de provedores. Não importe cegamente. Uma importação aprovada por reg.exe import requer análise de GPO/ACL/valores, aplicação ao serviço e nova verificação; não restaura automaticamente estado do serviço, FSMO, GPO ou horário anterior. Não há comando de rollback universal seguro. Antes de repetir, determine qual etapa foi concluída e se a função PDC mudou.
 
-## 18. Migração, testes e aceite
+## 18. Testes e aceite
 
-2.0.0 substitui a ferramenta modular 1.0.0 na mesma pasta. Não reutilize instruções antigas com -Apply, -NtpServers, -OutputPath, -ProbePeers ou src/NtpPdc.Core.ps1. No pacote novo basta cada PS1. Relatórios passam a ter os estados desta edição; automações que interpretavam AppliedVerified precisam ser revistas. A consulta sem aplicação agora é WhatIf. O conteúdo antigo permanece no histórico do Git, com link no CHANGELOG.
+O pacote contém dois scripts operacionais independentes e sua documentação. Use Configure-NTP-PDC.ps1 no PDC raiz e Configure-Time-DOMHIER.ps1 nos demais servidores. A consulta sem aplicação é feita com -WhatIf. Cada PS1 contém todo o mecanismo necessário.
 
-Os testes verificam parser PS5.1+, requisitos, mecanismos iguais, alvos, GPO, serviço, normalização/flags de peers, endereços proibidos, corrida de estado, backup obrigatório, confirmação, journal, HTML, verificação local, falhas de comando e timeout real de processo filho. As 19 simulações não substituem um laboratório AD real. Veja TESTING.pt-BR.md e EVIDENCE.json para resultados e limites exatos; não reutilize os números da versão 1.0.0.
+Os testes verificam parser PS5.1+, requisitos, mecanismos iguais, alvos, GPO, serviço, normalização/flags de peers, endereços proibidos, corrida de estado, backup obrigatório, confirmação, journal, HTML, verificação local, falhas de comando e timeout real de processo filho. As 19 simulações não substituem um laboratório AD real. Veja TESTING.pt-BR.md e EVIDENCE.json para resultados e limites exatos.
 
 Aceite autorizado: identificar papéis atuais; salvar configuração/logs e ponto de recuperação adequado; revisar peers e GPO; testar WhatIf no PDC raiz e num membro; confirmar bloqueio cruzado; aplicar primeiro no PDC em janela aprovada; verificar dados atuais e eventos; aplicar DOMHIER num membro de laboratório; verificar NT5DS e fonte; observar estabilidade antes de expandir por GPO. Repita o planejamento após transferência FSMO. Nenhum teste de desenvolvimento configurou um PDC real.
 

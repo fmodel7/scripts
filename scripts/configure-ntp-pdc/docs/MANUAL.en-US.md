@@ -90,7 +90,7 @@ After reviewing the target and approved change window, run only the correspondin
 .\Configure-Time-DOMHIER.ps1
 ```
 
-No parameters means application after confirmation, unlike version 1.0.0, which audited by default. This edition has no -Apply or -NtpServers parameter. Read the confirmation before answering Yes. Refusal or WhatIf returns NotApplied and exit code 0, meaning no application, not healthy time.
+No parameters means application after confirmation. Available execution options are those described in this manual. Read the confirmation before answering Yes. Refusal or WhatIf returns NotApplied and exit code 0, meaning no application, not healthy time.
 
 For previously approved automation, -Confirm:$false suppresses only the PowerShell question. It bypasses no target, policy or backup check and is not the beginner path. This is a local configuration tool, not a scheduled task. W32Time may adjust the system clock after configuration.
 
@@ -197,11 +197,11 @@ Resync has no time data or source is unexpected: inspect DNS, UDP 123 path, appr
 
 Partial failure: retain the run folder, backup and journal, inspect the current state and coordinate approved recovery. The backup exports the entire branch and can contain additional provider values. Do not blindly import it. An approved reg.exe import requires review of policy/ACLs/values, service activation and revalidation; it cannot automatically restore service state, FSMO, GPO or prior clock time. There is no universally safe rollback command. Before repeating, identify completed stages and whether PDC ownership changed.
 
-## 18. Migration, testing and acceptance
+## 18. Testing and acceptance
 
-2.0.0 replaces the modular 1.0.0 tool in the same folder. Old -Apply, -NtpServers, -OutputPath, -ProbePeers and src/NtpPdc.Core.ps1 instructions no longer apply. Each new PS1 is sufficient on its own. Report states changed; automation interpreting AppliedVerified must be updated. WhatIf is now the non-applying path. The previous content remains in Git history and is linked in CHANGELOG.
+The package contains two independent operational scripts and their documentation. Use Configure-NTP-PDC.ps1 on the forest-root PDC and Configure-Time-DOMHIER.ps1 on other domain servers. Use -WhatIf for non-applying preflight. Each PS1 embeds its complete implementation.
 
-Tests cover parsing, requirements, identical embedded engines, roles, policy, service, peer normalization/flags, rejected addresses, state races, mandatory backup, confirmation, journal, HTML, local verification, native errors and actual child-process timeout. Nineteen simulations are not a real AD lab. See TESTING.en-US.md and EVIDENCE.json for exact results and limits; version 1.0.0 counts are not reused.
+Tests cover parsing, requirements, identical embedded engines, roles, policy, service, peer normalization/flags, rejected addresses, state races, mandatory backup, confirmation, journal, HTML, local verification, native errors and actual child-process timeout. Nineteen simulations are not a real AD lab. See TESTING.en-US.md and EVIDENCE.json for exact results and limits.
 
 Authorized acceptance: identify current roles; preserve settings/logs and a suitable recovery point; review peers/GPO; run WhatIf on the root PDC and a member; confirm cross-target blocking; apply to the lab root PDC during an approved window; inspect current evidence/events; apply DOMHIER to a lab member; check NT5DS and source; observe stability before wider GPO deployment. Replan after FSMO transfer. No development test configured a real PDC.
 

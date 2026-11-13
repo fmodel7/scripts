@@ -71,6 +71,6 @@ No PowerShell 7, troque powershell.exe por pwsh. Pode usar estação comum/VSCod
 - [Validação e aceite](docs/TESTING.pt-BR.md) · [Funções internas](docs/INTERNALS.pt-BR.md).
 - [Histórico e migração](CHANGELOG.md) · [Evidências](docs/EVIDENCE.json).
 
-**Mudança de comportamento:** substitui 1.0.0 na mesma pasta. Sem parâmetros agora aplica após confirmação; não existe -Apply. Use -WhatIf para não aplicar. Os antigos arquivos auxiliares não são necessários.
+**Execução:** cada PS1 funciona sozinho. Sem parâmetros, aplica após confirmação; use -WhatIf para simular. Distribua somente os arquivos deste pacote.
 
 [CI](https://github.com/fmodel7/scripts/actions/runs/43437702532): 151 assertions / 19 simulated workflows per environment: Windows PowerShell 5.1, PowerShell 7 Windows and Linux mocks. No real PDC or clock was changed.

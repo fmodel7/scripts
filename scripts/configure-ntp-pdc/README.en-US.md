@@ -71,6 +71,6 @@ For PowerShell 7, replace powershell.exe with pwsh. A regular workstation/VSCode
 - [Validation and acceptance](docs/TESTING.en-US.md) · [Internal functions](docs/INTERNALS.en-US.md).
 - [History and migration](CHANGELOG.md) · [Evidence](docs/EVIDENCE.json).
 
-**Behavior change:** replaces 1.0.0 in the same folder. No parameters now means application after confirmation; -Apply no longer exists. Use -WhatIf for non-applying preflight. Old helper files are unnecessary.
+**Execution:** each PS1 works independently. Without parameters, it applies after confirmation; use -WhatIf to simulate. Distribute only files from this package.
 
 [CI](https://github.com/fmodel7/scripts/actions/runs/43437702532): 151 assertions / 19 simulated workflows per environment: Windows PowerShell 5.1, PowerShell 7 Windows and Linux mocks. No real PDC or clock was changed.

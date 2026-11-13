@@ -3,7 +3,7 @@
 ## 2026-11-13 — Windows Time 2.0.0
 
 - Substitui a ferramenta NTP modular por PS1 independentes de PDC e DOMHIER, com fontes embutidas, confirmação, backup e HTML.
-- Reescreve documentação PT-BR/EN-US, PDFs e pacote; a versão 1.0.0 permanece no histórico. Sem parâmetros passa a aplicar após confirmação: use -WhatIf para simular.
+- Documentação PT-BR/EN-US, PDFs e pacote apresentam somente os scripts atuais de PDC e DOMHIER. Sem parâmetros passa a aplicar após confirmação: use -WhatIf para simular.
 - Offline CI: 151 verificações e 19 fluxos por ambiente, em Windows PowerShell 5.1 e PowerShell 7 Windows/Linux. Sem teste de aplicação em PDC real.
 
 ## SNOW Edge Monitor 1.0.0 (fontes) — 13/11/2026
@@ -14,12 +14,6 @@
 - 48 testes unitários e 18 testes de navegador com dados/HTML fictícios; a execução operacional no Windows continua pendente.
 - Referência histórica sanitizada; original privado, configuração local e perfil de navegador excluídos da publicação.
 - Workflows exclusivos do projeto e auditoria limitada à sua árvore/histórico, preservando as outras ferramentas.
-
-## Configure NTP PDC 1.0.0 — 23/10/2026
-
-- Primeira ferramenta operacional na biblioteca, em scripts/configure-ntp-pdc.
-- Consulta por padrão, aplicação protegida no PDC raiz, relatórios, testes e manuais PT-BR/EN-US.
-- Não houve aplicação em domínio real durante o desenvolvimento; limites documentados na ferramenta.
 
 ## Estrutura inicial — 23/10/2026
 
