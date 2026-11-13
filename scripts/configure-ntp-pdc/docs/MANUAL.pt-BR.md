@@ -1,312 +1,217 @@
-# Manual técnico e operacional — Configure NTP PDC 1.0.0
+# Manual completo — FMODEL Windows Time 2.0.0
 
-**FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO**  
-F. Model · fmodel@fmodel.com.br · 23/10/2026
+FMODEL - SERVICOS E CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO  
+F. Model · fmodel@fmodel.com.br · Revisão com assistência de Akira (ChatGPT)  
+Edição: 13/11/2026 · [English](MANUAL.en-US.md) · [Início](../README.md)
 
-[Início](../README.md) · [English](MANUAL.en-US.md) · [Revisão do original](REVIEW.pt-BR.md) · [Aceitação](ACCEPTANCE.pt-BR.md)
+## 1. Objetivo e arquitetura
 
-Este manual descreve o código entregue, suas decisões de engenharia e os limites observados. As referências Microsoft ajudam a fundamentar a arquitetura; este projeto não é um produto Microsoft nem recebeu certificação ou endosso da empresa. Não houve configuração de um PDC real durante o desenvolvimento.
+Dois scripts independentes configuram o serviço Windows Time (W32Time). Configure-NTP-PDC.ps1 usa fontes NTP manuais no PDC Emulator do domínio raiz da floresta. Configure-Time-DOMHIER.ps1 usa a hierarquia AD nos demais servidores ingressados no domínio, inclusive DCs e PDCs de domínios filhos. Um PDC de domínio filho não é o PDC da raiz da floresta.
 
-## 1. Objetivo, arquitetura e escopo
+DOMHIER é o argumento de w32tm que seleciona a hierarquia do domínio; Type=NT5DS é o modo correspondente observado no Registro. Não significa que todos os computadores consultarão diretamente o PDC raiz. O AD seleciona fontes conforme funções, domínio e topologia.
 
-O script configura fontes NTP manuais no **PDC Emulator do domínio raiz da floresta AD DS**. PDC de domínio filho não é o mesmo alvo. Fontes aprovadas podem ser appliances internos ou serviços externos; “externo à hierarquia AD” não significa obrigatoriamente “público na Internet”.
+O script do PDC já contém a.st1.ntp.br, c.st1.ntp.br, d.st1.ntp.br e e.st1.ntp.br. São fontes solicitadas pelo autor, herdadas do arquivo original, não uma escolha obrigatória ou certificação Microsoft. A disponibilidade atual, termos de uso, latência, localização, adequação e independência dessas fontes não foram verificados. Para redes fora do Brasil, fontes internas aprovadas ou serviços geograficamente adequados podem ser preferíveis.
 
-A documentação Microsoft distingue o PDC da raiz dos demais membros da hierarquia. A ferramenta implementa esse recorte e não oferece modo de configurar todos os DCs, alterar FSMO, conceder permissões ou modificar políticas. [Referência de arquitetura](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings).
+## 2. Qual arquivo usar
 
-Fluxo implementado:
+- PDC raiz atual: Configure-NTP-PDC.ps1.
+- Outro DC, PDC de domínio filho ou servidor membro: Configure-Time-DOMHIER.ps1.
+- Estação Windows 10/11 ou Linux: apenas os testes offline; os scripts operacionais são exclusivos para Windows Server 2016+.
+- Workgroup, AD inacessível ou função PDC não identificável: a aplicação é bloqueada, sem opção de forçar.
 
-```text
-Validar Windows/elevação -> capturar contexto e estado -> resolver peers pedidos
-    -> Audit: relatórios, sem aplicação
-    -> Apply: validar alvo/política -> ShouldProcess -> lock local
-       -> revalidar -> snapshot + exportação -> persistir relatório
-       -> revalidar novamente -> intenção durável -> alterações
-       -> serviço + resync -> verificar configuração e status -> relatórios
+Cada PS1 contém todo seu mecanismo. Não exige src, módulo ActiveDirectory/RSAT, instalação de módulos, credenciais embutidas ou chave de API. A pasta tests é só para desenvolvimento. A duplicação interna permite distribuir um único PS1; os testes verificam que os mecanismos embutidos são idênticos.
+
+## 3. Requisitos e permissões
+
+Windows Server 2016 ou posterior, processo 64 bits, Windows PowerShell 5.1 ou PowerShell 7, sessão elevada e domínio AD funcional. O serviço W32Time e suas chaves padrão devem existir. O serviço não pode estar desabilitado; o script não muda seu tipo de inicialização.
+
+A execução usa o token atual. Não solicita senha, não concede privilégios e não exige uma função Microsoft 365. Administrador elevado no servidor e permissões de leitura AD, Registro e serviço são necessários. Execute no próprio alvo; não há parâmetro de execução remota ou varredura de servidores.
+
+No PDC, DNS deve resolver todas as fontes. W32Time precisa alcançar as fontes pela rede, normalmente UDP 123; a resolução DNS não testa essa conectividade. Para o cliente W32Time, considere também a porta de origem UDP 123 e as regras de retorno. Regras corporativas, GPO e arquitetura de horário têm precedência sobre um exemplo de laboratório.
+
+## 4. Baixar sem Git
+
+Abra a pasta no GitHub, clique em Windows-Time-v2.0.0.zip e escolha Download raw file. Extraia Tudo. Alternativamente, na página principal fmodel7/scripts, use Code → Download ZIP → Extrair Tudo e abra scripts/configure-ntp-pdc.
+
+Não execute dentro da visualização do ZIP. Um PS1 isolado funciona, mas baixar o pacote também fornece os manuais. Verifique a origem e compare o SHA256 com MANIFEST-SHA256.txt. O manifesto detecta diferenças; não é assinatura digital nem prova independente de autenticidade. Modificar o bloco NTP altera legitimamente o hash.
+
+## 5. Abrir no PowerShell ou VSCode
+
+No Explorador, abra a pasta extraída, clique na barra de endereço, digite powershell e pressione Enter. Para aplicar, a sessão precisa estar elevada: abra PowerShell como Administrador e use Set-Location com o caminho real da pasta. Não repita o nome da pasta se já estiver dentro dela.
+
+```powershell
+Get-Location
+Get-ChildItem
 ```
 
-Não faz varredura automática da floresta, não instala software, não muda fuso horário, não executa Set-Date, não altera firewall, hipervisor, provedores de VM ou limites de correção de fase. Também não registra/desregistra W32Time. Não é monitoramento contínuo ou correção automática após transferência de função PDC.
+No VSCode: abra como Administrador, File → Open Folder → pasta extraída; confie somente no código que revisou e abra Terminal → New Terminal com perfil PowerShell. A extensão Microsoft PowerShell é útil para edição, mas não é requisito para executar. O terminal herda a elevação do VSCode. Não use dot-sourcing e não selecione um trecho para executar: execute o arquivo pelo nome. No PowerShell 5.1, preserve UTF-8 com BOM ao editar os PS1.
 
-## 2. Arquivos, dependências e permissões
+## 6. Testar sem alterar horário
 
-| Arquivo | Uso |
-|---|---|
-| Configure-NTP-PDC.ps1 | Entrada com parâmetros, confirmação e códigos de saída. |
-| src/NtpPdc.Core.ps1 | Validações, processo nativo, backup, aplicação, verificação e relatórios. |
-| tests/Test-Core.ps1 | Parser, normalização, estados, persistência e leituras locais opcionais no Windows. |
-| tests/Test-Workflow.ps1 | 18 fluxos com adaptadores falsos. |
-| tests/Test-EntryPoint.ps1 | Três processos reais de entrada com dependências substituídas. |
-| tests/Mock-Adapters.ps1 | Auxiliar dos testes; não é uma ferramenta de uso operacional. |
-| examples/Report-SYNTHETIC.*.html | Prévia fictícia do relatório, sem domínio real. |
-| docs/EVIDENCE.json | Versão, hashes, ambientes e limites da validação. |
-| MANIFEST-SHA256.txt | Hash dos arquivos distribuídos; não é assinatura digital. |
+Em PowerShell normal, na pasta da ferramenta:
 
-A entrada operacional requer Windows de 64 bits e sessão elevada, inclusive para seus diagnósticos w32tm. Apply exige Windows Server 2016 ou posterior e identificação como DC/PDC raiz. Windows PowerShell 5.1 e PowerShell 7 são cobertos pelos testes; o módulo AD do RSAT não é requerido. A consulta de domínio usa a API .NET System.DirectoryServices, carregada explicitamente no caminho DC.
+```powershell
+powershell.exe -NoProfile -File .\tests\Test-WindowsTime.ps1
+```
 
-Não há credencial ou segredo em parâmetros. As operações usam o token atual e o contexto do computador. Administrador local elevado e acesso funcional ao AD são pré-condições; o script não adiciona usuários a grupos nem contorna ACLs. Não exige uma conta de administrador global Microsoft 365, que é um sistema diferente.
+Ou, com PowerShell 7 instalado:
 
-DNS, AD e W32Time precisam estar operacionais. Se o problema de horário impedir a própria descoberta AD, o script bloqueia a aplicação. Esse caso exige procedimento de recuperação separado com a equipe AD; não existe opção de forçar uma função PDC não comprovada.
+```powershell
+pwsh -NoProfile -File .\tests\Test-WindowsTime.ps1
+```
 
-## 3. Todos os parâmetros
+A suíte analisa a AST e carrega apenas funções; não executa as entradas operacionais. Substitui AD, DNS, Registro, serviço e comandos W32Time por adaptadores sintéticos. Testa também processos PowerShell filhos inofensivos para stdout, falha e timeout real de 30 segundos. Por isso leva mais de 30 segundos. Cria arquivos temporários de relatório/journal e os remove ao terminar. Não exige domínio nem elevação e não altera um PDC ou relógio real.
 
-| Parâmetro | Padrão/faixa | Efeito |
-|---|---|---|
-| NtpServers | Array vazio; 0–10 entradas no binding | Nomes/IPs aprovados, sem flags, URL ou espaços. Apply exige ao menos um. |
-| Apply | false | Habilita o caminho de alteração depois das pré-condições e confirmação. |
-| ReliabilityMode | Automatic; Automatic/Always | AnnounceFlags 10 ou 5, respectivamente. |
-| OutputPath | Vazio -> LocalApplicationData/FMODEL/NtpPdc | Diretório local de relatórios/backup; caminhos relativos seguem a localização PowerShell; não usar compartilhamento UNC ou unidade identificada como rede. |
-| ProbePeers | false | Solicita stripchart de três amostras para cada peer pedido; exige NtpServers. |
-| NativeTimeoutSeconds | 20; 5–120 | Tempo de espera por processo nativo. |
-| VerificationTimeoutSeconds | 120; 10–600 | Janela de polling medida por Stopwatch; não é timeout global. |
-| VerificationIntervalSeconds | 5; 1–30 | Espera entre tentativas de leitura de status. |
-| MaxSyncAgeSeconds | 300; 30–86400 | Idade máxima reconhecida do último bom sincronismo. Não altera esse valor no W32Time. |
-| WhatIf | false; parâmetro comum | Simula Apply após validação; permite consultas e relatórios, não mutações W32Time. |
-| Confirm | Preferências PowerShell; impacto High | Pergunta antes do conjunto de alterações. Confirm:false dispensa só essa pergunta. |
+## 7. Simular no alvo
 
-Os nove parâmetros próprios acima são definidos na entrada; WhatIf/Confirm vêm de SupportsShouldProcess. Parâmetros comuns como Verbose/ErrorAction são da plataforma, não modos adicionais do produto. O corpo usa ErrorAction Stop para as operações verificadas.
+No PDC raiz, na sessão elevada:
 
-## 4. Consulta, planejamento, simulação e aplicação
+```powershell
+.\Configure-NTP-PDC.ps1 -WhatIf
+```
 
-Consulta padrão, em PowerShell elevado na pasta completa:
+Nos outros servidores:
+
+```powershell
+.\Configure-Time-DOMHIER.ps1 -WhatIf
+```
+
+WhatIf faz pré-validação, incluindo consultas CIM/AD/Registro/serviço e DNS no PDC. Não comprova UDP/NTP, permissões futuras de escrita, backup ou reinício. Não cria pasta de execução, relatório ou backup, não muda W32Time e não solicita ressync. Um alvo incorreto continua bloqueado no WhatIf.
+
+## 8. Executar de verdade
+
+Após revisar o alvo e a janela de alteração, execute apenas o script correspondente:
 
 ```powershell
 .\Configure-NTP-PDC.ps1
 ```
 
-Planejar com nomes **reservados para exemplo**, que precisam ser substituídos por fontes reais aprovadas:
-
 ```powershell
-$peers = @('ntp1.example.net', 'ntp2.example.net', 'ntp3.example.net')
-.\Configure-NTP-PDC.ps1 -NtpServers $peers
-.\Configure-NTP-PDC.ps1 -NtpServers $peers -Apply -WhatIf
+.\Configure-Time-DOMHIER.ps1
 ```
 
-O primeiro comando com peers ainda é Audit: resolve os nomes e mostra o plano, sem aplicar. Os nomes example.net não são servidores operacionais. O README também mostra os quatro nomes brasileiros do script original, explicitamente como exemplos não validados e não como padrão recomendado pela Microsoft.
+Sem parâmetros significa aplicação depois da confirmação, diferentemente da versão 1.0.0, que consultava por padrão. Não existe -Apply nem -NtpServers nesta versão. Leia a confirmação e responda Yes somente no alvo e janela corretos. Recusar ou usar WhatIf retorna NotApplied e código 0, indicando nenhuma aplicação, não saúde do horário.
 
-Aplicação autorizada com peers já substituídos:
+Para automação previamente autorizada, -Confirm:$false dispensa somente a pergunta. Não contorna validações, GPO ou backup. Não é o caminho inicial para alunos. O script é executável local e pode ajustar o relógio por meio do W32Time; não é um agendador ou tarefa recorrente.
+
+## 9. Editar os servidores NTP
+
+No início de Configure-NTP-PDC.ps1, altere somente o array NtpServers para nomes aprovados:
 
 ```powershell
-.\Configure-NTP-PDC.ps1 -NtpServers $peers -Apply
+$NtpServers = @(
+    'a.st1.ntp.br'
+    'c.st1.ntp.br'
+    'd.st1.ntp.br'
+    'e.st1.ntp.br'
+)
 ```
 
-Para processo separado no Windows PowerShell 5.1, uma alternativa é executar a entrada dentro de -Command e construir o array na expressão. O -File do host legado possui particularidades ao receber arrays/switches explícitos; os exemplos interativos acima evitam depender dessas conversões.
+Use 1 a 10 nomes DNS ASCII; nomes internacionais precisam estar em formato punycode. Não informe IP literal, URL, porta, flags ou comandos. O mecanismo normaliza espaços externos e caixa e remove duplicatas. Bloqueia nomes/endereços locais, loopback, não especificados e multicast/broadcast identificados; exige resolução de todos os nomes.
 
-No VSCode, abra a pasta da ferramenta e um terminal elevado com a versão correta. Não faça dot-sourcing da entrada ou dos mocks. A pasta src é localizada por PSScriptRoot, independentemente do diretório de origem do processo.
+Uma fonte usa 0x8 (cliente NTP); duas usam 0x8 e 0xA (segunda como fallback-only); três ou mais usam 0x8 em todas. O polling permanece adaptativo, sem SpecialPollInterval fixo. Três ou mais fontes adequadas costumam ser preferíveis, mas a contagem não garante independência, confiança ou exatidão. Não há autenticação NTS implementada.
 
-WhatIf não equivale a zero I/O: há relatórios, leitura AD/Registro/serviço, resolução DNS quando peers são informados e tráfego NTP se ProbePeers for pedido. Não altera configuração, reinicia serviço, força resync ou exporta o backup .reg. Um alvo inválido continua inválido no WhatIf.
+## 10. Todas as opções e constantes
 
-## 5. Como identifica o alvo e evita atuar no servidor errado
+Não há parâmetros próprios. WhatIf e Confirm vêm de SupportsShouldProcess, com impacto High. Parâmetros comuns como Verbose e ErrorAction são da plataforma; o corpo usa tratamento Stop. Há um único conjunto de alterações por confirmação.
 
-1. Confere Windows, processo 64 bits e token elevado.
-2. Obtém Win32_ComputerSystem e Win32_OperatingSystem por CIM: associação a domínio, DomainRole, tipo de produto, build, fabricante e modelo.
-3. Para um DC associado ao domínio, usa GetComputerDomain, não GetCurrentDomain do usuário. Compara o domínio CIM com o domínio da API.
-4. Obtém Forest.RootDomain e seu PdcRoleOwner. Compara FQDNs completos, ignorando caixa e ponto final apropriado; não usa regex com o nome local interpolado.
-5. Exige que domínio do computador e raiz da floresta sejam iguais, e que o computador seja o PDC dessa raiz.
-6. Revalida após confirmação, novamente depois do backup e antes das alterações, e verifica função/política após a aplicação.
+Constantes internas: versão 2.0.0; timeout nativo 30 s por processo; espera pelo serviço Running até 30 s; mutex local Global\FMODEL.WindowsTime.Setup; saída LocalApplicationData/FMODEL/WindowsTime/Run-UTC-GUID. Essas esperas não são timeout global: AD, CIM, DNS, confirmação, controle de serviço e gravação em disco podem demorar mais. Não há repetição automática, agendamento, lista remota, senha ou modo de forçar a execução.
 
-Não há transação distribuída entre o AD e o Registro. Uma transferência FSMO ou mudança de GPO concorrente ainda pode ocorrer entre leituras. A validação utiliza a visão do diretório obtida naquele momento; não é consenso entre todos os DCs. Se o alvo/política mudar ao final, o resultado não é promovido a AppliedVerified.
+## 11. Validação do alvo e política
 
-A aplicação tem mutex nomeado Global\FMODEL.ConfigureNtpPdc. Se outro processo detiver o lock, a execução não aplica. O lock é local ao computador e não impede alterações por GPO, outro software ou um administrador usando ferramentas diretamente.
+Get-TimeContext verifica Windows/64 bits, token elevado, ingresso no domínio, Windows Server e build mínimo. CIM fornece o estado local; System.DirectoryServices consulta GetComputerDomain().Forest.RootDomain.PdcRoleOwner. A floresta vem do domínio do computador, e não do usuário interativo. O FQDN local é comparado ao proprietário da função, sem correspondência por regex ou apenas nome curto.
 
-## 6. Políticas e serviço
+PDC exige DC e coincidência com o PDC raiz; DOMHIER bloqueia esse alvo e aceita outros servidores do domínio. Qualquer chave HKLM:\SOFTWARE\Policies\Microsoft\W32Time, inclusive vazia, bloqueia a aplicação por decisão conservadora do projeto. Isso não prova cobertura de todas as formas de política: uma GPO pode ser aplicada mais tarde. Não apague a chave para contornar o bloqueio; ajuste com a equipe de domínio.
 
-A presença de HKLM\SOFTWARE\Policies\Microsoft\W32Time bloqueia Apply, **mesmo se o ramo estiver vazio**. É uma escolha conservadora deste projeto, não prova de que uma GPO específica está ativa. Não enumera toda a RSOP/MDM, não faz gpupdate e não apaga a política.
+Depois da confirmação, o processo adquire exclusão local, relê o contexto, exporta backup e coleta diagnósticos. Antes da primeira mutação, verifica novamente papel/política e cinco valores selecionados do Registro. Após a aplicação, verifica alvo e configuração. Esses controles reduzem corrida, mas não são transação AD/Registro: FSMO, GPO e outros administradores ainda podem mudar estado entre verificações. O mutex não bloqueia ferramentas externas ou outro computador.
 
-Quando o ramo existe, revise gpresult/RSOP e a configuração administrada. Ajuste pela GPO que realmente governa o cenário, com o escopo adequado ao domínio raiz. Não remova a chave só para satisfazer o script. Uma política ou agente que escreva por outro caminho também pode alterar os valores depois da execução.
+## 12. Alterações realizadas
 
-Serviço W32Time ausente, desabilitado ou com chaves essenciais faltantes impede Apply. Não muda StartMode. Se estiver apenas parado e não desabilitado, após backup e autorização o fluxo o inicia antes de configurar; depois reinicia para aplicar os provedores. Quando já está em execução, o reinício ocorre uma vez depois da configuração. Aguarda Running até 30 segundos, sem parada forçada de dependentes.
+Primeiro exporta toda a ramificação HKLM\SYSTEM\CurrentControlSet\Services\W32Time com reg.exe. Exige saída zero e arquivo não vazio. Salva HTML/JSON de BackupSaved antes de alterar W32Time. Um registro INTENT é gravado e Flush(true) é chamado antes de cada etapa; COMPLETED só após retorno sem erro. Um INTENT sem COMPLETED significa etapa iniciada ou de resultado desconhecido, não necessariamente que nenhuma mudança ocorreu.
 
-## 7. Peers, normalização, DNS e flags
+Se W32Time estava parado, inicia-o depois do backup. Nos dois modos define NtpClient.Enabled=1 e AnnounceFlags=10 (0xA, anúncio automático). No PDC também define NtpServer.Enabled=1. Os valores são DWORD. DOMHIER preserva NtpServer.Enabled; não transforma automaticamente um membro em servidor NTP. O serviço mantém o tipo de inicialização anterior.
 
-Cada peer passa por validação de sintaxe. DNS é normalizado para minúsculas/IDNA e o ponto final é removido. IPv4/IPv6 válidos são aceitos, incluindo IP privado para um appliance aprovado. Endereços loopback, não especificados e multicast/broadcast são rejeitados; IPv4 mapeado em IPv6 é normalizado antes da checagem. Não aceita flags inseridas pelo usuário, URLs, aspas, quebras de linha ou IDs de zona IPv6.
+PDC executa w32tm /config /manualpeerlist:"lista" /syncfromflags:manual /update. DOMHIER executa w32tm /config /syncfromflags:domhier /update. Nomes manuais antigos podem continuar no campo NtpServer após DOMHIER; Type=NT5DS é o modo relevante, e o script não usa essa lista para sincronizar manualmente.
 
-Remove nomes repetidos sem diferenciar caixa. O limite é de dez entradas/distintos conforme binding e plano. Nome repetido não vira redundância. Resolve **todos** os peers solicitados; falha de DNS/endereço inválido bloqueia o caminho. Nomes/IPs que apontem para o próprio computador são rejeitados para evitar um loop local. Isso não detecta todos os loops possíveis em uma cadeia NTP.
+Depois reinicia o serviço sem -Force e espera Running. Executa uma vez w32tm /resync /rediscover e consulta configuration, source, status /verbose e peers. Não usa /monitor de todo o domínio, /reliable:yes incondicional ou /unregister. Não muda firewall, fuso, limites de correção de fase, configuração do hipervisor, ACL ou GPO.
 
-Não valida propriedade do servidor, contrato do provedor, independência física, fonte de hardware ou assinatura criptográfica. Nomes diferentes podem representar o mesmo IP/relógio. DNS e IP podem mudar depois da resolução; correspondência posterior é conservadora e pode não reconhecer uma rotação legítima.
+## 13. Processos e tratamento de erros
 
-Plano do código:
+Os binários vêm de Environment.SystemDirectory, com UseShellExecute=false, argumentos separados por aspas e rejeição de aspas, quebras de linha, NUL e barra final nos argumentos. stdout/stderr são lidos assincronamente. Saída diferente de zero ou timeout gera erro. Após timeout é feita tentativa de terminar o processo; uma operação já entregue ao serviço pode ter ocorrido.
 
-| Quantidade de peers distintos | Flags |
-|---|---|
-| 1 | Primeiro ,0x8; avisa que há menos de três nomes. |
-| 2 | Primeiro ,0x8; segundo ,0xA = cliente + fallback-only. |
-| 3–10 | Todos ,0x8; não força polling fixo. |
+Não há retry automático ou rollback automático. Erro antes de iniciar etapas W32Time é Blocked; depois da fronteira de mutação é FailedAfterMutationPossible. Essa classificação é conservadora: uma falha ao registrar a intenção pode ocorrer antes de uma mudança efetiva. Falha final na gravação do relatório também resulta em código 1; o relatório anterior, backup e journal podem ser os únicos arquivos disponíveis.
 
-As flags de peer e AnnounceFlags são campos diferentes, mesmo quando o número é igual. Aqui 0x8 no peer é modo cliente; 0x2 adiciona uso apenas como fallback. O projeto não usa SpecialPollInterval, não acrescenta 0x1 e não muda MinPollInterval/MaxPollInterval. [Referência de opções](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings).
+## 14. Resultados e códigos de saída
 
-## 8. Anúncio, provedores e limites de correção
-
-O plano pede Type=NTP e a lista manual via w32tm. Habilita o provedor cliente NtpClient e o servidor NtpServer. Ajusta AnnounceFlags como DWORD:
-
-- Automatic: 10/0xA, anúncio/confiabilidade automáticos. É a escolha padrão do projeto para evitar promover incondicionalmente uma fonte não sincronizada.
-- Always: 5/0x5, anúncio/confiabilidade permanentes; opção explícita do operador, não prova de qualidade.
-
-A Microsoft documenta condições em que 0xA deve ser preferido a 0x5. A escolha padrão deste projeto não transforma todo cenário de tempo em uma única receita universal. A orientação histórica com polling especial e a opção moderna de cliente adaptativo têm contextos distintos. [Discussão oficial de anúncio](https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/configure-authoritative-time-server).
-
-MaxPosPhaseCorrection e MaxNegPhaseCorrection são capturados, **não alterados**. Analise sua adequação à organização, especialmente se o relógio estiver muito deslocado. O script não remove limites para forçar uma correção e não calcula um offset independente antes de aplicar. Não existe garantia de ajuste gradual em vez de salto: o comportamento efetivo é do Windows e da política existente.
-
-## 9. Ordem exata das alterações e backup
-
-Antes do primeiro comando que muda W32Time:
-
-1. Confirmação, lock e leitura renovada do alvo/política/estado.
-2. Grava before-settings.json com o snapshot renovado.
-3. Executa reg.exe export do ramo inteiro HKLM\SYSTEM\CurrentControlSet\Services\W32Time para w32time-before.reg.
-4. Exige processo sem timeout, código zero e arquivo não vazio.
-5. Persiste report.json e os HTMLs com estado BackupSaved.
-6. Revalida alvo/política e compara os cinco valores locais relevantes para detectar mudança durante a preparação.
-
-Após isso, com intenção em disco antes de cada operação:
-
-- Inicia W32Time se necessário.
-- w32tm /config /manualpeerlist:<lista> /syncfromflags:manual /update.
-- Define AnnounceFlags e Enabled dos dois provedores, como DWORD.
-- w32tm /config /update.
-- Reinicia W32Time e aguarda Running.
-- w32tm /resync /rediscover, uma vez.
-
-Os argumentos são enviados a processos fixos do SystemDirectory, sem shell. A lista manual é um argumento, incluindo seus espaços. Argumentos com aspas ou quebras são recusados pelo wrapper. Não é um executor genérico para comandos fornecidos pelo usuário.
-
-A exportação é um backup de configuração, não backup do AD, do estado do relógio ou da VM. A checagem de arquivo não é um teste completo de restauração. Não importar automaticamente o ramo inteiro em outro computador ou após uma mudança FSMO/política.
-
-## 10. Verificação: critérios e alcance real
-
-ConfigurationVerified exige cinco configurações locais esperadas, lista de peers equivalente sem depender de ordem/caixa, W32Time Running e rechecagem final de função/política. Não é uma comprovação independente de todas as configurações efetivas da RSOP.
-
-Time evidence exige simultaneamente:
-
-- /query /source e /query /status /verbose sem timeout e com código zero.
-- Fonte de uma única linha correspondente a um nome pedido ou IP resolvido previamente. Remove sufixo nativo ,0x... quando presente.
-- Leap Indicator reconhecido em 0, 1 ou 2; 3 não confirma sincronização.
-- Stratum reconhecido entre 1 e 15.
-- Idade reconhecida desde o último bom sincronismo entre zero e MaxSyncAgeSeconds.
-
-O parser reconhece rótulos EN-US/PT-BR explicitamente testados com textos sintéticos. Não presume sucesso em outros idiomas, saída alterada ou rótulos repetidos. Um Windows em outro idioma pode estar sincronizado e ainda receber AppliedNeedsReview por falta de evidência interpretável. Nessa situação, analisar a saída nativa.
-
-A idade é relativa informada pelo serviço; não depende de converter uma data regional. Um status recente pode anteceder o início da execução, desde que esteja dentro da janela. Não comprova um pacote novo causado especificamente por aquele resync. Fonte, status e configuração são leituras separadas, não um snapshot atômico.
-
-AppliedVerified significa somente que esses critérios foram observados. Não mede precisão absoluta, offset real independente, alinhamento de toda a floresta, segurança do upstream, ausência de spoofing ou autenticação NTP/NTS. Não há detecção de conteúdo malicioso ou integração com VirusTotal neste script.
-
-## 11. Timeouts, falhas e códigos de saída
-
-Cada processo nativo tem timeout. Stdout e stderr são lidos assincronamente para evitar bloqueio de buffers. Em timeout, o cliente é encerrado quando possível; isso **não cancela necessariamente o que o serviço Windows já fez**. Não há repetição automática de config/resync.
-
-A espera de evidência usa Stopwatch para não depender de saltos do relógio sendo corrigido. A janela é verificada entre tentativas: leituras já iniciadas podem ultrapassá-la. DNS, descoberta AD, espera de confirmação, CIM e serviço têm seus próprios comportamentos; NativeTimeoutSeconds não é um timeout global.
-
-| Estado | Exit | Interpretação |
+| Resultado | Código | Interpretação |
 |---|---|---|
-| AuditCompleted | 0 | Consulta concluída, sem aplicar; saúde não certificada. |
-| WhatIf / Declined | 0 | Sem mutação W32Time nesse fluxo. |
-| AppliedVerified | 0 | Critérios observados; limites da seção 10 permanecem. |
-| AppliedNeedsReview | 2 | Alterações realizadas com verificação incompleta/negativa. |
-| Blocked | 1 | Não iniciou mutação W32Time; pode ter gravado relatórios/backup. |
-| FailedAfterMutationPossible | 1 | Tentou alteração; investigar possível estado parcial. |
+| NotApplied | 0 | WhatIf ou confirmação recusada; sem pasta de execução. |
+| Configured | 0 | Configuração local esperada, serviço Running, pedido de ressync aceito e quatro consultas retornaram sem erro nativo. |
+| ConfiguredNeedsReview | 2 | Configuração/diagnóstico não confirmou todos os critérios ou ressync falhou/ficou desconhecido. Houve aplicação. |
+| Blocked | 1 | Fluxo não iniciou mutação W32Time; pode haver backup/relatório. |
+| FailedAfterMutationPossible | 1 | Pode haver mudança parcial; analisar antes de repetir. |
 
-Erro de plataforma, privilégio, binding ou diretório antes de criar a pasta pode sair com 1 sem relatório. Falha ao salvar o relatório final propaga erro; usar o backup/diário já existentes. O script não promete que uma falha na auditoria final possa desfazer operações anteriores.
+BackupSaved é um estado intermediário persistido, não sucesso final. Falhas iniciais de plataforma, AD, permissão ou parâmetro podem terminar com 1 sem relatório. O processo encerrará com o código: execute como arquivo, não por dot-sourcing. Em um processo filho, consulte LASTEXITCODE na sessão chamadora.
 
-Em automação, conferir LASTEXITCODE imediatamente depois de um processo/script terminar. Zero em Audit/WhatIf não significa que houve configuração ou que NTP está saudável.
+Configured não analisa rótulos localizados, leap indicator, stratum, offset ou idade do sincronismo. O script não certifica saúde, autenticação das fontes, precisão, sincronização recente ou propagação para toda a floresta. Essa simplificação é deliberada; a validação operacional é feita com os diagnósticos e aceite no laboratório. Saída zero de /resync é aceitação do pedido, não prova de precisão.
 
-## 12. Arquivos gerados, campos e privacidade
+## 15. Relatórios e proteção dos dados
 
-Cada pasta Run-<UTC>-<sufixo> tem ID próprio. O horário UTC pode ser corrigido durante a execução; não ordenar uma investigação somente pelos timestamps. A ordem das linhas do diário e as fases ajudam a reconstruir o fluxo.
+Após aprovação e criação da pasta, a saída fica no LocalApplicationData da conta elevada que executou o processo, não necessariamente da conta que abriu o Explorador:
 
-| Artefato | Conteúdo/condição |
-|---|---|
-| Report.pt-BR.html / Report.en-US.html | Resumo legível, plano, resultado e avisos; sem recursos externos/JavaScript. |
-| report.json | SchemaVersion, Version, Operator, OperatorSid, RunId, datas, Mode, State, RunFolder, Context, Plan, Policy, Before/After, ResolvedPeers, Before/AfterDiagnostics, ConfigurationVerified, Verification, ProbeResults, MutationAttempted, Error e Warnings. |
-| before-settings.json | Oito valores selecionados, caminho/nome/tipo/existência das chaves, estado/modo de início do serviço. |
-| w32time-before.reg | Exportação anterior do ramo W32Time, apenas após aprovação Apply. |
-| diagnostics-before-*.txt | Saída bruta de source/status/configuration/peers anteriores. |
-| diagnostics-after-*.txt | Consultas posteriores, quando alcançadas pelo fluxo. |
-| config-command.txt / resync-command.txt | Saídas dos comandos correspondentes, quando alcançados. |
-| actions.jsonl | UTC, Action e Phase INTENT/COMPLETED por operação iniciada. |
+- Report.html: leitura no navegador, mensagens PT-BR/EN-US e detalhes expansíveis.
+- report.json: contexto anterior/posterior, operador/SID, plano, backup, status e diagnósticos brutos.
+- W32Time-before.reg: exportação anterior, somente no caminho aprovado.
+- actions.jsonl: intenção/conclusão por etapa, quando a aplicação é iniciada.
 
-Context inclui FQDN, domínio/raiz/PDC, OS/build, DomainRole, associação, fabricante/modelo, indício de VM e endereços locais. Plan contém Servers, PeerList, ReliabilityMode, AnnounceFlags, Type e Enabled dos provedores. ResolvedPeers registra nomes/IPs e hora da resolução. Cada resultado nativo guarda Executable, Arguments, ExitCode, TimedOut, Output e ObservedUtc.
+O HTML é offline, sem JavaScript ou recursos remotos, e codifica os dados inseridos. As gravações HTML/JSON sobrescrevem os arquivos e não são uma transação atômica; interrupção ou disco cheio pode deixar arquivos incompletos. O journal é gravado separadamente. Abra o caminho exibido no console; a ferramenta não abre um navegador elevado automaticamente.
 
-Verification contém Evidence, Attempts, ElapsedSeconds e as duas últimas saídas nativas. Evidence expõe fonte, correspondência, reconhecimento numérico, leap, stratum, idade, limite e nota de alcance. Antes/Depois têm Values, Registry, ServiceState e ServiceStartMode. Registry distingue chave ausente de valor ausente e registra ValueKind; não tratar ausência como zero.
+Os arquivos podem conter domínio, host, IPs, política e identidade. Herdam ACLs da pasta local, sem endurecimento, criptografia ou expurgo automático. Não há telemetria/upload. Não publique relatórios reais nem backups no repositório. Cada execução aprovada cria uma pasta diferente; defina retenção e acesso conforme a empresa.
 
-O diário recebe Flush(true) antes da operação. INTENT sem COMPLETED não prova que nada mudou. Não é armazenamento imutável, assinatura ou transação. JSON/HTML usam escrita temporária e substituição por arquivo, não uma transação envolvendo todos os relatórios. O HTML codifica texto dinâmico e aplica CSP restritiva.
-
-Os arquivos herdam ACLs normais do diretório; não há nova criptografia, expurgo, envio de e-mail, telemetria ou upload ao GitHub. O relatório contém conta/SID e topologia potencialmente sensíveis. O .gitignore ajuda, mas não impede uma inclusão forçada nem limpa histórico.
-
-Para ler JSON corretamente também no PowerShell 5.1:
+## 16. Conferência operacional e perguntas frequentes
 
 ```powershell
-Get-Content -LiteralPath 'C:\CAMINHO-DO-RUN\report.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+w32tm /query /configuration
+w32tm /query /source
+w32tm /query /status /verbose
+w32tm /query /peers
 ```
 
-## 13. Diagnóstico de rede e virtualização
+No PDC, confira Type=NTP e a lista aprovada. Em DOMHIER, confira Type=NT5DS. Avalie fonte esperada, último sincronismo bem-sucedido recente, leap indicator sem aviso de não sincronizado, stratum utilizável e logs Windows Time. Rótulos variam com o idioma. CMOS/local clock, VM IC Time Synchronization Provider ou saída sem dados exigem investigação, conforme a arquitetura. A ausência da expressão Local CMOS Clock não demonstra sucesso.
 
-Para testar peers sem aplicar, com peers reais aprovados:
+Pergunta: posso usar o DOMHIER em todos os DCs? Nos demais DCs, sim, mas o PDC da raiz deve manter sua fonte externa à hierarquia AD. Não se refere necessariamente à Internet: pode ser um appliance NTP interno aprovado.
 
-```powershell
-.\Configure-NTP-PDC.ps1 -NtpServers $peers -ProbePeers
-```
+Pergunta: vou interromper autenticação? O reinício é do W32Time, mas ajustes de horário podem afetar Kerberos, certificados, logs e aplicações. Planeje janela e aceite com a equipe AD. O script não garante impacto zero.
 
-ProbePeers usa stripchart, três amostras e intervalo de um segundo. Não define sozinho um sinal de sucesso: ver a saída. A porta de origem do stripchart é efêmera; a comunicação do cliente W32Time utiliza UDP 123 de origem. Portanto um probe funcionando não prova o mesmo caminho de firewall/NAT. Test-NetConnection -Port 123 testa TCP e não comprova NTP. [Descrição das ferramentas e portas](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings).
+Pergunta: preciso desativar sincronismo com o host em toda VM? Não. A decisão depende do papel do servidor, plataforma, provedor e orientações do fornecedor/Microsoft. O script registra fabricante/modelo, mas não altera integração de VM nem decide uma política universal.
 
-O indício de VM é heurístico. Captura o valor local VMICTimeProvider.Enabled quando existente, mas não consulta o host nem VMware Tools. Não muda Integration Services, serviço vmictimesync, Registro do provedor ou configuração da nuvem. As orientações Microsoft variam conforme plataforma e cenário; revisar a arquitetura do DC e possíveis ciclos host/domínio antes de alterar integração. [DC virtual](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service) · [Hyper-V Integration Services](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/manage/manage-hyper-v-integration-services) · [Cenário Azure AD DC](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/external-ntpsource-configuration).
+Pergunta: posso fixar o IP do PDC nos outros servidores? Não é necessário para DOMHIER e isso perde a descoberta pela hierarquia. Alterações de função FSMO devem ser acompanhadas por um procedimento que configure o novo PDC raiz; estes scripts não fazem migração contínua.
 
-## 14. Demais DCs, membros e transferência de PDC
+## 17. Problemas e recuperação
 
-Esta ferramenta não aplica nos outros DCs/membros. Para um equipamento que deva retornar à hierarquia, um administrador pode avaliar, fora deste script:
+ExecutionPolicy bloqueia: consulte Get-ExecutionPolicy -List e a política corporativa. Para arquivos baixados e revisados, Unblock-File -LiteralPath .\Configure-NTP-PDC.ps1 ou o equivalente DOMHIER remove a marca de origem; não ignora assinatura exigida ou GPO. Não altere a política global para Unrestricted nem desabilite proteções como solução automática.
 
-```powershell
-# OPERAÇÃO REAL, somente no alvo correto e conforme a política do ambiente.
-w32tm /config /syncfromflags:DOMHIER /update
-Restart-Service -Name W32Time
-w32tm /resync /rediscover
-```
+Alvo errado: execute no servidor indicado como PDC raiz ou use DOMHIER no servidor adequado. AD/DNS inacessível: investigue descoberta, DNS e autenticação; o script não força um papel não comprovado. Política presente: administre W32Time por GPO com escopo correto. Serviço desabilitado: confirme a configuração com a equipe responsável, sem alterar o startup type indiscriminadamente.
 
-Não copiar esse bloco para o PDC raiz que deve utilizar suas fontes aprovadas. O script não descobre nem executa essas operações remotamente. Em uma transferência FSMO, revisar novo PDC, antigo PDC, GPO e comportamento de inicialização; não presumir que uma execução anterior se adapta sozinha.
+Ressync sem dados ou fonte inesperada: examine DNS, caminho UDP 123, fontes aprovadas, eventos W32Time, provedor de VM e limites de correção de fase. Um stripchart pode ajudar no diagnóstico, mas usa porta de origem efêmera e não prova o mesmo caminho UDP do serviço; não conclua conectividade a partir de ping. Não há ressync repetido automático.
 
-## 15. Recuperação e investigação
+Falha parcial: preserve pasta, backup e journal, consulte o estado atual e coordene recuperação autorizada. O backup contém toda a ramificação e pode incluir valores adicionais de provedores. Não importe cegamente. Uma importação aprovada por reg.exe import requer análise de GPO/ACL/valores, aplicação ao serviço e nova verificação; não restaura automaticamente estado do serviço, FSMO, GPO ou horário anterior. Não há comando de rollback universal seguro. Antes de repetir, determine qual etapa foi concluída e se a função PDC mudou.
 
-1. Guardar pasta Run, código/versão e logs do serviço. Verificar último INTENT/COMPLETED.
-2. Confirmar novamente qual é o PDC raiz e qual política governa W32Time.
-3. Consultar configuração, fonte e status atuais; não repetir resync/config às cegas após timeout.
-4. Comparar before-settings.json com o estado atual. Restaurar seletivamente apenas os valores apropriados ao mesmo alvo e cenário, preservando tipos e ausências quando necessário.
-5. Tratar importação completa de .reg como operação administrativa de impacto, não procedimento automático recomendado. Ela pode sobrescrever alterações legítimas posteriores e não restaura o relógio.
-6. Revalidar serviço, configuração, sincronismo e consumidores conforme procedimento da organização.
+## 18. Migração, testes e aceite
 
-Não existe -Restore, rollback de AD, restauração de VM ou ajuste reverso de hora nesta ferramenta. Alterações parciais podem exigir ação manual. Não usar Set-Date indiscriminadamente para “voltar ao antes”.
+2.0.0 substitui a ferramenta modular 1.0.0 na mesma pasta. Não reutilize instruções antigas com -Apply, -NtpServers, -OutputPath, -ProbePeers ou src/NtpPdc.Core.ps1. No pacote novo basta cada PS1. Relatórios passam a ter os estados desta edição; automações que interpretavam AppliedVerified precisam ser revistas. A consulta sem aplicação agora é WhatIf. O conteúdo antigo permanece no histórico do Git, com link no CHANGELOG.
 
-## 16. Perguntas frequentes
+Os testes verificam parser PS5.1+, requisitos, mecanismos iguais, alvos, GPO, serviço, normalização/flags de peers, endereços proibidos, corrida de estado, backup obrigatório, confirmação, journal, HTML, verificação local, falhas de comando e timeout real de processo filho. As 19 simulações não substituem um laboratório AD real. Veja TESTING.pt-BR.md e EVIDENCE.json para resultados e limites exatos; não reutilize os números da versão 1.0.0.
 
-- **Por que não basta ser PDC?** Um domínio filho também tem PDC; o alvo desta receita é a raiz da floresta.
-- **Por que não usa IPs fixos do arquivo original?** Os nomes são configuráveis; o código não promete que um mapeamento DNS antigo continue válido.
-- **Por que não há defaults NTP?** Para exigir a escolha consciente de fontes aprovadas para o ambiente.
-- **AppliedVerified garante precisão?** Não; apenas os critérios definidos da seção 10.
-- **Resync retornou zero: acabou?** Não. O fluxo ainda verifica configuração e evidência de tempo.
-- **Fonte correta, mas AppliedNeedsReview?** Pode ser idioma não reconhecido, idade, stratum/leap, leitura falha ou divergência local/política.
-- **Posso usar num PC comum?** Audit pode coletar estado local quando suportado; Apply é bloqueado.
-- **Precisa instalar módulo AD?** Não usa RSAT ActiveDirectory; depende das APIs Windows/.NET e do AD acessível.
-- **Desliga integração da VM?** Não. Registra indícios e deixa a decisão da plataforma para o administrador.
-- **Muda fuso ou horário de verão?** Não. Sincronização e apresentação do fuso são assuntos distintos.
-- **E se o serviço estiver desabilitado?** Bloqueia; não muda StartMode ou política.
-- **Há desfazer?** Não automático; exportação de Registro não reverte tempo nem efeitos em aplicações.
-- **É um script oficial da Microsoft?** Não. É uma implementação FMODEL fundamentada em referências oficiais.
-- **Ele contata Internet sem peers?** Não inicia probe NTP próprio no Audit padrão; pode consultar o AD. O serviço existente continua funcionando independentemente do script.
-- **Posso publicar o relatório?** Pode revelar nomes internos e operador/SID. Revisar/redigir conforme autorização; exemplos incluídos são fictícios.
+Aceite autorizado: identificar papéis atuais; salvar configuração/logs e ponto de recuperação adequado; revisar peers e GPO; testar WhatIf no PDC raiz e num membro; confirmar bloqueio cruzado; aplicar primeiro no PDC em janela aprovada; verificar dados atuais e eventos; aplicar DOMHIER num membro de laboratório; verificar NT5DS e fonte; observar estabilidade antes de expandir por GPO. Repita o planejamento após transferência FSMO. Nenhum teste de desenvolvimento configurou um PDC real.
 
-## 17. Testes e uso em produção
+## 19. Referências
 
-A evidência inclui testes de funções, 18 fluxos simulados e três execuções isoladas do comando de entrada com dependências falsas. O CI roda Windows PowerShell 5.1 e PowerShell 7 no Windows, e testes simulados no Linux. No Windows, há também leitura real local de Registro/CIM, disponibilidade da API DirectoryServices e ajuda nativa w32tm; não há vínculo a domínio ou NTP externo durante os testes.
+As orientações embasam arquitetura e decisões, mas o projeto não é certificado ou endossado pela Microsoft.
 
-Não foram validados um PDC real, LDAP da sua floresta, alterações reais de Registro/serviço/relógio, GPO empresarial, precisão, firewall, peers públicos ou eventos de migração/restore de VM. Não há cobertura percentual, avaliação de conformidade ou eficácia garantida. Execute a [aceitação](ACCEPTANCE.pt-BR.md) em ambiente controlado antes de adotar em operação.
-
-## 18. Rastreabilidade e referências
-
-Código desta revisão: `f680c67aa3ebd9d11950ef28431da9a27f8ef58b`. Hashes e ambiente estão em [EVIDENCE.json](EVIDENCE.json); [execução CI](https://github.com/fmodel7/scripts/actions/runs/40010481878). A comparação com o original está em [REVIEW.pt-BR.md](REVIEW.pt-BR.md). O manifesto identifica bytes distribuídos, não a identidade do autor.
-
-Referências Microsoft consultadas em 23/10/2026:
-
-- [Ferramentas e configurações W32Time](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings)
-- [Funcionamento do serviço de tempo](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/how-the-windows-time-service-works)
-- [Servidor de tempo autoritativo / KB 816042](https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/configure-authoritative-time-server)
-- [Serviço de tempo e cenários virtuais](https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service)
-- [Hyper-V Integration Services](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/manage/manage-hyper-v-integration-services)
-- [Tempo de AD DC em Azure](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/external-ntpsource-configuration)
-
-A documentação do provedor [NTP.br](https://ntp.br/guia/windows/) é uma referência adicional; não converte os peers do original em uma escolha universal. As fontes explicam tecnologias e cenários; o comportamento exato e os controles descritos neste manual são os do código FMODEL entregue.
-
-[Function map / Mapa de funções](FUNCTIONS.pt-BR.md)
+- Windows Time tools and settings: https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings
+- Authoritative time server e AnnounceFlags: https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/configure-authoritative-time-server
+- Funcionamento da hierarquia: https://learn.microsoft.com/en-us/windows-server/networking/windows-time-service/how-the-windows-time-service-works
+- Hyper-V integration services: https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/manage/manage-hyper-v-integration-services
+- Azure e fontes externas: https://learn.microsoft.com/en-us/azure/virtual-machines/windows/external-ntpsource-configuration
+- Guia do provedor ntp.br: https://ntp.br/guia/windows/

@@ -1,39 +1,26 @@
 {
-  "version": "1.0.0",
-  "source_commit": "f680c67aa3ebd9d11950ef28431da9a27f8ef58b",
-  "review_date": "2026-10-23",
+  "version": "2.0.0",
+  "review_date": "2026-11-13",
+  "source_commit": "2d7aaf1562a27f7667124374e81802dd68ff95be",
   "source_sha256": {
-    "Configure-NTP-PDC.ps1": "eae6f61986f787536819eb7df45687964356f02581ddaa7c2cf11edf78224ede",
-    "src/NtpPdc.Core.ps1": "6a39f9ec55ba6b07fee87556db25ba8cd47e921ab1c317148e5ee4796231af63"
+    "Configure-NTP-PDC.ps1": "4f19230fce9519b3d0b1b5322755d230968cfd81b5b90c284b1c6c7f12e48576",
+    "Configure-Time-DOMHIER.ps1": "557af232796cd7467661dcb862b060b4b617119e9946b0de96bb2bf22899d18b",
+    "tests/Test-WindowsTime.ps1": "5004321673d754abce61e56767f21999afd31f66542654bc5d9921326569d3cd"
   },
-  "original_sha256": "3332f90ed33b5b5467c686b32e02920fb56271cb45540353c524b829993481a9",
+  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/43437702532",
+  "ci_status": "success",
+  "ci_platforms": [
+    "Windows PowerShell 5.1 / Windows",
+    "PowerShell 7 / Windows",
+    "PowerShell 7 / Linux"
+  ],
+  "assertions_per_environment": 151,
+  "mocked_workflows_per_environment": 19,
   "local_runtime": "PowerShell 7.4.13 / Linux",
-  "local_core_checks": 75,
-  "mocked_workflows": 18,
-  "workflow_assertions": 188,
-  "isolated_entry_processes": 3,
-  "entry_assertions": 9,
+  "real_native_runner_tested_with_harmless_child_processes": true,
   "real_pdc_configuration_tested": false,
   "real_clock_changed": false,
-  "live_dns_ntp_probed": false,
-  "ci_url": "https://github.com/fmodel7/scripts/actions/runs/40010481878",
-  "ci_platforms": [
-    {
-      "environment": "Windows hosted runner",
-      "shell": "Windows PowerShell 5.1",
-      "core_checks": 79
-    },
-    {
-      "environment": "Windows hosted runner",
-      "shell": "PowerShell 7",
-      "core_checks": 79
-    },
-    {
-      "environment": "Ubuntu hosted runner",
-      "shell": "PowerShell 7",
-      "core_checks": 75
-    }
-  ],
-  "ci_status": "success",
-  "runtime_details": "Exact runtime metadata is uploaded as runtime.txt in each CI artifact."
+  "live_external_dns_ntp_probed": false,
+  "real_AD_GPO_registry_service_application_tested": false,
+  "limitations": "Mocks do not certify real AD integration, time accuracy or live service configuration; authorized lab acceptance required."
 }
