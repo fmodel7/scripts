@@ -15,6 +15,8 @@ try{
     foreach($n in @('IncludeDirectorySecurity','IncludeTopology','IncludeGpoInventory','IncludeSysvolInventory','IncludeDnsConfiguration','IncludeBackupEvidence','IncludeHostInventory','IncludeSecurityConfiguration','IncludeRsop','IncludeSecurityEvents','FullAssessment')){Assert $o.$n "$n enabled by explicit comprehensive preset"}
     Assert ($o.Scope -eq 'Domain' -and -not (Get-AdEffectiveOptions ([pscustomobject]@{FullAssessment=$true})).IncludeGpoInventory) 'scope and old FullAssessment behavior preserved'
     Assert ((Get-AdSchemas).Count -eq 63) '63 normalized datasets'
+    Assert (@(Read-AdJsonList '[{"Path":"a"},{"Path":"b"}]').Count -eq 2) 'manifest JSON arrays flatten consistently on Windows PowerShell 5.1 and 7'
+    Assert (@(Read-SnapshotCatalog '[{"Id":"a"},{"Id":"b"}]').Count -eq 2) 'remote registry catalog parses independent rules on Windows PowerShell 5.1 and 7'
     Assert (@(Get-AdRegistryCatalog).Count -eq 12) '12 registry guidance rules'
     $a=[pscustomobject]@{Name='SYNTHETIC';ObjectClass='user';ObjectGUID='a';DistinguishedName='CN=A,DC=example,DC=test';userAccountControl=(128+2097152+32+65536+4194304+262144);objectSid='S-1-5-21-1-2-3-1001'}
     $flags=Convert-AdSecurityAccount $a example.test dc1.example.test

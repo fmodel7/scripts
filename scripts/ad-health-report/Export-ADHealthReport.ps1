@@ -702,6 +702,12 @@ function Add-AdExtensionError {
     param($Report,[string]$Dataset,[string]$Scope,[string]$Message,[string]$Type='Incomplete')
     Add-AdRows $Report 'CollectionErrors' @([pscustomobject]@{Dataset=$Dataset;Scope=$Scope;ErrorType=$Type;Message=$Message})
 }
+function Read-AdJsonList {
+    param([string]$Text)
+    # PS5.1 ConvertFrom-Json can emit the array as one pipeline object.
+    $parsed=ConvertFrom-Json -InputObject $Text
+    foreach($item in $parsed){$item}
+}
 function Invoke-AdModuleRead {
     param([ValidateSet('GroupPolicy','DnsServer')][string]$Module,[string]$Command,[hashtable]$Arguments,[int]$TimeoutSeconds=60)
     $allow=@{GroupPolicy=@('Get-GPO','Get-GPOReport','Get-GPPermission','Get-GPResultantSetOfPolicy');DnsServer=@('Get-DnsServer','Get-DnsServerZone','Get-DnsServerZoneAging')}
@@ -938,6 +944,7 @@ function Invoke-AdRemoteSnapshot {
         $ErrorActionPreference='Stop'
         $result=[ordered]@{Hardware=@();Software=@();Hotfixes=@();Security=@();Registry=@();Logs=@();Errors=@();AuditText='';AuditExit=$null;SoftwareTruncated=$false}
         function SnapshotError([string]$Dataset,$ErrorObject){$result.Errors+=,[pscustomobject]@{Dataset=$Dataset;Message=[string]$ErrorObject}}
+        function Read-SnapshotCatalog([string]$Json){$parsed=ConvertFrom-Json -InputObject $Json;foreach($item in $parsed){$item}}
         if($Hardware){
             try{
                 $cs=Get-CimInstance Win32_ComputerSystem -ErrorAction Stop;$os=Get-CimInstance Win32_OperatingSystem -ErrorAction Stop;$bios=Get-CimInstance Win32_BIOS -ErrorAction Stop;$cpu=@(Get-CimInstance Win32_Processor -ErrorAction Stop)
@@ -997,7 +1004,7 @@ function Invoke-AdRemoteSnapshot {
                 else{foreach($name in @('State','StartMode')){$result.Security+=,[pscustomobject]@{Component='Spooler';Setting=$name;Value=$sp[0].$name;Observation='Observed';Source='Win32_Service'}}}
             }catch{SnapshotError 'HostSecurity' $_.Exception.Message}
             try{foreach($fw in @(Get-NetFirewallProfile -PolicyStore ActiveStore -ErrorAction Stop)){$result.Security+=,[pscustomobject]@{Component='Firewall';Setting=[string]$fw.Name;Value=[string]$fw.Enabled;Observation='Observed';Source='ActiveStore'}}}catch{SnapshotError 'HostSecurity' $_.Exception.Message}
-            foreach($rule in @($CatalogJson|ConvertFrom-Json)){
+            foreach($rule in (Read-SnapshotCatalog $CatalogJson)){
                 $key=$null;$value=$null;$kind='';$observation='NotConfigured';$errorText=''
                 try{
                     $key=[Microsoft.Win32.Registry]::LocalMachine.OpenSubKey([string]$rule.Path,$false)
@@ -1289,7 +1296,7 @@ function Invoke-AdRenderSnapshot {
     $loaded|Add-Member -NotePropertyName ImportedReportSHA256 -NotePropertyValue ((Get-FileHash -LiteralPath $input.FullName -Algorithm SHA256).Hash) -Force
     $copied=0;$manifest=Join-Path $input.DirectoryName 'run-manifest.json'
     if(Test-Path -LiteralPath $manifest){
-        $m=Get-AdLocalInputFile $manifest 10485760;$entries=@([IO.File]::ReadAllText($m.FullName)|ConvertFrom-Json);$used=0L
+        $m=Get-AdLocalInputFile $manifest 10485760;$entries=@(Read-AdJsonList ([IO.File]::ReadAllText($m.FullName)));$used=0L
         foreach($entry in $entries){
             if([string]$entry.Path -notmatch '^native/[A-Za-z0-9][A-Za-z0-9.-]*\.(txt|xml|json)$'){continue}
             $file=Get-AdLocalInputFile (Join-Path $input.DirectoryName ([string]$entry.Path)) 104857600
